@@ -829,6 +829,63 @@ export default function HomePage() {
             </p>
           </div>
         </section>
+
+        {/* Footer */}
+        <footer className="bg-muted/30 border-t py-12">
+          <div className="container mx-auto px-4">
+            <div className="grid md:grid-cols-4 gap-8 mb-8">
+              {/* Product */}
+              <div>
+                <h4 className="font-semibold mb-4">Product</h4>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li><Link href="/features" className="hover:text-primary transition-colors">Features</Link></li>
+                  <li><Link href="/pricing" className="hover:text-primary transition-colors">Pricing</Link></li>
+                  <li><Link href="/courses" className="hover:text-primary transition-colors">Courses</Link></li>
+                  <li><Link href="/student/portal" className="hover:text-primary transition-colors">Student Portal</Link></li>
+                </ul>
+              </div>
+
+              {/* Company */}
+              <div>
+                <h4 className="font-semibold mb-4">Company</h4>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li><Link href="/about" className="hover:text-primary transition-colors">About Us</Link></li>
+                  <li><Link href="/contact" className="hover:text-primary transition-colors">Contact</Link></li>
+                  <li><Link href="/admin/login" className="hover:text-primary transition-colors">Admin Login</Link></li>
+                </ul>
+              </div>
+
+              {/* Legal */}
+              <div>
+                <h4 className="font-semibold mb-4">Legal</h4>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li><Link href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link></li>
+                  <li><Link href="/terms" className="hover:text-primary transition-colors">Terms of Service</Link></li>
+                  <li><Link href="/cookies" className="hover:text-primary transition-colors">Cookie Policy</Link></li>
+                </ul>
+              </div>
+
+              {/* Contact */}
+              <div>
+                <h4 className="font-semibold mb-4">Contact</h4>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li className="flex items-center gap-2">
+                    <Mail className="h-4 w-4" />
+                    info@gtstraining.com.au
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Globe className="h-4 w-4" />
+                    Queensland, Australia
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="border-t pt-8 text-center text-sm text-muted-foreground">
+              <p>© 2026 GTS Training Centre. All rights reserved.</p>
+            </div>
+          </div>
+        </footer>
       </main>
     </>
   );
