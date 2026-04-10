@@ -15,6 +15,7 @@ import { ArrowLeft, Search, Filter, Edit, DollarSign, Mail, Phone, Calendar, Use
 import { format } from "date-fns";
 import Link from "next/link";
 import type { Tables } from "@/integrations/supabase/types";
+import { emailService } from "@/services/emailService";
 
 type Booking = Tables<"bookings"> & {
   scheduled_classes: {
@@ -146,6 +147,43 @@ export default function BookingsDashboard() {
       toast({ title: "Payment status updated" });
       fetchBookings();
       setDialogOpen(false);
+    }
+  };
+
+  const handleUpdateBooking = async () => {
+    if (!selectedBooking) return;
+
+    const { error } = await supabase
+      .from("bookings")
+      .update({
+        status: editFormData.status,
+        payment_status: editFormData.payment_status,
+        paid_amount: parseFloat(editFormData.paid_amount)
+      })
+      .eq("id", selectedBooking.id);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    } else {
+      // Check if payment was updated
+      const oldPaidAmount = selectedBooking.paid_amount;
+      const newPaidAmount = parseFloat(editFormData.paid_amount);
+      
+      if (newPaidAmount > oldPaidAmount) {
+        // Payment was added, send receipt email
+        const paymentAmount = newPaidAmount - oldPaidAmount;
+        const updatedBooking = { ...selectedBooking, paid_amount: newPaidAmount };
+        await emailService.sendPaymentReceipt(updatedBooking, paymentAmount);
+      }
+
+      toast({ title: "Booking updated successfully" });
+      setDetailsDialogOpen(false);
+      setSelectedBooking(null);
+      fetchBookings();
     }
   };
 

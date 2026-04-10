@@ -3,13 +3,14 @@ import { useRouter } from "next/router";
 import { Navigation } from "@/components/Navigation";
 import { SEO } from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
+import { emailService } from "@/services/emailService";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, MapPin, Clock, DollarSign } from "lucide-react";
+import { Calendar, MapPin, Clock, DollarSign, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -99,6 +100,21 @@ export default function BookingPage() {
       console.log("Booking created:", { booking, bookingError });
 
       if (bookingError) throw bookingError;
+
+      // Send booking confirmation email
+      if (booking && classData && classData.course_templates) {
+        await emailService.sendBookingConfirmation({
+          booking,
+          scheduledClass: classData,
+          courseTemplate: classData.course_templates as any,
+          studentName: `${formData.firstName} ${formData.lastName}`,
+          studentEmail: formData.email,
+          accessToken
+        });
+
+        // Schedule 24-hour reminder
+        await emailService.schedule24HourReminder(booking.id);
+      }
 
       toast({
         title: "Booking confirmed!",
