@@ -1,6 +1,6 @@
 ---
 title: Pricing Page
-status: in_progress
+status: done
 priority: high
 type: feature
 tags: [pricing, plans, comparison, sales]
@@ -26,13 +26,13 @@ Features:
 - Mobile responsive cards
 
 ## Checklist
-- [ ] Create pricing page
-- [ ] Design 3 pricing tiers
-- [ ] Add annual/monthly toggle
-- [ ] Build feature comparison table
-- [ ] Add FAQ section
-- [ ] Implement CTAs
-- [ ] Add trust signals
-- [ ] Design mobile layout
-- [ ] Link from navigation
-- [ ] Test all CTAs
+- [x] Create pricing page
+- [x] Design 3 pricing tiers
+- [x] Add annual/monthly toggle
+- [x] Build feature comparison table
+- [x] Add FAQ section
+- [x] Implement CTAs
+- [x] Add trust signals
+- [x] Design mobile layout
+- [x] Link from navigation
+- [x] Test all CTAs

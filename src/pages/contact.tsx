@@ -34,7 +34,7 @@ export default function ContactPage() {
           name: formData.name,
           email: formData.email,
           phone: formData.phone || null,
-          subject: formData.subject,
+          course_interest: formData.subject,
           message: formData.message,
           status: "new"
         });

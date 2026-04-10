@@ -1,6 +1,6 @@
 ---
 title: Legal Policy Pages
-status: in_progress
+status: done
 priority: medium
 type: feature
 tags: [legal, compliance, policies, pages]
@@ -24,11 +24,11 @@ Features:
 - Mobile responsive design
 
 ## Checklist
-- [ ] Create Privacy Policy page
-- [ ] Create Terms of Service page
-- [ ] Create Cookie Policy page
-- [ ] Add table of contents
-- [ ] Add last updated dates
-- [ ] Link from footer
-- [ ] Verify GDPR compliance
-- [ ] Test mobile responsiveness
+- [x] Create Privacy Policy page
+- [x] Create Terms of Service page
+- [x] Create Cookie Policy page
+- [x] Add table of contents
+- [x] Add last updated dates
+- [x] Link from footer
+- [x] Verify GDPR compliance
+- [x] Test mobile responsiveness

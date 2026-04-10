@@ -1,6 +1,6 @@
 ---
 title: Contact Form Enhancement
-status: in_progress
+status: done
 priority: high
 type: feature
 tags: [contact, form, email, enquiry]
@@ -27,13 +27,13 @@ Features:
 - Multiple contact methods (email, phone)
 
 ## Checklist
-- [ ] Upgrade contact page UI
-- [ ] Add form validation
-- [ ] Implement email sending
-- [ ] Save to database (enquiries table)
-- [ ] Add success/error states
-- [ ] Add loading states
-- [ ] Display contact info
-- [ ] Add FAQ section
-- [ ] Test form submission
-- [ ] Verify email delivery
+- [x] Upgrade contact page UI
+- [x] Add form validation
+- [x] Implement email sending
+- [x] Save to database (enquiries table)
+- [x] Add success/error states
+- [x] Add loading states
+- [x] Display contact info
+- [x] Add FAQ section
+- [x] Test form submission
+- [x] Verify email delivery
