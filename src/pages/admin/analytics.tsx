@@ -17,6 +17,9 @@ import {
   Download
 } from "lucide-react";
 import Link from "next/link";
+import { Navigation } from "@/components/Navigation";
+import { exportService } from "@/services/exportService";
+import { format } from "date-fns";
 
 interface RevenueStats {
   totalRevenue: number;
@@ -483,7 +486,20 @@ export default function Analytics() {
             </div>
           </TabsContent>
 
-          <TabsContent value="feedback" className="space-y-4">
+          <TabsContent value="feedback" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Student Satisfaction</h2>
+              <Button
+                onClick={async () => {
+                  const csv = await exportService.exportFeedbackCSV();
+                  exportService.downloadCSV(csv, `feedback-${format(new Date(), "yyyy-MM-dd")}.csv`);
+                }}
+                variant="outline"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export Feedback
+              </Button>
+            </div>
             <div className="grid gap-4 md:grid-cols-2">
               <Card>
                 <CardHeader>

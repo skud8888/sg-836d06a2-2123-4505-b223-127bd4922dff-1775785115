@@ -9,10 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Search, Mail, Phone, Calendar, MessageSquare } from "lucide-react";
+import { ArrowLeft, Search, Mail, Phone, Calendar, MessageSquare, Download } from "lucide-react";
 import { format } from "date-fns";
 import Link from "next/link";
 import type { Tables } from "@/integrations/supabase/types";
+import { exportService } from "@/services/exportService";
 
 type Enquiry = Tables<"enquiries">;
 
@@ -112,7 +113,7 @@ export default function Enquiries() {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-6xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="mb-6 flex items-center justify-between">
           <div>
             <Link href="/admin">
               <Button variant="ghost" size="sm" className="mb-2">
@@ -120,9 +121,18 @@ export default function Enquiries() {
                 Back to Dashboard
               </Button>
             </Link>
-            <h1 className="text-3xl font-heading font-bold">Enquiries</h1>
+            <h1 className="text-3xl font-bold">Enquiries</h1>
             <p className="text-muted-foreground">Manage contact form submissions</p>
           </div>
+          <Button
+            onClick={async () => {
+              const csv = await exportService.exportEnquiriesCSV();
+              exportService.downloadCSV(csv, `enquiries-${format(new Date(), "yyyy-MM-dd")}.csv`);
+            }}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export CSV
+          </Button>
         </div>
 
         {/* Stats */}

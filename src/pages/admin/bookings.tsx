@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Navigation } from "@/components/Navigation";
 import { supabase } from "@/integrations/supabase/client";
 import { emailService } from "@/services/emailService";
+import { exportService } from "@/services/exportService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,7 +16,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DocumentUpload } from "@/components/DocumentUpload";
 import { DocumentList } from "@/components/DocumentList";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Users, DollarSign, Calendar, Mail, Phone, FileText, Upload, ArrowLeft, Edit } from "lucide-react";
+import { Search, Users, DollarSign, Calendar, Mail, Phone, FileText, Upload, ArrowLeft, Edit, Download } from "lucide-react";
 import { format } from "date-fns";
 import type { Tables } from "@/integrations/supabase/types";
 import {
@@ -200,15 +201,26 @@ export default function BookingsDashboard() {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto space-y-6">
-        <div>
-          <Link href="/admin">
-            <Button variant="ghost" size="sm" className="mb-2">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
-            </Button>
-          </Link>
-          <h1 className="text-3xl font-heading font-bold">Student Bookings</h1>
-          <p className="text-muted-foreground">Manage all student enrollments and payments</p>
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <Link href="/admin">
+              <Button variant="ghost" size="sm" className="mb-2">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Dashboard
+              </Button>
+            </Link>
+            <h1 className="text-3xl font-bold">Bookings Management</h1>
+            <p className="text-muted-foreground">Manage all course bookings</p>
+          </div>
+          <Button
+            onClick={async () => {
+              const csv = await exportService.exportBookingsCSV();
+              exportService.downloadCSV(csv, `bookings-${format(new Date(), "yyyy-MM-dd")}.csv`);
+            }}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export CSV
+          </Button>
         </div>
 
         {/* Stats Cards */}
