@@ -20,7 +20,8 @@ import {
   Brain,
   Shield,
   DollarSign,
-  User
+  User,
+  Activity
 } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -147,6 +148,15 @@ export default function AdminDashboard() {
       icon: FileText,
       href: "/admin/audit-logs",
       color: "text-slate-600 dark:text-slate-400",
+      show: userRole === "super_admin" || userRole === "admin"
+    },
+    {
+      title: "System Health",
+      description: "Service monitoring",
+      icon: Activity,
+      href: "/admin/system-health",
+      color: "text-teal-600 dark:text-teal-400",
+      badge: "NEW",
       show: userRole === "super_admin" || userRole === "admin"
     }
   ];

@@ -1,31 +1,42 @@
-import { useEffect } from "react";
-import { Toaster } from "@/components/ui/toaster";
-import { InstallPWA } from "@/components/InstallPWA";
 import "@/styles/globals.css";
+import "driver.js/dist/driver.css";
 import type { AppProps } from "next/app";
+import { ThemeProvider } from "@/contexts/ThemeProvider";
+import { Toaster } from "@/components/ui/toaster";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { useEffect } from "react";
+import { performanceMonitor } from "@/services/performanceMonitor";
+import { useRouter } from "next/router";
 
 export default function App({ Component, pageProps }: AppProps) {
+  const router = useRouter();
+
   useEffect(() => {
-    // Register service worker for PWA support
-    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-      window.addEventListener("load", function () {
-        navigator.serviceWorker.register("/sw.js").then(
-          function (registration) {
-            console.log("ServiceWorker registration successful");
-          },
-          function (err) {
-            console.log("ServiceWorker registration failed: ", err);
-          }
-        );
-      });
-    }
-  }, []);
+    // Track page views with performance monitoring
+    const handleRouteChange = (url: string) => {
+      performanceMonitor.trackPageView(url);
+    };
+
+    router.events.on("routeChangeComplete", handleRouteChange);
+
+    return () => {
+      router.events.off("routeChangeComplete", handleRouteChange);
+    };
+  }, [router.events]);
+
+  const handleError = (error: Error, errorInfo: React.ErrorInfo) => {
+    // Log to monitoring service
+    console.error("Global error caught:", error, errorInfo);
+    
+    // TODO: Send to error tracking service (Sentry, etc.)
+  };
 
   return (
-    <>
-      <Component {...pageProps} />
-      <InstallPWA />
-      <Toaster />
-    </>
+    <ErrorBoundary level="global" onError={handleError}>
+      <ThemeProvider>
+        <Component {...pageProps} />
+        <Toaster />
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
