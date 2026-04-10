@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Users, Calendar, BookOpen, Mail, BarChart3, Brain, Shield, FileText } from "lucide-react";
+import { Users, Calendar, BookOpen, Mail, BarChart3, Brain, Shield, FileText, DollarSign, UserCheck } from "lucide-react";
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -35,6 +35,34 @@ export default function AdminDashboard() {
                 </CardTitle>
                 <CardDescription>
                   Manage course bookings and payments
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </Link>
+
+          <Link href="/admin/students">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <UserCheck className="h-5 w-5 text-primary" />
+                  Students
+                </CardTitle>
+                <CardDescription>
+                  Student records and enrollment history
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </Link>
+
+          <Link href="/admin/payments">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5 text-primary" />
+                  Payments
+                </CardTitle>
+                <CardDescription>
+                  Track outstanding balances and aging
                 </CardDescription>
               </CardHeader>
             </Card>

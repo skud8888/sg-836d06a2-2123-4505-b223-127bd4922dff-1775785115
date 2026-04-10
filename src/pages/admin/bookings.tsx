@@ -15,8 +15,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DocumentUpload } from "@/components/DocumentUpload";
 import { DocumentList } from "@/components/DocumentList";
+import { EvidenceCapture } from "@/components/EvidenceCapture";
+import { EvidenceGallery } from "@/components/EvidenceGallery";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Users, DollarSign, Calendar, Mail, Phone, FileText, Upload, ArrowLeft, Edit, Download } from "lucide-react";
+import { Search, Users, DollarSign, Calendar, Mail, Phone, FileText, Upload, ArrowLeft, Edit, Download, Camera } from "lucide-react";
 import { format } from "date-fns";
 import type { Tables } from "@/integrations/supabase/types";
 import {
@@ -26,6 +28,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { notificationService } from "@/services/notificationService";
 
 type Booking = Tables<"bookings"> & {
   scheduled_classes: (Tables<"scheduled_classes"> & {
@@ -129,6 +132,11 @@ export default function BookingsDashboard() {
         variant: "destructive"
       });
     } else {
+      // Send feedback request if completed
+      if (status === "completed") {
+        await notificationService.sendFeedbackRequest(selectedBooking.id);
+      }
+
       toast({ title: "Booking status updated" });
       fetchBookings();
       setDialogOpen(false);
@@ -406,9 +414,10 @@ export default function BookingsDashboard() {
             </DialogHeader>
             {selectedBooking && (
               <Tabs defaultValue="details" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="details">Details & Payment</TabsTrigger>
                   <TabsTrigger value="documents">Documents</TabsTrigger>
+                  <TabsTrigger value="evidence">Evidence</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="details" className="space-y-6 mt-4">
@@ -554,6 +563,22 @@ export default function BookingsDashboard() {
                       }}
                     />
                     <DocumentList bookingId={selectedBooking.id} />
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="evidence" className="space-y-4 mt-4">
+                  <div className="space-y-4">
+                    <EvidenceCapture
+                      bookingId={selectedBooking.id}
+                      scheduledClassId={selectedBooking.scheduled_class_id || undefined}
+                      onCaptureComplete={() => {
+                        // Trigger evidence gallery refresh
+                      }}
+                    />
+                    <EvidenceGallery
+                      bookingId={selectedBooking.id}
+                      scheduledClassId={selectedBooking.scheduled_class_id || undefined}
+                    />
                   </div>
                 </TabsContent>
               </Tabs>

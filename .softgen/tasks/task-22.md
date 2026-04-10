@@ -1,6 +1,6 @@
 ---
 title: Evidence Capture Tool
-status: in_progress
+status: done
 priority: high
 type: feature
 tags: [evidence, compliance, photos, documents]
@@ -22,13 +22,13 @@ Evidence types:
 Must support offline capture with sync when back online.
 
 ## Checklist
-- [ ] Create evidence_capture table
-- [ ] Build photo capture component (mobile-optimized)
-- [ ] Add evidence type categorization
-- [ ] Create trainer evidence upload interface
-- [ ] Build evidence gallery view per booking
-- [ ] Add geolocation tagging for evidence
-- [ ] Implement offline support with sync queue
-- [ ] Create compliance checklist templates
-- [ ] Add bulk evidence upload
-- [ ] Build evidence export for audits
+- [x] Create evidence_capture table
+- [x] Build photo capture component (mobile-optimized)
+- [x] Add evidence type categorization
+- [x] Create trainer evidence upload interface
+- [x] Build evidence gallery view per booking
+- [x] Add geolocation tagging for evidence
+- [x] Implement offline support with sync queue
+- [x] Create compliance checklist templates
+- [x] Add bulk evidence upload
+- [x] Build evidence export for audits
