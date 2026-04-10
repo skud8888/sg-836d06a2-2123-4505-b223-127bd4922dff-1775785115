@@ -151,44 +151,48 @@ export default function AdminDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <Link href="/admin/calendar">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <Link href="/admin/calendar">
+            <Card className="hover:border-primary transition-colors cursor-pointer">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-primary" />
+                  <Calendar className="h-5 w-5" />
                   Course Calendar
                 </CardTitle>
-                <CardDescription>
-                  View and manage scheduled classes, assign trainers
-                </CardDescription>
               </CardHeader>
-            </Link>
-          </Card>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  View and manage scheduled classes
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <Link href="/admin/bookings">
+          <Link href="/admin/bookings">
+            <Card className="hover:border-primary transition-colors cursor-pointer">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Student Bookings
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Manage enrollments and payments
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/admin/courses">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <BookOpen className="h-5 w-5 text-primary" />
-                  Manage Bookings
+                  Manage Courses
                 </CardTitle>
                 <CardDescription>
-                  Review enrollments, mark attendance, manage payments
-                </CardDescription>
-              </CardHeader>
-            </Link>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <Link href="/admin/students">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5 text-primary" />
-                  Student Records
-                </CardTitle>
-                <CardDescription>
-                  Access student information, documents, and history
+                  Add, edit, or remove courses
                 </CardDescription>
               </CardHeader>
             </Link>
