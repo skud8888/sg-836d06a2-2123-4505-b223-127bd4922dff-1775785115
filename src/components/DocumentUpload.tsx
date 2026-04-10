@@ -55,10 +55,10 @@ export function DocumentUpload({
     const { document, error } = await documentService.uploadDocument({
       file: selectedFile,
       documentType,
-      relatedBookingId,
-      relatedCourseId,
-      relatedTrainerId,
-      description: description || undefined,
+      bookingId: relatedBookingId,
+      courseId: relatedCourseId,
+      trainerId: relatedTrainerId,
+      notes: description || undefined,
       tags: tagArray.length > 0 ? tagArray : undefined
     });
 

@@ -11,13 +11,13 @@ export const documentService = {
   async uploadDocument(params: {
     file: File;
     documentType: Document["document_type"];
-    relatedBookingId?: string;
-    relatedCourseId?: string;
-    relatedTrainerId?: string;
-    description?: string;
+    bookingId?: string;
+    courseId?: string;
+    trainerId?: string;
+    notes?: string;
     tags?: string[];
   }): Promise<{ document: Document | null; error: any }> {
-    const { file, documentType, relatedBookingId, relatedCourseId, relatedTrainerId, description, tags } = params;
+    const { file, documentType, bookingId, courseId, trainerId, notes, tags } = params;
 
     try {
       // Get current user
@@ -49,15 +49,15 @@ export const documentService = {
       const { data: document, error: dbError } = await supabase
         .from("documents")
         .insert({
-          filename: file.name,
+          file_name: file.name,
           file_path: uploadData.path,
           file_size: file.size,
           mime_type: file.type,
           document_type: documentType,
-          related_booking_id: relatedBookingId || null,
-          related_course_id: relatedCourseId || null,
-          related_trainer_id: relatedTrainerId || null,
-          description: description || null,
+          booking_id: bookingId || null,
+          course_id: courseId || null,
+          trainer_id: trainerId || null,
+          notes: notes || null,
           tags: tags || null,
           uploaded_by: user.id
         })
@@ -128,7 +128,7 @@ export const documentService = {
     const url = URL.createObjectURL(data);
     const a = window.document.createElement("a");
     a.href = url;
-    a.download = document.filename;
+    a.download = document.file_name;
     window.document.body.appendChild(a);
     a.click();
     window.document.body.removeChild(a);
@@ -142,10 +142,10 @@ export const documentService = {
     const { data, error } = await supabase
       .from("documents")
       .select("*")
-      .eq("related_booking_id", bookingId)
+      .eq("booking_id", bookingId)
       .eq("is_latest_version", true)
       .is("deleted_at", null)
-      .order("created_at", { ascending: false });
+      .order("uploaded_at", { ascending: false });
 
     if (error) {
       console.error("Error fetching booking documents:", error);
@@ -162,10 +162,10 @@ export const documentService = {
     const { data, error } = await supabase
       .from("documents")
       .select("*")
-      .eq("related_course_id", courseId)
+      .eq("course_id", courseId)
       .eq("is_latest_version", true)
       .is("deleted_at", null)
-      .order("created_at", { ascending: false });
+      .order("uploaded_at", { ascending: false });
 
     if (error) {
       console.error("Error fetching course documents:", error);
@@ -316,7 +316,7 @@ export const documentService = {
 
     if (params.query) {
       queryBuilder = queryBuilder.or(
-        `filename.ilike.%${params.query}%,description.ilike.%${params.query}%`
+        `file_name.ilike.%${params.query}%,notes.ilike.%${params.query}%`
       );
     }
 
@@ -325,18 +325,18 @@ export const documentService = {
     }
 
     if (params.bookingId) {
-      queryBuilder = queryBuilder.eq("related_booking_id", params.bookingId);
+      queryBuilder = queryBuilder.eq("booking_id", params.bookingId);
     }
 
     if (params.courseId) {
-      queryBuilder = queryBuilder.eq("related_course_id", params.courseId);
+      queryBuilder = queryBuilder.eq("course_id", params.courseId);
     }
 
     if (params.trainerId) {
-      queryBuilder = queryBuilder.eq("related_trainer_id", params.trainerId);
+      queryBuilder = queryBuilder.eq("trainer_id", params.trainerId);
     }
 
-    const { data, error } = await queryBuilder.order("created_at", { ascending: false });
+    const { data, error } = await queryBuilder.order("uploaded_at", { ascending: false });
 
     if (error) {
       console.error("Search error:", error);

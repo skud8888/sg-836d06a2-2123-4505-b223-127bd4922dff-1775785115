@@ -95,22 +95,22 @@ export function DocumentList({ bookingId, courseId, trainerId, showUpload = fals
                 <div className="flex items-start gap-3 flex-1">
                   <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{doc.filename}</p>
-                    {doc.description && (
-                      <p className="text-sm text-muted-foreground mt-1">{doc.description}</p>
+                    <p className="font-medium truncate">{doc.file_name}</p>
+                    {doc.notes && (
+                      <p className="text-sm text-muted-foreground mt-1">{doc.notes}</p>
                     )}
                     <div className="flex items-center gap-2 mt-2 flex-wrap">
                       <Badge variant="secondary" className={getDocumentTypeColor(doc.document_type)}>
                         {doc.document_type}
                       </Badge>
-                      {doc.version > 1 && (
+                      {doc.version && doc.version > 1 && (
                         <Badge variant="outline">v{doc.version}</Badge>
                       )}
                       {doc.tags && doc.tags.map((tag) => (
                         <Badge key={tag} variant="outline">{tag}</Badge>
                       ))}
                       <span className="text-xs text-muted-foreground">
-                        {format(new Date(doc.created_at), "MMM d, yyyy")}
+                        {doc.uploaded_at ? format(new Date(doc.uploaded_at), "MMM d, yyyy") : ""}
                       </span>
                     </div>
                   </div>
@@ -152,7 +152,7 @@ export function DocumentList({ bookingId, courseId, trainerId, showUpload = fals
                     <div>
                       <p className="font-medium">Version {version.version}</p>
                       <p className="text-sm text-muted-foreground">
-                        {format(new Date(version.created_at), "MMM d, yyyy 'at' h:mm a")}
+                        {version.uploaded_at ? format(new Date(version.uploaded_at), "MMM d, yyyy 'at' h:mm a") : ""}
                       </p>
                       {version.is_latest_version && (
                         <Badge variant="default" className="mt-1">Latest</Badge>

@@ -210,45 +210,108 @@ export type Database = {
         }
         Relationships: []
       }
+      document_audit_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          document_id: string | null
+          id: string
+          metadata: Json | null
+          performed_by: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          document_id?: string | null
+          id?: string
+          metadata?: Json | null
+          performed_by?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          document_id?: string | null
+          id?: string
+          metadata?: Json | null
+          performed_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_audit_logs_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_audit_logs_performed_by_fkey"
+            columns: ["performed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           booking_id: string | null
+          course_id: string | null
+          deleted_at: string | null
           document_type: string
           file_name: string
           file_path: string
           file_size: number | null
           id: string
+          is_latest_version: boolean | null
           mime_type: string | null
           notes: string | null
+          parent_document_id: string | null
           scheduled_class_id: string | null
+          tags: string[] | null
+          trainer_id: string | null
           uploaded_at: string | null
           uploaded_by: string | null
+          version: number | null
         }
         Insert: {
           booking_id?: string | null
+          course_id?: string | null
+          deleted_at?: string | null
           document_type: string
           file_name: string
           file_path: string
           file_size?: number | null
           id?: string
+          is_latest_version?: boolean | null
           mime_type?: string | null
           notes?: string | null
+          parent_document_id?: string | null
           scheduled_class_id?: string | null
+          tags?: string[] | null
+          trainer_id?: string | null
           uploaded_at?: string | null
           uploaded_by?: string | null
+          version?: number | null
         }
         Update: {
           booking_id?: string | null
+          course_id?: string | null
+          deleted_at?: string | null
           document_type?: string
           file_name?: string
           file_path?: string
           file_size?: number | null
           id?: string
+          is_latest_version?: boolean | null
           mime_type?: string | null
           notes?: string | null
+          parent_document_id?: string | null
           scheduled_class_id?: string | null
+          tags?: string[] | null
+          trainer_id?: string | null
           uploaded_at?: string | null
           uploaded_by?: string | null
+          version?: number | null
         }
         Relationships: [
           {
@@ -259,10 +322,31 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "documents_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "course_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_parent_document_id_fkey"
+            columns: ["parent_document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "documents_scheduled_class_id_fkey"
             columns: ["scheduled_class_id"]
             isOneToOne: false
             referencedRelation: "scheduled_classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_trainer_id_fkey"
+            columns: ["trainer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
@@ -470,8 +554,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_document_version: {
+        Args: {
+          p_document_id: string
+          p_new_file_path: string
+          p_new_filename: string
+          p_uploaded_by: string
+        }
+        Returns: string
+      }
       generate_student_token: { Args: never; Returns: string }
       get_next_invoice_number: { Args: never; Returns: string }
+      log_document_access: {
+        Args: {
+          p_action: string
+          p_document_id: string
+          p_metadata?: Json
+          p_user_id?: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
