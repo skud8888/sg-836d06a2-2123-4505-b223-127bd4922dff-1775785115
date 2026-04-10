@@ -4,6 +4,7 @@ import type { AppProps } from "next/app";
 import { ThemeProvider } from "@/contexts/ThemeProvider";
 import { Toaster } from "@/components/ui/toaster";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { FeedbackWidget } from "@/components/FeedbackWidget";
 import { useEffect } from "react";
 import { performanceMonitor } from "@/services/performanceMonitor";
 import { useRouter } from "next/router";
@@ -36,6 +37,7 @@ export default function App({ Component, pageProps }: AppProps) {
       <ThemeProvider>
         <Component {...pageProps} />
         <Toaster />
+        <FeedbackWidget />
       </ThemeProvider>
     </ErrorBoundary>
   );

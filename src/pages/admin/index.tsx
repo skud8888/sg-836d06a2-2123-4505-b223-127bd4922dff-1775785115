@@ -135,6 +135,15 @@ export default function AdminDashboard() {
       color: "text-emerald-600 dark:text-emerald-400"
     },
     {
+      title: "Feedback",
+      description: "User feedback & bugs",
+      icon: MessageSquare,
+      href: "/admin/feedback",
+      color: "text-rose-600 dark:text-rose-400",
+      badge: "NEW",
+      show: userRole === "super_admin" || userRole === "admin"
+    },
+    {
       title: "User Management",
       description: "Manage admin roles",
       icon: Shield,
