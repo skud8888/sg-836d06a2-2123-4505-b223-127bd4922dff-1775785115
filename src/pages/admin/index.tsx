@@ -4,7 +4,7 @@ import Link from "next/link";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Users, DollarSign, BookOpen, LogOut, LayoutDashboard, Mail } from "lucide-react";
+import { Calendar, Users, DollarSign, BookOpen, LogOut, LayoutDashboard, Mail, BarChart3 } from "lucide-react";
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -221,6 +221,20 @@ export default function AdminDashboard() {
                 </CardTitle>
                 <CardDescription>
                   View contact form submissions
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </Link>
+
+          <Link href="/admin/analytics">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-primary" />
+                  Analytics
+                </CardTitle>
+                <CardDescription>
+                  Business metrics and insights
                 </CardDescription>
               </CardHeader>
             </Card>
