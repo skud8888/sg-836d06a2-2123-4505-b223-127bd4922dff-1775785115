@@ -1,6 +1,6 @@
 ---
 title: Admin Backups Dashboard
-status: in_progress
+status: done
 priority: high
 type: feature
 tags: [admin, backup, dashboard, ui]
@@ -25,13 +25,13 @@ Features:
 - Success/failure statistics
 
 ## Checklist
-- [ ] Create admin/backups.tsx page
-- [ ] Display backup history table
-- [ ] Add backup configuration form
-- [ ] Implement manual backup trigger
-- [ ] Build download backup functionality
-- [ ] Add restore backup UI
-- [ ] Show storage metrics
-- [ ] Create backup testing feature
-- [ ] Add retention policy editor
-- [ ] Implement schedule configuration
+- [x] Create admin/backups.tsx page
+- [x] Display backup history table
+- [x] Add backup configuration form
+- [x] Implement manual backup trigger
+- [x] Build download backup functionality
+- [x] Add restore backup UI
+- [x] Show storage metrics
+- [x] Create backup testing feature
+- [x] Add retention policy editor
+- [x] Implement schedule configuration
