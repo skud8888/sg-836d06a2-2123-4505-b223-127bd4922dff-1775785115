@@ -1,6 +1,6 @@
 ---
 title: Role-Based Access Control (RBAC)
-status: in_progress
+status: done
 priority: urgent
 type: feature
 tags: [security, rbac, permissions, roles]
@@ -20,11 +20,11 @@ Roles:
 - **Student**: View own bookings/documents only
 
 ## Checklist
-- [ ] Create user_roles and role_permissions tables
-- [ ] Build role assignment UI for admin
-- [ ] Implement permission checks in RLS policies
-- [ ] Add role-based navigation and UI visibility
-- [ ] Create permission middleware for sensitive actions
-- [ ] Build user management dashboard
-- [ ] Add role-based data filtering
-- [ ] Test permission boundaries
+- [x] Create user_roles and role_permissions tables
+- [x] Build role assignment UI for admin
+- [x] Implement permission checks in RLS policies
+- [x] Add role-based navigation and UI visibility
+- [x] Create permission middleware for sensitive actions
+- [x] Build user management dashboard
+- [x] Add role-based data filtering
+- [x] Test permission boundaries
