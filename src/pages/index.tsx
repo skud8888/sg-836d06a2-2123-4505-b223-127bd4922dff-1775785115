@@ -18,6 +18,7 @@ import {
   Clock,
   Award,
   File,
+  FileText,
   CreditCard,
   Bell,
   Search,
