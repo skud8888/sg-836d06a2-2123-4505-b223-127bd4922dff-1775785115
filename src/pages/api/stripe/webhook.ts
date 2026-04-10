@@ -4,7 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { buffer } from "micro";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2024-11-20.acacia"
+  apiVersion: "2025-01-27.acacia"
 });
 
 const supabase = createClient(
