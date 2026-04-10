@@ -17,6 +17,7 @@ export type Database = {
     Tables: {
       bookings: {
         Row: {
+          access_token: string | null
           booking_date: string | null
           created_at: string | null
           id: string
@@ -34,11 +35,13 @@ export type Database = {
           student_id: string | null
           student_name: string
           student_phone: string | null
+          token_expires_at: string | null
           total_amount: number
           updated_at: string | null
           usi_number: string | null
         }
         Insert: {
+          access_token?: string | null
           booking_date?: string | null
           created_at?: string | null
           id?: string
@@ -56,11 +59,13 @@ export type Database = {
           student_id?: string | null
           student_name: string
           student_phone?: string | null
+          token_expires_at?: string | null
           total_amount: number
           updated_at?: string | null
           usi_number?: string | null
         }
         Update: {
+          access_token?: string | null
           booking_date?: string | null
           created_at?: string | null
           id?: string
@@ -78,6 +83,7 @@ export type Database = {
           student_id?: string | null
           student_name?: string
           student_phone?: string | null
+          token_expires_at?: string | null
           total_amount?: number
           updated_at?: string | null
           usi_number?: string | null
@@ -95,6 +101,66 @@ export type Database = {
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      course_feedback: {
+        Row: {
+          booking_id: string
+          comments: string | null
+          course_quality: number | null
+          created_at: string | null
+          id: string
+          rating: number
+          scheduled_class_id: string
+          student_email: string
+          testimonial_approved: boolean | null
+          trainer_quality: number | null
+          venue_quality: number | null
+          would_recommend: boolean | null
+        }
+        Insert: {
+          booking_id: string
+          comments?: string | null
+          course_quality?: number | null
+          created_at?: string | null
+          id?: string
+          rating: number
+          scheduled_class_id: string
+          student_email: string
+          testimonial_approved?: boolean | null
+          trainer_quality?: number | null
+          venue_quality?: number | null
+          would_recommend?: boolean | null
+        }
+        Update: {
+          booking_id?: string
+          comments?: string | null
+          course_quality?: number | null
+          created_at?: string | null
+          id?: string
+          rating?: number
+          scheduled_class_id?: string
+          student_email?: string
+          testimonial_approved?: boolean | null
+          trainer_quality?: number | null
+          venue_quality?: number | null
+          would_recommend?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_feedback_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_feedback_scheduled_class_id_fkey"
+            columns: ["scheduled_class_id"]
+            isOneToOne: false
+            referencedRelation: "scheduled_classes"
             referencedColumns: ["id"]
           },
         ]
@@ -404,6 +470,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_student_token: { Args: never; Returns: string }
       get_next_invoice_number: { Args: never; Returns: string }
     }
     Enums: {

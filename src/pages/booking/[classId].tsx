@@ -74,6 +74,10 @@ export default function BookingPage() {
         ? Number(classData?.course_templates?.price_deposit || 0)
         : Number(classData?.course_templates?.price_full || 0);
 
+      // Generate access token for student portal
+      const { data: tokenData } = await supabase.rpc("generate_student_token");
+      const accessToken = tokenData as string;
+
       const { data: booking, error: bookingError } = await supabase
         .from("bookings")
         .insert({
@@ -85,7 +89,9 @@ export default function BookingPage() {
           status: "pending",
           payment_status: "unpaid",
           total_amount: Number(classData?.course_templates?.price_full || 0),
-          paid_amount: 0
+          paid_amount: 0,
+          access_token: accessToken,
+          token_expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() // 1 year
         })
         .select()
         .single();
@@ -95,21 +101,19 @@ export default function BookingPage() {
       if (bookingError) throw bookingError;
 
       toast({
-        title: "Booking Submitted",
-        description: `Your booking for ${classData?.course_templates?.name} has been created. Redirecting to payment...`
+        title: "Booking confirmed!",
+        description: "Check your email for confirmation and portal access link"
       });
 
-      // TODO: Integrate Stripe payment
-      // For now, redirect to a success page
+      // Redirect to success page or student portal
       setTimeout(() => {
-        router.push(`/booking/success?bookingId=${booking.id}`);
+        router.push(`/student/portal?token=${accessToken}&email=${formData.email}`);
       }, 2000);
 
     } catch (error: any) {
-      console.error("Booking error:", error);
       toast({
-        title: "Booking Failed",
-        description: error.message || "Failed to create booking",
+        title: "Booking failed",
+        description: error.message,
         variant: "destructive"
       });
     } finally {
