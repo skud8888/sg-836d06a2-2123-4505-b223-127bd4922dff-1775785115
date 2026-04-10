@@ -139,6 +139,99 @@ export type Database = {
           },
         ]
       }
+      backup_config: {
+        Row: {
+          backup_location: string | null
+          created_at: string | null
+          enabled: boolean | null
+          encryption_enabled: boolean | null
+          id: string
+          last_backup_at: string | null
+          next_backup_at: string | null
+          notification_emails: string[] | null
+          notify_on_failure: boolean | null
+          retention_days: number
+          schedule: string
+          time: string
+          updated_at: string | null
+        }
+        Insert: {
+          backup_location?: string | null
+          created_at?: string | null
+          enabled?: boolean | null
+          encryption_enabled?: boolean | null
+          id?: string
+          last_backup_at?: string | null
+          next_backup_at?: string | null
+          notification_emails?: string[] | null
+          notify_on_failure?: boolean | null
+          retention_days?: number
+          schedule?: string
+          time?: string
+          updated_at?: string | null
+        }
+        Update: {
+          backup_location?: string | null
+          created_at?: string | null
+          enabled?: boolean | null
+          encryption_enabled?: boolean | null
+          id?: string
+          last_backup_at?: string | null
+          next_backup_at?: string | null
+          notification_emails?: string[] | null
+          notify_on_failure?: boolean | null
+          retention_days?: number
+          schedule?: string
+          time?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      backup_history: {
+        Row: {
+          backup_type: string
+          checksum: string | null
+          completed_at: string | null
+          created_at: string | null
+          duration_seconds: number | null
+          error_message: string | null
+          file_path: string | null
+          id: string
+          rows_backed_up: number | null
+          size_bytes: number | null
+          status: string
+          tables_backed_up: string[] | null
+        }
+        Insert: {
+          backup_type: string
+          checksum?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          duration_seconds?: number | null
+          error_message?: string | null
+          file_path?: string | null
+          id?: string
+          rows_backed_up?: number | null
+          size_bytes?: number | null
+          status: string
+          tables_backed_up?: string[] | null
+        }
+        Update: {
+          backup_type?: string
+          checksum?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          duration_seconds?: number | null
+          error_message?: string | null
+          file_path?: string | null
+          id?: string
+          rows_backed_up?: number | null
+          size_bytes?: number | null
+          status?: string
+          tables_backed_up?: string[] | null
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           access_token: string | null
@@ -1293,6 +1386,60 @@ export type Database = {
           user_email?: string | null
           user_id?: string | null
           user_role?: string | null
+        }
+        Relationships: []
+      }
+      user_feedback: {
+        Row: {
+          assigned_to: string | null
+          category: string
+          created_at: string | null
+          id: string
+          message: string
+          metadata: Json | null
+          priority: string | null
+          rating: number | null
+          resolved_at: string | null
+          screenshot_url: string | null
+          status: string
+          subject: string
+          updated_at: string | null
+          user_email: string
+          user_id: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          category: string
+          created_at?: string | null
+          id?: string
+          message: string
+          metadata?: Json | null
+          priority?: string | null
+          rating?: number | null
+          resolved_at?: string | null
+          screenshot_url?: string | null
+          status?: string
+          subject: string
+          updated_at?: string | null
+          user_email: string
+          user_id?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          category?: string
+          created_at?: string | null
+          id?: string
+          message?: string
+          metadata?: Json | null
+          priority?: string | null
+          rating?: number | null
+          resolved_at?: string | null
+          screenshot_url?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string | null
+          user_email?: string
+          user_id?: string | null
         }
         Relationships: []
       }
