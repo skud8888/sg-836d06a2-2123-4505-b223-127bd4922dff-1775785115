@@ -20,6 +20,7 @@ export type Database = {
           booking_date: string | null
           created_at: string | null
           id: string
+          invoice_generated_at: string | null
           invoice_number: string | null
           notes: string | null
           paid_amount: number | null
@@ -41,6 +42,7 @@ export type Database = {
           booking_date?: string | null
           created_at?: string | null
           id?: string
+          invoice_generated_at?: string | null
           invoice_number?: string | null
           notes?: string | null
           paid_amount?: number | null
@@ -62,6 +64,7 @@ export type Database = {
           booking_date?: string | null
           created_at?: string | null
           id?: string
+          invoice_generated_at?: string | null
           invoice_number?: string | null
           notes?: string | null
           paid_amount?: number | null
@@ -205,6 +208,60 @@ export type Database = {
           },
         ]
       }
+      enquiries: {
+        Row: {
+          course_interest: string | null
+          created_at: string | null
+          email: string
+          id: string
+          message: string | null
+          name: string
+          phone: string | null
+          preferred_dates: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          course_interest?: string | null
+          created_at?: string | null
+          email: string
+          id?: string
+          message?: string | null
+          name: string
+          phone?: string | null
+          preferred_dates?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          course_interest?: string | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          message?: string | null
+          name?: string
+          phone?: string | null
+          preferred_dates?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      invoice_counter: {
+        Row: {
+          current_number: number | null
+          id: number
+        }
+        Insert: {
+          current_number?: number | null
+          id?: number
+        }
+        Update: {
+          current_number?: number | null
+          id?: number
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number
@@ -347,7 +404,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_next_invoice_number: { Args: never; Returns: string }
     }
     Enums: {
       [_ in never]: never

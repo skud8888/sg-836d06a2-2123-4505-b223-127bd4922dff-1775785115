@@ -20,8 +20,11 @@ export function Navigation() {
             <Link href="#features" className="text-sm font-medium hover:text-primary transition-colors">
               Features
             </Link>
-            <Link href="#courses" className="text-sm font-medium hover:text-primary transition-colors">
+            <Link href="/courses" className="text-sm font-medium hover:text-primary transition-colors">
               Courses
+            </Link>
+            <Link href="/contact" className="text-sm font-medium hover:text-primary transition-colors">
+              Contact
             </Link>
             <Link href="#pricing" className="text-sm font-medium hover:text-primary transition-colors">
               Pricing
@@ -55,8 +58,11 @@ export function Navigation() {
             <Link href="#features" className="block py-2 text-sm font-medium hover:text-primary transition-colors">
               Features
             </Link>
-            <Link href="#courses" className="block py-2 text-sm font-medium hover:text-primary transition-colors">
+            <Link href="/courses" className="block py-2 text-sm font-medium hover:text-primary transition-colors">
               Courses
+            </Link>
+            <Link href="/contact" className="block py-2 text-sm font-medium hover:text-primary transition-colors">
+              Contact
             </Link>
             <Link href="#pricing" className="block py-2 text-sm font-medium hover:text-primary transition-colors">
               Pricing
