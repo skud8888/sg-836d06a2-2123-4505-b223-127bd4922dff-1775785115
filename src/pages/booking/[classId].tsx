@@ -14,12 +14,12 @@ import { format } from "date-fns";
 import type { Tables } from "@/integrations/supabase/types";
 
 type ScheduledClass = Tables<"scheduled_classes"> & {
-  course_templates: Pick<Tables<"course_templates">, "name" | "code" | "price" | "deposit_amount"> | null;
+  course_templates: Pick<Tables<"course_templates">, "name" | "code" | "price_full" | "price_deposit"> | null;
 };
 
 export default function BookingPage() {
   const router = useRouter();
-  const { classId } = router.query;
+  const { classId } = router.query as { classId: string };
   const { toast } = useToast();
   
   const [classData, setClassData] = useState<ScheduledClass | null>(null);
@@ -46,7 +46,7 @@ export default function BookingPage() {
       .from("scheduled_classes")
       .select(`
         *,
-        course_templates(name, code, price, deposit_amount)
+        course_templates(name, code, price_full, price_deposit)
       `)
       .eq("id", classId)
       .single();
@@ -71,13 +71,13 @@ export default function BookingPage() {
 
     try {
       const paymentAmount = formData.paymentType === "deposit" 
-        ? classData?.course_templates?.deposit_amount || 0
-        : classData?.course_templates?.price || 0;
+        ? Number(classData?.course_templates?.price_deposit || 0)
+        : Number(classData?.course_templates?.price_full || 0);
 
       const { data: booking, error: bookingError } = await supabase
         .from("bookings")
         .insert({
-          scheduled_class_id: classId as string,
+          scheduled_class_id: classId,
           student_first_name: formData.firstName,
           student_last_name: formData.lastName,
           student_email: formData.email,
@@ -85,7 +85,7 @@ export default function BookingPage() {
           usi_number: formData.usiNumber || null,
           payment_status: "pending",
           attendance_status: "pending",
-          total_amount: classData?.course_templates?.price || 0,
+          total_amount: Number(classData?.course_templates?.price_full || 0),
           paid_amount: 0,
           payment_type: formData.paymentType === "deposit" ? "deposit" : "full"
         })
@@ -147,8 +147,8 @@ export default function BookingPage() {
   }
 
   const paymentAmount = formData.paymentType === "deposit"
-    ? classData.course_templates?.deposit_amount || 0
-    : classData.course_templates?.price || 0;
+    ? Number(classData.course_templates?.price_deposit || 0)
+    : Number(classData.course_templates?.price_full || 0);
 
   return (
     <>
@@ -183,7 +183,7 @@ export default function BookingPage() {
               </div>
               <div className="flex items-center gap-2">
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
-                <span>Total: ${classData.course_templates?.price}</span>
+                <span>Total: ${Number(classData.course_templates?.price_full || 0)}</span>
               </div>
             </CardContent>
           </Card>
@@ -256,13 +256,13 @@ export default function BookingPage() {
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="deposit" id="deposit" />
                       <Label htmlFor="deposit" className="font-normal cursor-pointer">
-                        Pay Deposit (${classData.course_templates?.deposit_amount}) - Secure your spot
+                        Pay Deposit (${Number(classData.course_templates?.price_deposit || 0)}) - Secure your spot
                       </Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="full" id="full" />
                       <Label htmlFor="full" className="font-normal cursor-pointer">
-                        Pay Full Amount (${classData.course_templates?.price})
+                        Pay Full Amount (${Number(classData.course_templates?.price_full || 0)})
                       </Label>
                     </div>
                   </RadioGroup>
@@ -272,7 +272,7 @@ export default function BookingPage() {
                   <p className="text-sm font-semibold mb-1">Payment Due Today: ${paymentAmount}</p>
                   <p className="text-xs text-muted-foreground">
                     {formData.paymentType === "deposit" && 
-                      `Remaining balance of $${(classData.course_templates?.price || 0) - (classData.course_templates?.deposit_amount || 0)} payable before course date`
+                      `Remaining balance of $${Number(classData.course_templates?.price_full || 0) - Number(classData.course_templates?.price_deposit || 0)} payable before course date`
                     }
                   </p>
                 </div>

@@ -25,10 +25,10 @@ export default function CourseManagement() {
     name: "",
     code: "",
     description: "",
-    price: "",
-    deposit_amount: "",
+    price_full: "",
+    price_deposit: "",
     duration_hours: "",
-    units_of_competency: "",
+    units: "",
     max_students: "20"
   });
 
@@ -65,10 +65,10 @@ export default function CourseManagement() {
         name: course.name,
         code: course.code,
         description: course.description || "",
-        price: course.price.toString(),
-        deposit_amount: course.deposit_amount.toString(),
+        price_full: course.price_full.toString(),
+        price_deposit: course.price_deposit.toString(),
         duration_hours: course.duration_hours.toString(),
-        units_of_competency: course.units_of_competency?.join(", ") || "",
+        units: course.units?.join(", ") || "",
         max_students: course.max_students.toString()
       });
     } else {
@@ -77,10 +77,10 @@ export default function CourseManagement() {
         name: "",
         code: "",
         description: "",
-        price: "",
-        deposit_amount: "",
+        price_full: "",
+        price_deposit: "",
         duration_hours: "",
-        units_of_competency: "",
+        units: "",
         max_students: "20"
       });
     }
@@ -94,11 +94,11 @@ export default function CourseManagement() {
       name: formData.name,
       code: formData.code,
       description: formData.description || null,
-      price: parseFloat(formData.price),
-      deposit_amount: parseFloat(formData.deposit_amount),
+      price_full: parseFloat(formData.price_full),
+      price_deposit: parseFloat(formData.price_deposit),
       duration_hours: parseInt(formData.duration_hours),
-      units_of_competency: formData.units_of_competency 
-        ? formData.units_of_competency.split(",").map(u => u.trim())
+      units: formData.units 
+        ? formData.units.split(",").map(u => u.trim())
         : null,
       max_students: parseInt(formData.max_students)
     };
@@ -210,8 +210,8 @@ export default function CourseManagement() {
                       type="number"
                       step="0.01"
                       required
-                      value={formData.price}
-                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                      value={formData.price_full}
+                      onChange={(e) => setFormData({ ...formData, price_full: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
@@ -221,8 +221,8 @@ export default function CourseManagement() {
                       type="number"
                       step="0.01"
                       required
-                      value={formData.deposit_amount}
-                      onChange={(e) => setFormData({ ...formData, deposit_amount: e.target.value })}
+                      value={formData.price_deposit}
+                      onChange={(e) => setFormData({ ...formData, price_deposit: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
@@ -242,8 +242,8 @@ export default function CourseManagement() {
                   <Input
                     id="units"
                     placeholder="HLTAID011, HLTAID009"
-                    value={formData.units_of_competency}
-                    onChange={(e) => setFormData({ ...formData, units_of_competency: e.target.value })}
+                    value={formData.units}
+                    onChange={(e) => setFormData({ ...formData, units: e.target.value })}
                   />
                 </div>
 
@@ -300,11 +300,11 @@ export default function CourseManagement() {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
                       <div>
                         <p className="text-xs text-muted-foreground">Price</p>
-                        <p className="font-semibold">${course.price}</p>
+                        <p className="font-semibold">${course.price_full}</p>
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground">Deposit</p>
-                        <p className="font-semibold">${course.deposit_amount}</p>
+                        <p className="font-semibold">${course.price_deposit}</p>
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground">Duration</p>
@@ -315,10 +315,10 @@ export default function CourseManagement() {
                         <p className="font-semibold">{course.max_students}</p>
                       </div>
                     </div>
-                    {course.units_of_competency && course.units_of_competency.length > 0 && (
+                    {course.units && course.units.length > 0 && (
                       <div className="pt-2">
                         <p className="text-xs text-muted-foreground mb-1">Units</p>
-                        <p className="text-xs">{course.units_of_competency.join(", ")}</p>
+                        <p className="text-xs">{course.units.join(", ")}</p>
                       </div>
                     )}
                   </div>

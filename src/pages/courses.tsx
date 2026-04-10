@@ -11,7 +11,7 @@ import Link from "next/link";
 import type { Tables } from "@/integrations/supabase/types";
 
 type ScheduledClass = Tables<"scheduled_classes"> & {
-  course_templates: Pick<Tables<"course_templates">, "name" | "code" | "description" | "price" | "deposit_amount"> | null;
+  course_templates: Pick<Tables<"course_templates">, "name" | "code" | "description" | "price_full" | "price_deposit"> | null;
   bookings: { count: number }[];
 };
 
@@ -28,7 +28,7 @@ export default function Courses() {
       .from("scheduled_classes")
       .select(`
         *,
-        course_templates(name, code, description, price, deposit_amount),
+        course_templates(name, code, description, price_full, price_deposit),
         bookings(count)
       `)
       .eq("status", "scheduled")
@@ -120,7 +120,7 @@ export default function Courses() {
                         <div className="flex items-center gap-2">
                           <DollarSign className="h-4 w-4 text-muted-foreground" />
                           <span>
-                            ${classItem.course_templates?.price} (${classItem.course_templates?.deposit_amount} deposit to secure)
+                            ${classItem.course_templates?.price_full} (${classItem.course_templates?.price_deposit} deposit to secure)
                           </span>
                         </div>
                       </div>
