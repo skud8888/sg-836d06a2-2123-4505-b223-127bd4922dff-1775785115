@@ -206,18 +206,18 @@ export default function Analytics() {
     }
 
     const totalReviews = feedback.length;
-    const averageRating = feedback.reduce((sum, f) => sum + f.rating_overall, 0) / totalReviews;
+    const averageRating = feedback.reduce((sum, f) => sum + f.rating, 0) / totalReviews;
 
     const ratingBreakdown = [1, 2, 3, 4, 5].map(stars => ({
       stars,
-      count: feedback.filter(f => Math.round(f.rating_overall) === stars).length
+      count: feedback.filter(f => Math.round(f.rating) === stars).length
     }));
 
     const averageByCategory = {
-      overall: feedback.reduce((sum, f) => sum + f.rating_overall, 0) / totalReviews,
-      course: feedback.reduce((sum, f) => sum + f.rating_course_quality, 0) / totalReviews,
-      trainer: feedback.reduce((sum, f) => sum + f.rating_trainer_quality, 0) / totalReviews,
-      venue: feedback.reduce((sum, f) => sum + f.rating_venue_quality, 0) / totalReviews
+      overall: feedback.reduce((sum, f) => sum + f.rating, 0) / totalReviews,
+      course: feedback.reduce((sum, f) => sum + (f.course_quality || 0), 0) / totalReviews,
+      trainer: feedback.reduce((sum, f) => sum + (f.trainer_quality || 0), 0) / totalReviews,
+      venue: feedback.reduce((sum, f) => sum + (f.venue_quality || 0), 0) / totalReviews
     };
 
     setFeedbackStats({
