@@ -62,7 +62,7 @@ export function ActivityFeed({ limit = 20 }: { limit?: number }) {
   const loadActivities = async () => {
     setLoading(true);
 
-    let query = supabase
+    let query = (supabase as any)
       .from("activity_feed")
       .select("*")
       .order("created_at", { ascending: false })

@@ -46,7 +46,7 @@ export function NotificationPreferences() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("notification_preferences")
       .select("*")
       .eq("user_id", user.id)
@@ -67,7 +67,7 @@ export function NotificationPreferences() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from("notification_preferences")
       .update(preferences)
       .eq("user_id", user.id);
