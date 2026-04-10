@@ -9,8 +9,9 @@ import { ArrowLeft, Calendar as CalendarIcon, MapPin, Users, User } from "lucide
 import type { Tables } from "@/integrations/supabase/types";
 
 type ScheduledClass = Tables<"scheduled_classes"> & {
-  course_templates: Pick<Tables<"course_templates">, "name" | "code">;
+  course_templates: Pick<Tables<"course_templates">, "name" | "code"> | null;
   profiles: Pick<Tables<"profiles">, "full_name"> | null;
+  bookings: { count: number }[];
 };
 
 export default function CourseCalendar() {
@@ -49,15 +50,16 @@ export default function CourseCalendar() {
       .from("scheduled_classes")
       .select(`
         *,
-        course_templates!scheduled_classes_course_id_fkey(name, code),
-        profiles!scheduled_classes_trainer_id_fkey(full_name)
+        course_templates(name, code),
+        profiles(full_name),
+        bookings(count)
       `)
       .order("start_datetime", { ascending: true });
 
     console.log("Fetched classes:", { data, error });
 
     if (data) {
-      setClasses(data as ScheduledClass[]);
+      setClasses(data as any as ScheduledClass[]);
     }
   };
 
@@ -163,7 +165,7 @@ export default function CourseCalendar() {
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4 text-muted-foreground" />
                       <span>
-                        {classItem.enrolled_count || 0} / {classItem.max_students} students
+                        {classItem.bookings?.[0]?.count || 0} / {classItem.max_students} students
                       </span>
                     </div>
                   </div>
