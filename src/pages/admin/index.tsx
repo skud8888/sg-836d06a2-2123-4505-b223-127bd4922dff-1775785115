@@ -195,8 +195,8 @@ export default function AdminDashboard() {
                   Add, edit, or remove courses
                 </CardDescription>
               </CardHeader>
-            </Link>
-          </Card>
+            </Card>
+          </Link>
         </div>
       </div>
     </div>
