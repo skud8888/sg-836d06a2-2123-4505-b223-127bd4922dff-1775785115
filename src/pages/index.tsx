@@ -17,7 +17,7 @@ import {
   TrendingUp,
   Clock,
   Award,
-  FileText,
+  File,
   CreditCard,
   Bell,
   Search,
@@ -30,10 +30,123 @@ import {
   PenTool,
   Brain,
   Mail,
-  Activity
+  Activity,
+  Code,
+  Sparkles
 } from "lucide-react";
 
 export default function HomePage() {
+  const features = [
+    {
+      icon: Calendar,
+      title: "Smart Scheduling",
+      description: "Automated course scheduling with conflict detection, calendar sync, and capacity management.",
+      color: "text-blue-600 dark:text-blue-400"
+    },
+    {
+      icon: Users,
+      title: "Student Enrollment",
+      description: "Streamlined enrollment process with online booking, payment integration, and instant confirmations.",
+      color: "text-green-600 dark:text-green-400"
+    },
+    {
+      icon: BookOpen,
+      title: "Course Templates",
+      description: "Reusable course templates with customizable content, pricing, and scheduling rules.",
+      color: "text-orange-600 dark:text-orange-400"
+    },
+    {
+      icon: File,
+      title: "Complete Records",
+      description: "Comprehensive student profiles with enrollment history, documents, and payment tracking.",
+      color: "text-purple-600 dark:text-purple-400"
+    },
+    {
+      icon: BarChart3,
+      title: "Progress Tracking",
+      description: "Monitor student progress, attendance, and performance with detailed analytics.",
+      color: "text-cyan-600 dark:text-cyan-400"
+    },
+    {
+      icon: Bell,
+      title: "Automated Notifications",
+      description: "Email and SMS reminders for upcoming classes, payments, and important updates.",
+      color: "text-yellow-600 dark:text-yellow-400"
+    },
+    {
+      icon: CreditCard,
+      title: "Stripe Integration",
+      description: "Secure online payments with support for full payment, deposits, and installment plans.",
+      color: "text-emerald-600 dark:text-emerald-400"
+    },
+    {
+      icon: File,
+      title: "Automated Receipts",
+      description: "Instant receipt generation and email delivery for all transactions.",
+      color: "text-indigo-600 dark:text-indigo-400"
+    },
+    {
+      icon: BarChart3,
+      title: "Payment Aging Reports",
+      description: "Track outstanding balances, overdue payments, and collection priorities.",
+      color: "text-pink-600 dark:text-pink-400"
+    },
+    {
+      icon: File,
+      title: "Centralized Hub",
+      description: "All documents linked to students, courses, and bookings in one organized system.",
+      color: "text-violet-600 dark:text-violet-400"
+    },
+    {
+      icon: Database,
+      title: "Version Control",
+      description: "Complete document history with version tracking and audit trails.",
+      color: "text-slate-600 dark:text-slate-400"
+    },
+    {
+      icon: PenTool,
+      title: "E-Signatures",
+      description: "Digital signature workflow for contracts, waivers, and enrollment agreements.",
+      color: "text-rose-600 dark:text-rose-400"
+    },
+    {
+      icon: Camera,
+      title: "Evidence Capture",
+      description: "Mobile-optimized tool for capturing attendance photos, assessments, and completed work.",
+      color: "text-teal-600 dark:text-teal-400"
+    },
+    {
+      icon: Shield,
+      title: "Audit Logs",
+      description: "Complete activity trail for GDPR and SOC2 compliance requirements.",
+      color: "text-red-600 dark:text-red-400"
+    },
+    {
+      icon: Lock,
+      title: "Role-Based Access",
+      description: "Granular permissions with 5 predefined roles and custom permission sets.",
+      color: "text-amber-600 dark:text-amber-400"
+    },
+    {
+      icon: Brain,
+      title: "Predictive Analytics",
+      description: "AI-powered predictions for churn risk, upsell opportunities, and no-show alerts.",
+      color: "text-fuchsia-600 dark:text-fuchsia-400"
+    },
+    {
+      icon: Search,
+      title: "Smart Search",
+      description: "Universal Cmd+K search across all records with natural language understanding.",
+      color: "text-sky-600 dark:text-sky-400"
+    },
+    {
+      icon: Zap,
+      title: "Workflow Automation",
+      description: "Automated notifications, reminders, and follow-ups based on booking events.",
+      color: "text-lime-600 dark:text-lime-400"
+    }
+  ];
+
   return (
     <>
       <SEO
