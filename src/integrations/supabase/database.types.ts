@@ -15,6 +15,123 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_action_queue: {
+        Row: {
+          action_type: string
+          approved_at: string | null
+          approved_by: string | null
+          confidence_score: number | null
+          created_at: string | null
+          executed_at: string | null
+          id: string
+          proposed_action: Json
+          reasoning: string | null
+          status: string | null
+          target_entity: string
+          target_id: string
+        }
+        Insert: {
+          action_type: string
+          approved_at?: string | null
+          approved_by?: string | null
+          confidence_score?: number | null
+          created_at?: string | null
+          executed_at?: string | null
+          id?: string
+          proposed_action: Json
+          reasoning?: string | null
+          status?: string | null
+          target_entity: string
+          target_id: string
+        }
+        Update: {
+          action_type?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          confidence_score?: number | null
+          created_at?: string | null
+          executed_at?: string | null
+          id?: string
+          proposed_action?: Json
+          reasoning?: string | null
+          status?: string | null
+          target_entity?: string
+          target_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_action_queue_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_insights: {
+        Row: {
+          confidence_score: number | null
+          created_at: string | null
+          id: string
+          insight_type: string
+          prediction_data: Json
+          recommendation: string | null
+          related_booking_id: string | null
+          related_enquiry_id: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string | null
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string | null
+          id?: string
+          insight_type: string
+          prediction_data: Json
+          recommendation?: string | null
+          related_booking_id?: string | null
+          related_enquiry_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string | null
+          id?: string
+          insight_type?: string
+          prediction_data?: Json
+          recommendation?: string | null
+          related_booking_id?: string | null
+          related_enquiry_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_insights_related_booking_id_fkey"
+            columns: ["related_booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_insights_related_enquiry_id_fkey"
+            columns: ["related_enquiry_id"]
+            isOneToOne: false
+            referencedRelation: "enquiries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_insights_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           access_token: string | null
@@ -358,6 +475,50 @@ export type Database = {
           },
         ]
       }
+      email_parse_logs: {
+        Row: {
+          body_text: string | null
+          created_at: string | null
+          created_enquiry_id: string | null
+          error_message: string | null
+          from_email: string
+          id: string
+          parsed_data: Json | null
+          status: string | null
+          subject: string | null
+        }
+        Insert: {
+          body_text?: string | null
+          created_at?: string | null
+          created_enquiry_id?: string | null
+          error_message?: string | null
+          from_email: string
+          id?: string
+          parsed_data?: Json | null
+          status?: string | null
+          subject?: string | null
+        }
+        Update: {
+          body_text?: string | null
+          created_at?: string | null
+          created_enquiry_id?: string | null
+          error_message?: string | null
+          from_email?: string
+          id?: string
+          parsed_data?: Json | null
+          status?: string | null
+          subject?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_parse_logs_created_enquiry_id_fkey"
+            columns: ["created_enquiry_id"]
+            isOneToOne: false
+            referencedRelation: "enquiries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       enquiries: {
         Row: {
           course_interest: string | null
@@ -554,6 +715,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_churn_risk: { Args: { p_booking_id: string }; Returns: Json }
       create_document_version: {
         Args: {
           p_document_id: string
@@ -562,6 +724,10 @@ export type Database = {
           p_uploaded_by: string
         }
         Returns: string
+      }
+      detect_upsell_opportunities: {
+        Args: { p_booking_id: string }
+        Returns: Json
       }
       generate_student_token: { Args: never; Returns: string }
       get_next_invoice_number: { Args: never; Returns: string }
