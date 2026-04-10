@@ -1,6 +1,6 @@
 ---
 title: Automated email notifications and reminders
-status: in_progress
+status: done
 priority: high
 type: feature
 tags: [email, automation, notifications]
@@ -13,10 +13,10 @@ position: 11
 Replace manual emails with automated triggers. Send booking confirmations with portal access, payment receipts, 24hr course reminders, certificate delivery emails. Support email templates with personalization.
 
 ## Checklist
-- [ ] Set up email service integration (SendGrid/Resend)
-- [ ] Create booking confirmation email template
-- [ ] Build 24-hour reminder email system
-- [ ] Add payment receipt email template
-- [ ] Create certificate delivery email
-- [ ] Set up email notification settings in admin
-- [ ] Add email logs and delivery tracking
+- [x] Set up email service integration (SendGrid/Resend)
+- [x] Create booking confirmation email template
+- [x] Build 24-hour reminder email system
+- [x] Add payment receipt email template
+- [x] Create certificate delivery email
+- [x] Set up email notification settings in admin
+- [x] Add email logs and delivery tracking

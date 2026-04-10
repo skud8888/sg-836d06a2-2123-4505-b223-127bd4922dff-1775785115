@@ -132,9 +132,18 @@ export default function BookingsDashboard() {
   const handleUpdatePaymentStatus = async (paymentStatus: string) => {
     if (!selectedBooking) return;
 
+    const updates: any = { payment_status: paymentStatus };
+    let paymentAmount = 0;
+    
+    // If changing to paid, set the paid amount to total amount
+    if (paymentStatus === "paid" && selectedBooking.payment_status !== "paid") {
+      updates.paid_amount = selectedBooking.total_amount;
+      paymentAmount = selectedBooking.total_amount - selectedBooking.paid_amount;
+    }
+
     const { error } = await supabase
       .from("bookings")
-      .update({ payment_status: paymentStatus })
+      .update(updates)
       .eq("id", selectedBooking.id);
 
     if (error) {
@@ -144,46 +153,15 @@ export default function BookingsDashboard() {
         variant: "destructive"
       });
     } else {
+      // Send payment receipt if marked as paid
+      if (paymentStatus === "paid" && paymentAmount > 0) {
+        const updatedBooking = { ...selectedBooking, ...updates };
+        await emailService.sendPaymentReceipt(updatedBooking as any, paymentAmount);
+      }
+      
       toast({ title: "Payment status updated" });
       fetchBookings();
       setDialogOpen(false);
-    }
-  };
-
-  const handleUpdateBooking = async () => {
-    if (!selectedBooking) return;
-
-    const { error } = await supabase
-      .from("bookings")
-      .update({
-        status: editFormData.status,
-        payment_status: editFormData.payment_status,
-        paid_amount: parseFloat(editFormData.paid_amount)
-      })
-      .eq("id", selectedBooking.id);
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive"
-      });
-    } else {
-      // Check if payment was updated
-      const oldPaidAmount = selectedBooking.paid_amount;
-      const newPaidAmount = parseFloat(editFormData.paid_amount);
-      
-      if (newPaidAmount > oldPaidAmount) {
-        // Payment was added, send receipt email
-        const paymentAmount = newPaidAmount - oldPaidAmount;
-        const updatedBooking = { ...selectedBooking, paid_amount: newPaidAmount };
-        await emailService.sendPaymentReceipt(updatedBooking, paymentAmount);
-      }
-
-      toast({ title: "Booking updated successfully" });
-      setDetailsDialogOpen(false);
-      setSelectedBooking(null);
-      fetchBookings();
     }
   };
 

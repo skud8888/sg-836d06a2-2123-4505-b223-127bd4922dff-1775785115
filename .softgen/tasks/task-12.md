@@ -1,6 +1,6 @@
 ---
 title: Analytics and reporting dashboard
-status: in_progress
+status: done
 priority: medium
 type: feature
 tags: [analytics, reporting, insights]
@@ -13,11 +13,11 @@ position: 12
 Build comprehensive analytics dashboard for business insights. Track revenue by course, enrollment trends, payment collection rates, trainer utilization, student satisfaction scores, conversion rates from enquiries.
 
 ## Checklist
-- [ ] Create analytics dashboard page
-- [ ] Add revenue charts (by course, by month)
-- [ ] Build enrollment trends visualization
-- [ ] Add payment collection metrics
-- [ ] Create trainer utilization reports
-- [ ] Add student satisfaction scores from feedback
-- [ ] Build enquiry conversion funnel
-- [ ] Add export functionality for reports
+- [x] Create analytics dashboard page
+- [x] Add revenue charts (by course, by month)
+- [x] Build enrollment trends visualization
+- [x] Add payment collection metrics
+- [x] Create trainer utilization reports
+- [x] Add student satisfaction scores from feedback
+- [x] Build enquiry conversion funnel
+- [x] Add export functionality for reports
