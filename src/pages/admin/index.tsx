@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import { Navigation } from "@/components/Navigation";
 import { AdminWelcomeTour } from "@/components/AdminWelcomeTour";
+import { ActivityFeed } from "@/components/ActivityFeed";
 import { supabase } from "@/integrations/supabase/client";
 import { rbacService } from "@/services/rbacService";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -178,32 +179,40 @@ export default function AdminDashboard() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {dashboardCards
-            .filter(card => card.show !== false)
-            .map((card, index) => (
-              <Link key={index} href={card.href}>
-                <Card 
-                  className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer"
-                  data-tour={card.tourId}
-                >
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className={`h-12 w-12 rounded-lg bg-background flex items-center justify-center group-hover:scale-110 transition-transform ${card.color}`}>
-                        <card.icon className="h-6 w-6" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          {/* Main dashboard cards */}
+          <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+            {dashboardCards
+              .filter(card => card.show !== false)
+              .map((card, index) => (
+                <Link key={index} href={card.href}>
+                  <Card 
+                    className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+                    data-tour={card.tourId}
+                  >
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className={`h-12 w-12 rounded-lg bg-background flex items-center justify-center group-hover:scale-110 transition-transform ${card.color}`}>
+                          <card.icon className="h-6 w-6" />
+                        </div>
+                        {card.badge && (
+                          <Badge variant="secondary" className="text-xs">
+                            {card.badge}
+                          </Badge>
+                        )}
                       </div>
-                      {card.badge && (
-                        <Badge variant="secondary" className="text-xs">
-                          {card.badge}
-                        </Badge>
-                      )}
-                    </div>
-                    <CardTitle className="mt-4">{card.title}</CardTitle>
-                    <CardDescription>{card.description}</CardDescription>
-                  </CardHeader>
-                </Card>
-              </Link>
-            ))}
+                      <CardTitle className="mt-4">{card.title}</CardTitle>
+                      <CardDescription>{card.description}</CardDescription>
+                    </CardHeader>
+                  </Card>
+                </Link>
+              ))}
+          </div>
+
+          {/* Activity Feed */}
+          <div className="lg:col-span-1">
+            <ActivityFeed limit={15} />
+          </div>
         </div>
       </div>
     </div>

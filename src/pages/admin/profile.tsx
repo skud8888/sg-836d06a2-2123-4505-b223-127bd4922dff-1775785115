@@ -2,95 +2,84 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { Navigation } from "@/components/Navigation";
+import { NotificationPreferences } from "@/components/NotificationPreferences";
 import { supabase } from "@/integrations/supabase/client";
 import { rbacService } from "@/services/rbacService";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, User, Lock, Bell, Palette, Shield, Calendar, Loader2 } from "lucide-react";
+import { 
+  ArrowLeft, 
+  User, 
+  Mail, 
+  Phone, 
+  Shield, 
+  Key, 
+  Bell,
+  Upload,
+  Loader2,
+  Calendar,
+  Activity
+} from "lucide-react";
 import { format } from "date-fns";
-
-type UserProfile = {
-  id: string;
-  email: string;
-  created_at: string;
-  roles: string[];
-  user_metadata: any;
-};
 
 export default function AdminProfile() {
   const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [user, setUser] = useState<any>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [userRoles, setUserRoles] = useState<string[]>([]);
   
-  // Profile form
+  // Profile form state
   const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
   
-  // Password form
+  // Password change state
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  
-  // Preferences
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [smsNotifications, setSmsNotifications] = useState(false);
-  const [theme, setTheme] = useState("light");
-  const [language, setLanguage] = useState("en");
 
   useEffect(() => {
     loadProfile();
   }, []);
 
   const loadProfile = async () => {
-    setLoading(true);
-
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       router.push("/admin/login");
       return;
     }
 
-    const roles = await rbacService.getUserRoles(user.id);
-
-    setProfile({
-      id: user.id,
-      email: user.email || "",
-      created_at: user.created_at,
-      roles: roles.map(r => r.role),
-      user_metadata: user.user_metadata || {}
-    });
-
-    // Load preferences from metadata
+    setUser(user);
+    setEmail(user.email || "");
     setFullName(user.user_metadata?.full_name || "");
     setPhone(user.user_metadata?.phone || "");
-    setEmailNotifications(user.user_metadata?.email_notifications !== false);
-    setSmsNotifications(user.user_metadata?.sms_notifications === true);
-    setTheme(user.user_metadata?.theme || localStorage.getItem("theme") || "light");
-    setLanguage(user.user_metadata?.language || "en");
+    setAvatarUrl(user.user_metadata?.avatar_url || "");
 
+    const role = await rbacService.getUserPrimaryRole();
+    const roles = await rbacService.getUserRoles();
+    setUserRole(role);
+    setUserRoles(roles.map(r => r.role));
     setLoading(false);
   };
 
-  const handleUpdateProfile = async () => {
+  const updateProfile = async () => {
     setSaving(true);
 
     const { error } = await supabase.auth.updateUser({
       data: {
         full_name: fullName,
-        phone: phone,
-        email_notifications: emailNotifications,
-        sms_notifications: smsNotifications,
-        theme: theme,
-        language: language
+        phone,
+        avatar_url: avatarUrl
       }
     });
 
@@ -103,19 +92,18 @@ export default function AdminProfile() {
     } else {
       toast({
         title: "Profile updated",
-        description: "Your profile has been updated successfully"
+        description: "Your profile information has been saved"
       });
       loadProfile();
     }
-
     setSaving(false);
   };
 
-  const handleChangePassword = async () => {
+  const changePassword = async () => {
     if (newPassword !== confirmPassword) {
       toast({
-        title: "Passwords don't match",
-        description: "Please ensure your new passwords match",
+        title: "Error",
+        description: "New passwords do not match",
         variant: "destructive"
       });
       return;
@@ -123,7 +111,7 @@ export default function AdminProfile() {
 
     if (newPassword.length < 8) {
       toast({
-        title: "Password too short",
+        title: "Error",
         description: "Password must be at least 8 characters",
         variant: "destructive"
       });
@@ -151,20 +139,7 @@ export default function AdminProfile() {
       setNewPassword("");
       setConfirmPassword("");
     }
-
     setSaving(false);
-  };
-
-  const handleThemeChange = (newTheme: string) => {
-    setTheme(newTheme);
-    localStorage.setItem("theme", newTheme);
-    
-    if (newTheme === "auto") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-      document.documentElement.classList.toggle("dark", systemTheme === "dark");
-    } else {
-      document.documentElement.classList.toggle("dark", newTheme === "dark");
-    }
   };
 
   const getRoleBadgeColor = (role: string) => {
@@ -186,15 +161,11 @@ export default function AdminProfile() {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
-        <div className="container mx-auto px-4 py-8 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="container mx-auto px-4 py-8">
+          <p>Loading...</p>
         </div>
       </div>
     );
-  }
-
-  if (!profile) {
-    return null;
   }
 
   return (
@@ -208,91 +179,96 @@ export default function AdminProfile() {
               Back to Dashboard
             </Button>
           </Link>
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold">Profile Settings</h1>
-              <p className="text-muted-foreground">Manage your account and preferences</p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {profile.roles.map((role) => (
-                <Badge key={role} className={getRoleBadgeColor(role)}>
-                  {role.replace("_", " ")}
-                </Badge>
-              ))}
-            </div>
-          </div>
+          <h1 className="text-3xl font-bold">Profile Settings</h1>
+          <p className="text-muted-foreground">Manage your account settings and preferences</p>
         </div>
 
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid grid-cols-3 w-full max-w-md">
             <TabsTrigger value="profile">
               <User className="h-4 w-4 mr-2" />
               Profile
             </TabsTrigger>
             <TabsTrigger value="security">
-              <Lock className="h-4 w-4 mr-2" />
+              <Key className="h-4 w-4 mr-2" />
               Security
             </TabsTrigger>
             <TabsTrigger value="notifications">
               <Bell className="h-4 w-4 mr-2" />
               Notifications
             </TabsTrigger>
-            <TabsTrigger value="preferences">
-              <Palette className="h-4 w-4 mr-2" />
-              Preferences
-            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="profile">
+          {/* Profile Tab */}
+          <TabsContent value="profile" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Personal Information</CardTitle>
-                <CardDescription>Update your profile details</CardDescription>
+                <CardTitle>Profile Information</CardTitle>
+                <CardDescription>Update your personal information and avatar</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={profile.email}
-                    disabled
-                    className="bg-muted"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Email cannot be changed. Contact support if you need to update it.
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name</Label>
-                  <Input
-                    id="fullName"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder="John Smith"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+61 412 345 678"
-                  />
-                </div>
-
-                <div className="pt-4 border-t">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
-                    <span>Member since {format(new Date(profile.created_at), "MMMM d, yyyy")}</span>
+              <CardContent className="space-y-6">
+                <div className="flex items-center gap-6">
+                  <Avatar className="h-24 w-24">
+                    <AvatarImage src={avatarUrl} />
+                    <AvatarFallback className="text-2xl">
+                      {fullName?.charAt(0) || email?.charAt(0) || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <Button variant="outline" size="sm">
+                      <Upload className="h-4 w-4 mr-2" />
+                      Change Avatar
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      JPG, PNG or GIF. Max 2MB.
+                    </p>
                   </div>
                 </div>
 
-                <Button onClick={handleUpdateProfile} disabled={saving} className="w-full">
+                <div className="grid gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="fullName">Full Name</Label>
+                    <Input
+                      id="fullName"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      placeholder="John Smith"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="email">
+                      <Mail className="h-4 w-4 inline mr-2" />
+                      Email
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={email}
+                      disabled
+                      className="bg-muted"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Contact support to change your email address
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">
+                      <Phone className="h-4 w-4 inline mr-2" />
+                      Phone Number
+                    </Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="+1 (555) 000-0000"
+                    />
+                  </div>
+                </div>
+
+                <Button onClick={updateProfile} disabled={saving}>
                   {saving ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -304,13 +280,63 @@ export default function AdminProfile() {
                 </Button>
               </CardContent>
             </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5" />
+                  Roles & Permissions
+                </CardTitle>
+                <CardDescription>Your assigned roles in the system</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {userRoles.map((role) => (
+                    <Badge key={role} className={getRoleBadgeColor(role)}>
+                      {role.replace("_", " ").toUpperCase()}
+                    </Badge>
+                  ))}
+                </div>
+                <p className="text-sm text-muted-foreground mt-4">
+                  Contact a Super Admin to modify your roles
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5" />
+                  Account Details
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Account Created</span>
+                  <span className="text-sm font-medium">
+                    {format(new Date(user?.created_at), "PPP")}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Last Sign In</span>
+                  <span className="text-sm font-medium">
+                    {user?.last_sign_in_at ? format(new Date(user.last_sign_in_at), "PPp") : "Never"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">User ID</span>
+                  <span className="text-sm font-mono">{user?.id.substring(0, 8)}...</span>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
-          <TabsContent value="security">
+          {/* Security Tab */}
+          <TabsContent value="security" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Change Password</CardTitle>
-                <CardDescription>Update your account password</CardDescription>
+                <CardDescription>Update your password to keep your account secure</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
@@ -322,9 +348,6 @@ export default function AdminProfile() {
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="Enter new password"
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Must be at least 8 characters
-                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -338,11 +361,16 @@ export default function AdminProfile() {
                   />
                 </div>
 
-                <Button
-                  onClick={handleChangePassword}
-                  disabled={saving || !newPassword || !confirmPassword}
-                  className="w-full"
-                >
+                <div className="bg-muted p-4 rounded-lg">
+                  <p className="text-sm font-medium mb-2">Password requirements:</p>
+                  <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                    <li>At least 8 characters long</li>
+                    <li>Mix of uppercase and lowercase letters</li>
+                    <li>At least one number or special character</li>
+                  </ul>
+                </div>
+
+                <Button onClick={changePassword} disabled={saving || !newPassword || !confirmPassword}>
                   {saving ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -352,125 +380,28 @@ export default function AdminProfile() {
                     "Change Password"
                   )}
                 </Button>
+              </CardContent>
+            </Card>
 
-                <div className="pt-4 border-t">
-                  <div className="flex items-center gap-2">
-                    <Shield className="h-5 w-5 text-green-600" />
-                    <div>
-                      <p className="font-medium">Account Security</p>
-                      <p className="text-sm text-muted-foreground">
-                        Your account is protected with Supabase authentication
-                      </p>
-                    </div>
-                  </div>
-                </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Two-Factor Authentication</CardTitle>
+                <CardDescription>Add an extra layer of security to your account</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Two-factor authentication is not yet enabled for your account.
+                </p>
+                <Button variant="outline" disabled>
+                  Enable 2FA (Coming Soon)
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>
 
+          {/* Notifications Tab */}
           <TabsContent value="notifications">
-            <Card>
-              <CardHeader>
-                <CardTitle>Notification Preferences</CardTitle>
-                <CardDescription>Manage how you receive notifications</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="emailNotif">Email Notifications</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Receive booking confirmations, updates, and reminders via email
-                    </p>
-                  </div>
-                  <Switch
-                    id="emailNotif"
-                    checked={emailNotifications}
-                    onCheckedChange={setEmailNotifications}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="smsNotif">SMS Notifications</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Receive urgent alerts and reminders via SMS
-                    </p>
-                  </div>
-                  <Switch
-                    id="smsNotif"
-                    checked={smsNotifications}
-                    onCheckedChange={setSmsNotifications}
-                  />
-                </div>
-
-                <Button onClick={handleUpdateProfile} disabled={saving} className="w-full">
-                  {saving ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    "Save Preferences"
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="preferences">
-            <Card>
-              <CardHeader>
-                <CardTitle>Display Preferences</CardTitle>
-                <CardDescription>Customize your experience</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="theme">Theme</Label>
-                  <Select value={theme} onValueChange={handleThemeChange}>
-                    <SelectTrigger id="theme">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="light">Light</SelectItem>
-                      <SelectItem value="dark">Dark</SelectItem>
-                      <SelectItem value="auto">Auto (System)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">
-                    Choose your preferred color theme
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="language">Language</Label>
-                  <Select value={language} onValueChange={setLanguage}>
-                    <SelectTrigger id="language">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="es">Español</SelectItem>
-                      <SelectItem value="fr">Français</SelectItem>
-                      <SelectItem value="de">Deutsch</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">
-                    Select your preferred language (UI coming soon)
-                  </p>
-                </div>
-
-                <Button onClick={handleUpdateProfile} disabled={saving} className="w-full">
-                  {saving ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    "Save Preferences"
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
+            <NotificationPreferences />
           </TabsContent>
         </Tabs>
       </div>
