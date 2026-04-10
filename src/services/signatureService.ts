@@ -50,10 +50,11 @@ export const signatureService = {
   async sendSignatureRequestEmail(request: SignatureRequest): Promise<void> {
     const signUrl = `${window.location.origin}/sign/${request.id}`;
 
-    await emailService.sendEmail({
-      to: request.recipient_email,
-      subject: `Signature Required: ${request.document_type.replace(/_/g, " ")}`,
-      html: `
+    await emailService.sendEmail(
+      request.recipient_email,
+      {
+        subject: `Signature Required: ${request.document_type.replace(/_/g, " ")}`,
+        html: `
         <h2>Document Signature Request</h2>
         <p>Hello ${request.recipient_name},</p>
         <p>You have been requested to sign the following document:</p>
@@ -67,7 +68,8 @@ export const signatureService = {
         <p>This signature request will expire on ${new Date(request.expires_at!).toLocaleDateString()}.</p>
         <p>If you have any questions, please contact us.</p>
       `,
-    });
+      }
+    );
 
     // Update status to sent
     await supabase
@@ -119,10 +121,11 @@ export const signatureService = {
    * Send signature completed notification
    */
   async sendSignatureCompletedEmail(request: SignatureRequest): Promise<void> {
-    await emailService.sendEmail({
-      to: request.recipient_email,
-      subject: "Document Signed Successfully",
-      html: `
+    await emailService.sendEmail(
+      request.recipient_email,
+      {
+        subject: "Document Signed Successfully",
+        html: `
         <h2>Signature Completed</h2>
         <p>Hello ${request.recipient_name},</p>
         <p>Your signature has been successfully recorded for:</p>
@@ -131,7 +134,8 @@ export const signatureService = {
         <p>You will receive a copy of the signed document shortly.</p>
         <p>Thank you!</p>
       `,
-    });
+      }
+    );
   },
 
   /**
