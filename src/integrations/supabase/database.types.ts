@@ -229,6 +229,42 @@ export type Database = {
           },
         ]
       }
+      contract_templates: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          document_type: string
+          id: string
+          is_active: boolean | null
+          name: string
+          template_content: string
+          updated_at: string | null
+          variables: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          document_type: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          template_content: string
+          updated_at?: string | null
+          variables?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          document_type?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          template_content?: string
+          updated_at?: string | null
+          variables?: Json | null
+        }
+        Relationships: []
+      }
       course_feedback: {
         Row: {
           booking_id: string
@@ -1011,6 +1047,156 @@ export type Database = {
           },
         ]
       }
+      signature_requests: {
+        Row: {
+          booking_id: string | null
+          contract_template_id: string | null
+          created_at: string | null
+          declined_at: string | null
+          document_type: string
+          expires_at: string | null
+          id: string
+          last_reminder_at: string | null
+          metadata: Json | null
+          recipient_email: string
+          recipient_name: string
+          reminder_sent_count: number | null
+          sent_at: string | null
+          signature_data: string | null
+          signed_at: string | null
+          signed_document_id: string | null
+          signer_ip: string | null
+          status: string
+          updated_at: string | null
+          viewed_at: string | null
+        }
+        Insert: {
+          booking_id?: string | null
+          contract_template_id?: string | null
+          created_at?: string | null
+          declined_at?: string | null
+          document_type: string
+          expires_at?: string | null
+          id?: string
+          last_reminder_at?: string | null
+          metadata?: Json | null
+          recipient_email: string
+          recipient_name: string
+          reminder_sent_count?: number | null
+          sent_at?: string | null
+          signature_data?: string | null
+          signed_at?: string | null
+          signed_document_id?: string | null
+          signer_ip?: string | null
+          status?: string
+          updated_at?: string | null
+          viewed_at?: string | null
+        }
+        Update: {
+          booking_id?: string | null
+          contract_template_id?: string | null
+          created_at?: string | null
+          declined_at?: string | null
+          document_type?: string
+          expires_at?: string | null
+          id?: string
+          last_reminder_at?: string | null
+          metadata?: Json | null
+          recipient_email?: string
+          recipient_name?: string
+          reminder_sent_count?: number | null
+          sent_at?: string | null
+          signature_data?: string | null
+          signed_at?: string | null
+          signed_document_id?: string | null
+          signer_ip?: string | null
+          status?: string
+          updated_at?: string | null
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signature_requests_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "signature_requests_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "payment_tracking"
+            referencedColumns: ["booking_id"]
+          },
+        ]
+      }
+      stripe_payments: {
+        Row: {
+          amount: number
+          booking_id: string | null
+          created_at: string | null
+          currency: string | null
+          id: string
+          metadata: Json | null
+          payment_method: string | null
+          receipt_url: string | null
+          refund_id: string | null
+          refunded_amount: number | null
+          status: string
+          stripe_checkout_session_id: string | null
+          stripe_payment_intent_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          booking_id?: string | null
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          metadata?: Json | null
+          payment_method?: string | null
+          receipt_url?: string | null
+          refund_id?: string | null
+          refunded_amount?: number | null
+          status: string
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          booking_id?: string | null
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          metadata?: Json | null
+          payment_method?: string | null
+          receipt_url?: string | null
+          refund_id?: string | null
+          refunded_amount?: number | null
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stripe_payments_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stripe_payments_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "payment_tracking"
+            referencedColumns: ["booking_id"]
+          },
+        ]
+      }
       system_audit_logs: {
         Row: {
           action: string
@@ -1126,6 +1312,14 @@ export type Database = {
     }
     Functions: {
       calculate_churn_risk: { Args: { p_booking_id: string }; Returns: Json }
+      complete_signature: {
+        Args: {
+          p_request_id: string
+          p_signature_data: string
+          p_signer_ip: string
+        }
+        Returns: string
+      }
       create_document_version: {
         Args: {
           p_document_id: string
@@ -1167,6 +1361,10 @@ export type Database = {
       }
       schedule_payment_reminder: {
         Args: { p_booking_id: string }
+        Returns: undefined
+      }
+      send_signature_reminder: {
+        Args: { p_request_id: string }
         Returns: undefined
       }
       universal_search: {

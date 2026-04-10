@@ -97,7 +97,7 @@ export default function BookingPage() {
       if (error) throw error;
 
       // Send confirmation email
-      await emailService.sendBookingConfirmation(booking);
+      await emailService.sendBookingConfirmation(booking as any);
 
       setBookingId(booking.id);
 

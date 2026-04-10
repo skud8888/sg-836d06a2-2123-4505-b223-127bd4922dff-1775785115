@@ -22,7 +22,7 @@ export function StripeCheckout({
 }: StripeCheckoutProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [paymentType, setPaymentType] = useState<"full" | "deposit">("full");
+  const [paymentType, setPaymentType] = useState<"full" | "deposit" | "custom">("full");
   const [customAmount, setCustomAmount] = useState<string>("");
 
   const depositAmount = totalAmount * 0.3; // 30% deposit
