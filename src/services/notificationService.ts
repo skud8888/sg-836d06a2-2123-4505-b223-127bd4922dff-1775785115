@@ -53,14 +53,14 @@ export const notificationService = {
         }
         
         // Determine channel based on SMS preferences
-        if (prefs.sms_new_booking && type === "booking_confirmation") {
-          channel = recipientPhone ? "both" : "email";
-        }
-        if (prefs.sms_payment_received && type === "payment_receipt") {
-          channel = recipientPhone ? "both" : "email";
-        }
-        if (prefs.sms_course_reminder && type === "course_reminder") {
-          channel = recipientPhone ? "both" : "email";
+        let useSms = false;
+        if (prefs.sms_new_booking && type === "booking_confirmation") useSms = true;
+        if (prefs.sms_payment_received && type === "payment_receipt") useSms = true;
+        if (prefs.sms_course_reminder && type === "course_reminder") useSms = true;
+        
+        if (useSms && recipientPhone) {
+          channel = enabled ? "both" : "sms";
+          enabled = true; // Overall notification is enabled if SMS is enabled
         }
       }
 
