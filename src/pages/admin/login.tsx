@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Lock, Loader2 } from "lucide-react";
+import Link from "next/link";
 
 export default function AdminLogin() {
   const router = useRouter();
@@ -110,26 +111,13 @@ export default function AdminLogin() {
             </Button>
           </form>
 
-          <div className="mt-6 space-y-3">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
-                  Demo Credentials
-                </span>
-              </div>
-            </div>
-            <div className="text-xs text-muted-foreground space-y-1 bg-muted/50 p-3 rounded">
-              <p><strong>Note:</strong> Create admin users via Supabase Dashboard:</p>
-              <ol className="list-decimal ml-4 mt-2 space-y-1">
-                <li>Go to Supabase → Authentication → Users</li>
-                <li>Click "Add user" → Enter email/password</li>
-                <li>After creating, go to Admin → User Management</li>
-                <li>Assign "Super Admin" or "Admin" role</li>
-              </ol>
-            </div>
+          <div className="mt-6 text-center">
+            <p className="text-sm text-muted-foreground">
+              Don&apos;t have an account?{" "}
+              <Link href="/admin/signup" className="text-primary hover:underline font-medium">
+                Create admin account
+              </Link>
+            </p>
           </div>
         </CardContent>
       </Card>
