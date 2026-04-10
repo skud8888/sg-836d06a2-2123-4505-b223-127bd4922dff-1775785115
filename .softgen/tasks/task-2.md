@@ -1,6 +1,6 @@
 ---
 title: Build booking system with Stripe integration
-status: todo
+status: in_progress
 priority: high
 type: feature
 tags: [booking, payments, stripe]
@@ -15,12 +15,14 @@ Replace Amelia booking system with native booking flow. Include course selection
 Database schema: ✅ Complete
 Admin dashboard: ✅ Ready
 Test data: ✅ Seeded
+Public booking: ✅ Live
+Course management: ✅ Complete
 
 ## Checklist
 - [x] Database schema for courses, classes, bookings, payments
 - [x] Admin authentication and dashboard
-- [ ] Create public course listing page with available classes
-- [ ] Build booking form (student details, payment selection)
+- [x] Create public course listing page with available classes
+- [x] Build booking form (student details, payment selection)
 - [ ] Integrate Stripe payment processing
 - [ ] Set up automated confirmation emails
 - [ ] Create invoice generation workflow
