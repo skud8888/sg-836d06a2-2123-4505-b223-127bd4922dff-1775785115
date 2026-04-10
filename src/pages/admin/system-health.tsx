@@ -161,7 +161,7 @@ export default function SystemHealth() {
     );
   }
 
-  const services = healthData?.services || {};
+  const services = healthData?.services || ({} as any);
   const system = healthData?.system;
 
   return (
