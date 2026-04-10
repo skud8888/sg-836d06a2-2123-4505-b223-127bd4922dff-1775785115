@@ -21,7 +21,8 @@ import {
   Shield,
   DollarSign,
   User,
-  Activity
+  Activity,
+  Database
 } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -167,6 +168,15 @@ export default function AdminDashboard() {
       color: "text-teal-600 dark:text-teal-400",
       badge: "NEW",
       show: userRole === "super_admin" || userRole === "admin"
+    },
+    {
+      title: "Backups",
+      description: "Database backups",
+      icon: Database,
+      href: "/admin/backups",
+      color: "text-violet-600 dark:text-violet-400",
+      badge: "NEW",
+      show: userRole === "super_admin"
     }
   ];
 
