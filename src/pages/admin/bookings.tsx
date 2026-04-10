@@ -1,30 +1,33 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import { Navigation } from "@/components/Navigation";
 import { supabase } from "@/integrations/supabase/client";
+import { emailService } from "@/services/emailService";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DocumentUpload } from "@/components/DocumentUpload";
+import { DocumentList } from "@/components/DocumentList";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Search, Filter, Edit, DollarSign, Mail, Phone, Calendar, User } from "lucide-react";
+import { Search, Users, DollarSign, Calendar, Mail, Phone, FileText, Upload } from "lucide-react";
 import { format } from "date-fns";
-import Link from "next/link";
 import type { Tables } from "@/integrations/supabase/types";
-import { emailService } from "@/services/emailService";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 type Booking = Tables<"bookings"> & {
-  scheduled_classes: {
-    start_datetime: string;
-    course_templates: {
-      name: string;
-      code: string;
-    } | null;
-  } | null;
+  scheduled_classes: (Tables<"scheduled_classes"> & {
+    course_templates: Pick<Tables<"course_templates">, "name" | "code"> | null;
+  }) | null;
 };
 
 export default function BookingsDashboard() {
@@ -380,128 +383,166 @@ export default function BookingsDashboard() {
 
         {/* Booking Details Dialog */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Booking Details</DialogTitle>
               <DialogDescription>
-                View and update booking information
+                View and manage booking information
               </DialogDescription>
             </DialogHeader>
             {selectedBooking && (
-              <div className="space-y-6">
-                {/* Student Info */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold">Student Information</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Name</Label>
-                      <p className="font-medium">{selectedBooking.student_name}</p>
-                    </div>
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Email</Label>
-                      <p className="font-medium">{selectedBooking.student_email}</p>
-                    </div>
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Phone</Label>
-                      <p className="font-medium">{selectedBooking.student_phone}</p>
-                    </div>
-                    <div>
-                      <Label className="text-xs text-muted-foreground">USI Number</Label>
-                      <p className="font-medium">{selectedBooking.usi_number || "Not provided"}</p>
-                    </div>
-                  </div>
-                </div>
+              <Tabs defaultValue="details" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="details">Details & Payment</TabsTrigger>
+                  <TabsTrigger value="documents">Documents</TabsTrigger>
+                </TabsList>
 
-                {/* Course Info */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold">Course Information</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Course</Label>
-                      <p className="font-medium">
-                        {selectedBooking.scheduled_classes?.course_templates?.name || "N/A"}
-                      </p>
-                    </div>
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Date</Label>
-                      <p className="font-medium">
-                        {selectedBooking.scheduled_classes?.start_datetime
-                          ? format(new Date(selectedBooking.scheduled_classes.start_datetime), "EEEE, MMMM d, yyyy")
-                          : "N/A"}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                <TabsContent value="details" className="space-y-6 mt-4">
+                  <div className="grid gap-6">
+                    {/* Student Information */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">Student Information</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label className="text-muted-foreground">Name</Label>
+                            <p className="font-medium">{selectedBooking.student_name}</p>
+                          </div>
+                          <div>
+                            <Label className="text-muted-foreground">USI Number</Label>
+                            <p className="font-medium">{selectedBooking.usi_number || "Not provided"}</p>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-4 w-4 text-muted-foreground" />
+                            <a href={`mailto:${selectedBooking.student_email}`} className="text-primary hover:underline">
+                              {selectedBooking.student_email}
+                            </a>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Phone className="h-4 w-4 text-muted-foreground" />
+                            <a href={`tel:${selectedBooking.student_phone}`} className="text-primary hover:underline">
+                              {selectedBooking.student_phone}
+                            </a>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
 
-                {/* Payment Info */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold">Payment Information</h3>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Total Amount</Label>
-                      <p className="font-medium text-lg">${selectedBooking.total_amount}</p>
-                    </div>
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Paid</Label>
-                      <p className="font-medium text-lg text-green-600">${selectedBooking.paid_amount}</p>
-                    </div>
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Remaining</Label>
-                      <p className="font-medium text-lg text-red-600">
-                        ${selectedBooking.total_amount - selectedBooking.paid_amount}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                    {/* Course Information */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">Course Information</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div>
+                          <Label className="text-muted-foreground">Course</Label>
+                          <p className="font-medium">
+                            {selectedBooking.scheduled_classes?.course_templates?.name || "Unknown Course"}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {selectedBooking.scheduled_classes?.course_templates?.code}
+                          </p>
+                        </div>
+                        <div>
+                          <Label className="text-muted-foreground">Schedule</Label>
+                          <p className="font-medium flex items-center gap-2">
+                            <Calendar className="h-4 w-4" />
+                            {selectedBooking.scheduled_classes?.start_datetime 
+                              ? format(new Date(selectedBooking.scheduled_classes.start_datetime), "PPP 'at' p")
+                              : "Not scheduled"}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
 
-                {/* Status Updates */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold">Update Status</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Booking Status</Label>
-                      <Select
-                        value={selectedBooking.status}
-                        onValueChange={handleUpdateStatus}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="pending">Pending</SelectItem>
-                          <SelectItem value="confirmed">Confirmed</SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
-                          <SelectItem value="cancelled">Cancelled</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Payment Status</Label>
-                      <Select
-                        value={selectedBooking.payment_status}
-                        onValueChange={handleUpdatePaymentStatus}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="unpaid">Unpaid</SelectItem>
-                          <SelectItem value="partial">Partial</SelectItem>
-                          <SelectItem value="paid">Paid</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
+                    {/* Status & Payment */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">Status & Payment</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label>Booking Status</Label>
+                            <Select 
+                              value={selectedBooking.status} 
+                              onValueChange={(value) => handleUpdateStatus(value)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="pending">Pending</SelectItem>
+                                <SelectItem value="confirmed">Confirmed</SelectItem>
+                                <SelectItem value="completed">Completed</SelectItem>
+                                <SelectItem value="cancelled">Cancelled</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label>Payment Status</Label>
+                            <Select 
+                              value={selectedBooking.payment_status} 
+                              onValueChange={(value) => handleUpdatePaymentStatus(value)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="unpaid">Unpaid</SelectItem>
+                                <SelectItem value="partial">Partial</SelectItem>
+                                <SelectItem value="paid">Paid</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
 
-                {/* Notes */}
-                {selectedBooking.notes && (
-                  <div className="space-y-2">
-                    <Label>Notes</Label>
-                    <Textarea value={selectedBooking.notes} readOnly rows={3} />
+                        <div className="grid grid-cols-3 gap-4 p-4 bg-muted rounded-lg">
+                          <div>
+                            <Label className="text-muted-foreground text-xs">Total Amount</Label>
+                            <p className="text-lg font-bold">${selectedBooking.total_amount}</p>
+                          </div>
+                          <div>
+                            <Label className="text-muted-foreground text-xs">Paid Amount</Label>
+                            <p className="text-lg font-bold text-green-600">${selectedBooking.paid_amount}</p>
+                          </div>
+                          <div>
+                            <Label className="text-muted-foreground text-xs">Balance Due</Label>
+                            <p className="text-lg font-bold text-orange-600">
+                              ${selectedBooking.total_amount - selectedBooking.paid_amount}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div>
+                          <Label className="text-muted-foreground text-xs">Booked On</Label>
+                          <p className="text-sm">
+                            {selectedBooking.created_at 
+                              ? format(new Date(selectedBooking.created_at), "PPP 'at' p")
+                              : "Unknown"}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
-                )}
-              </div>
+                </TabsContent>
+
+                <TabsContent value="documents" className="space-y-4 mt-4">
+                  <div className="space-y-4">
+                    <DocumentUpload 
+                      relatedBookingId={selectedBooking.id}
+                      onUploadComplete={() => {
+                        // Trigger document list refresh
+                      }}
+                    />
+                    <DocumentList bookingId={selectedBooking.id} />
+                  </div>
+                </TabsContent>
+              </Tabs>
             )}
           </DialogContent>
         </Dialog>

@@ -11,15 +11,15 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, MapPin, Clock, Download, Star, AlertCircle, User, Mail, Phone } from "lucide-react";
+import { Calendar, MapPin, Clock, Download, Star, AlertCircle, User, Mail, Phone, FileText } from "lucide-react";
 import { format } from "date-fns";
 import Link from "next/link";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Booking = Tables<"bookings"> & {
-  scheduled_classes: Tables<"scheduled_classes"> & {
-    course_templates: Pick<Tables<"course_templates">, "name" | "code"> | null;
-  } | null;
+  scheduled_classes: (Tables<"scheduled_classes"> & {
+    course_templates: Pick<Tables<"course_templates">, "name" | "code" | "price_full"> | null;
+  }) | null;
 };
 
 export default function StudentPortal() {
@@ -248,6 +248,9 @@ export default function StudentPortal() {
               <TabsTrigger value="past">
                 Past Courses ({pastBookings.length})
               </TabsTrigger>
+              <TabsTrigger value="documents">
+                My Documents
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="upcoming" className="space-y-4">
@@ -382,6 +385,41 @@ export default function StudentPortal() {
                   </Card>
                 ))
               )}
+            </TabsContent>
+
+            <TabsContent value="documents" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    My Documents
+                  </CardTitle>
+                  <CardDescription>
+                    All your course-related documents in one place
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {bookings.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8">
+                      No documents available yet
+                    </p>
+                  ) : (
+                    <div className="space-y-6">
+                      {bookings.map((booking) => (
+                        <div key={booking.id}>
+                          <h3 className="font-semibold mb-3">
+                            {booking.scheduled_classes?.course_templates?.name} - {" "}
+                            {booking.scheduled_classes?.start_datetime 
+                              ? format(new Date(booking.scheduled_classes.start_datetime), "MMM d, yyyy")
+                              : ""}
+                          </h3>
+                          <DocumentList bookingId={booking.id} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </TabsContent>
           </Tabs>
         </div>
