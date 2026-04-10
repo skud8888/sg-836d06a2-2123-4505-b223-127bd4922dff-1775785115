@@ -77,16 +77,15 @@ export default function BookingPage() {
       const { data: booking, error: bookingError } = await supabase
         .from("bookings")
         .insert({
-          class_id: classId,
+          scheduled_class_id: classId,
           student_name: `${formData.firstName} ${formData.lastName}`.trim(),
           student_email: formData.email,
           student_phone: formData.phone,
           usi_number: formData.usiNumber || null,
-          payment_status: "pending",
-          attendance_status: "pending",
+          status: "pending",
+          payment_status: "unpaid",
           total_amount: Number(classData?.course_templates?.price_full || 0),
-          paid_amount: 0,
-          payment_type: formData.paymentType === "deposit" ? "deposit" : "full"
+          paid_amount: 0
         })
         .select()
         .single();
