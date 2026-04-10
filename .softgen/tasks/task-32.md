@@ -1,6 +1,6 @@
 ---
 title: Dashboard Activity Feed
-status: in_progress
+status: done
 priority: high
 type: feature
 tags: [dashboard, activity, real-time, feed]
@@ -23,13 +23,13 @@ Features:
 - Activity notifications badge
 
 ## Checklist
-- [ ] Create activity_feed view from audit_logs
-- [ ] Build ActivityFeed component
-- [ ] Add real-time subscriptions
-- [ ] Implement event type filters
-- [ ] Create event card templates
-- [ ] Add relative time formatting
-- [ ] Build click-to-detail navigation
-- [ ] Implement load more pagination
-- [ ] Add activity badge counter
-- [ ] Create activity notifications dropdown
+- [x] Create activity_feed view from audit_logs
+- [x] Build ActivityFeed component
+- [x] Add real-time subscriptions
+- [x] Implement event type filters
+- [x] Create event card templates
+- [x] Add relative time formatting
+- [x] Build click-to-detail navigation
+- [x] Implement load more pagination
+- [x] Add activity badge counter
+- [x] Create activity notifications dropdown

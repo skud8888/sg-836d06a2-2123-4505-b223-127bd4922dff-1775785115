@@ -1,6 +1,6 @@
 ---
 title: Notification Preferences System
-status: in_progress
+status: done
 priority: high
 type: feature
 tags: [notifications, settings, email, sms]
@@ -23,13 +23,13 @@ Features:
 - Unsubscribe options
 
 ## Checklist
-- [ ] Create notification_preferences table
-- [ ] Build preferences UI component
-- [ ] Add email notification toggles
-- [ ] Add SMS notification toggles
-- [ ] Implement quiet hours picker
-- [ ] Create digest scheduling options
-- [ ] Add test notification functionality
-- [ ] Build notification history view
-- [ ] Integrate with emailService
-- [ ] Add preference sync across devices
+- [x] Create notification_preferences table
+- [x] Build preferences UI component
+- [x] Add email notification toggles
+- [x] Add SMS notification toggles
+- [x] Implement quiet hours picker
+- [x] Create digest scheduling options
+- [x] Add test notification functionality
+- [x] Build notification history view
+- [x] Integrate with emailService
+- [x] Add preference sync across devices

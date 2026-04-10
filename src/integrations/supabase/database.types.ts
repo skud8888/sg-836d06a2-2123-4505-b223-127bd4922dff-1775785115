@@ -1,4 +1,4 @@
- 
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 export type Json =
   | string
   | number
@@ -753,31 +753,82 @@ export type Database = {
       }
       notification_preferences: {
         Row: {
-          channel: string
           created_at: string | null
-          enabled: boolean | null
+          daily_digest: boolean | null
+          desktop_notifications: boolean | null
+          digest_time: string | null
+          email_attendance_marked: boolean | null
+          email_booking_cancelled: boolean | null
+          email_course_reminder: boolean | null
+          email_document_uploaded: boolean | null
+          email_new_booking: boolean | null
+          email_new_enquiry: boolean | null
+          email_payment_failed: boolean | null
+          email_payment_received: boolean | null
           id: string
-          notification_type: string
+          notification_sound: boolean | null
+          quiet_hours_enabled: boolean | null
+          quiet_hours_end: string | null
+          quiet_hours_start: string | null
+          sms_booking_cancelled: boolean | null
+          sms_course_reminder: boolean | null
+          sms_new_booking: boolean | null
+          sms_payment_received: boolean | null
           updated_at: string | null
-          user_email: string
+          user_id: string
+          weekly_digest: boolean | null
         }
         Insert: {
-          channel: string
           created_at?: string | null
-          enabled?: boolean | null
+          daily_digest?: boolean | null
+          desktop_notifications?: boolean | null
+          digest_time?: string | null
+          email_attendance_marked?: boolean | null
+          email_booking_cancelled?: boolean | null
+          email_course_reminder?: boolean | null
+          email_document_uploaded?: boolean | null
+          email_new_booking?: boolean | null
+          email_new_enquiry?: boolean | null
+          email_payment_failed?: boolean | null
+          email_payment_received?: boolean | null
           id?: string
-          notification_type: string
+          notification_sound?: boolean | null
+          quiet_hours_enabled?: boolean | null
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          sms_booking_cancelled?: boolean | null
+          sms_course_reminder?: boolean | null
+          sms_new_booking?: boolean | null
+          sms_payment_received?: boolean | null
           updated_at?: string | null
-          user_email: string
+          user_id: string
+          weekly_digest?: boolean | null
         }
         Update: {
-          channel?: string
           created_at?: string | null
-          enabled?: boolean | null
+          daily_digest?: boolean | null
+          desktop_notifications?: boolean | null
+          digest_time?: string | null
+          email_attendance_marked?: boolean | null
+          email_booking_cancelled?: boolean | null
+          email_course_reminder?: boolean | null
+          email_document_uploaded?: boolean | null
+          email_new_booking?: boolean | null
+          email_new_enquiry?: boolean | null
+          email_payment_failed?: boolean | null
+          email_payment_received?: boolean | null
           id?: string
-          notification_type?: string
+          notification_sound?: boolean | null
+          quiet_hours_enabled?: boolean | null
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          sms_booking_cancelled?: boolean | null
+          sms_course_reminder?: boolean | null
+          sms_new_booking?: boolean | null
+          sms_payment_received?: boolean | null
           updated_at?: string | null
-          user_email?: string
+          user_id?: string
+          weekly_digest?: boolean | null
         }
         Relationships: []
       }
@@ -1274,6 +1325,42 @@ export type Database = {
       }
     }
     Views: {
+      activity_feed: {
+        Row: {
+          action: string | null
+          created_at: string | null
+          event_icon: string | null
+          event_type: string | null
+          id: string | null
+          metadata: Json | null
+          resource_id: string | null
+          resource_type: string | null
+          user_email: string | null
+        }
+        Insert: {
+          action?: string | null
+          created_at?: string | null
+          event_icon?: never
+          event_type?: never
+          id?: string | null
+          metadata?: Json | null
+          resource_id?: string | null
+          resource_type?: string | null
+          user_email?: string | null
+        }
+        Update: {
+          action?: string | null
+          created_at?: string | null
+          event_icon?: never
+          event_type?: never
+          id?: string | null
+          metadata?: Json | null
+          resource_id?: string | null
+          resource_type?: string | null
+          user_email?: string | null
+        }
+        Relationships: []
+      }
       payment_tracking: {
         Row: {
           balance_due: number | null
