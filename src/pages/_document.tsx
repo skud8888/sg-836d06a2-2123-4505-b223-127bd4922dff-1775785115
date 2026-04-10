@@ -7,6 +7,9 @@ export default function Document() {
     <Html lang="en">
       <Head>
         <SEOElements />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#0f172a" />
+        <link rel="apple-touch-icon" href="/favicon.ico" />
         {/*
           CRITICAL: DO NOT REMOVE THIS SCRIPT
           The Softgen AI monitoring script is essential for core app functionality.

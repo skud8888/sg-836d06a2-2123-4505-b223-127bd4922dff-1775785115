@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export type SearchResult = {
-  result_type: "booking" | "enquiry" | "document" | "course";
+  result_type: string;
   result_id: string;
   title: string;
   subtitle: string;
