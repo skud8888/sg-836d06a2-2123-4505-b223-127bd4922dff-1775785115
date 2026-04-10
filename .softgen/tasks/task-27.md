@@ -1,6 +1,6 @@
 ---
 title: Dark Mode Implementation
-status: in_progress
+status: done
 priority: high
 type: feature
 tags: [dark-mode, theming, accessibility]
@@ -22,13 +22,13 @@ Requirements:
 - Toggle switch in navigation
 
 ## Checklist
-- [ ] Configure dark mode in globals.css
-- [ ] Define dark mode color tokens
-- [ ] Update all shadcn components for dark mode
-- [ ] Add theme toggle component
-- [ ] Implement theme persistence
-- [ ] Test all dashboards in dark mode
-- [ ] Verify contrast ratios
-- [ ] Add system preference detection
-- [ ] Create smooth theme transition
-- [ ] Test all interactive states (hover, focus, active)
+- [x] Configure dark mode in globals.css
+- [x] Define dark mode color tokens
+- [x] Update all shadcn components for dark mode
+- [x] Add theme toggle component
+- [x] Implement theme persistence
+- [x] Test all dashboards in dark mode
+- [x] Verify contrast ratios
+- [x] Add system preference detection
+- [x] Create smooth theme transition
+- [x] Test all interactive states (hover, focus, active)

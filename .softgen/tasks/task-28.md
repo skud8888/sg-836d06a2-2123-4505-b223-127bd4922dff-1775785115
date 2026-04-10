@@ -1,6 +1,6 @@
 ---
 title: Marketing Site Pages
-status: in_progress
+status: done
 priority: high
 type: feature
 tags: [marketing, landing, seo, conversion]
@@ -21,13 +21,13 @@ Pages to create:
 - Contact Page (already exists, enhance)
 
 ## Checklist
-- [ ] Design hero section with CTA
-- [ ] Create features showcase section
-- [ ] Build testimonials carousel
-- [ ] Add stats/metrics section
-- [ ] Create about page layout
-- [ ] Build pricing comparison table
-- [ ] Add FAQ accordion
-- [ ] Implement contact form enhancements
-- [ ] Add social proof elements
-- [ ] Optimize for SEO and conversions
+- [x] Design hero section with CTA
+- [x] Create features showcase section
+- [x] Build testimonials carousel
+- [x] Add stats/metrics section
+- [x] Create about page layout
+- [x] Build pricing comparison table
+- [x] Add FAQ accordion
+- [x] Implement contact form enhancements
+- [x] Add social proof elements
+- [x] Optimize for SEO and conversions

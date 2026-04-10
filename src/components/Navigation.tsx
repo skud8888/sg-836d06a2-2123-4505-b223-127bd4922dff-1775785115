@@ -2,7 +2,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ThemeSwitch } from "@/components/ThemeSwitch";
-import { GlobalSearch } from "@/components/GlobalSearch";
 import { Menu, X } from "lucide-react";
 
 export function Navigation() {
@@ -13,12 +12,21 @@ export function Navigation() {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <span className="text-xl font-heading font-bold">GTS Training</span>
+            <span className="text-xl font-bold">GTS Training</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-6">
             <Link href="/courses" className="hover:text-primary transition-colors">
               Courses
+            </Link>
+            <Link href="/about" className="hover:text-primary transition-colors">
+              About
+            </Link>
+            <Link href="/features" className="hover:text-primary transition-colors">
+              Features
+            </Link>
+            <Link href="/pricing" className="hover:text-primary transition-colors">
+              Pricing
             </Link>
             <Link href="/contact" className="hover:text-primary transition-colors">
               Contact
@@ -26,7 +34,6 @@ export function Navigation() {
           </nav>
 
           <div className="hidden md:flex items-center gap-3">
-            <GlobalSearch />
             <ThemeSwitch />
             <Link href="/admin/login">
               <Button>Admin Login</Button>
@@ -42,16 +49,25 @@ export function Navigation() {
         </div>
 
         {mobileMenuOpen && (
-          <div className="md:hidden py-4 px-6 space-y-4 border-t">
+          <div className="md:hidden py-4 space-y-4 border-t mt-4">
             <Link href="/courses" className="block hover:text-primary transition-colors">
               Courses
+            </Link>
+            <Link href="/about" className="block hover:text-primary transition-colors">
+              About
+            </Link>
+            <Link href="/features" className="block hover:text-primary transition-colors">
+              Features
+            </Link>
+            <Link href="/pricing" className="block hover:text-primary transition-colors">
+              Pricing
             </Link>
             <Link href="/contact" className="block hover:text-primary transition-colors">
               Contact
             </Link>
-            <div className="pt-4 space-y-3">
-              <GlobalSearch />
-              <Link href="/admin/login">
+            <div className="pt-4 space-y-3 flex items-center gap-3">
+              <ThemeSwitch />
+              <Link href="/admin/login" className="flex-1">
                 <Button className="w-full">Admin Login</Button>
               </Link>
             </div>
