@@ -17,13 +17,16 @@ Admin dashboard: ✅ Ready
 Test data: ✅ Seeded
 Public booking: ✅ Live
 Course management: ✅ Complete
+Search & filters: ✅ Complete
+Bookings dashboard: ✅ Complete
 
 ## Checklist
 - [x] Database schema for courses, classes, bookings, payments
 - [x] Admin authentication and dashboard
 - [x] Create public course listing page with available classes
 - [x] Build booking form (student details, payment selection)
+- [x] Add course search and filtering
+- [x] Add booking management dashboard for admin
 - [ ] Integrate Stripe payment processing
 - [ ] Set up automated confirmation emails
 - [ ] Create invoice generation workflow
-- [ ] Add booking management dashboard for admin
