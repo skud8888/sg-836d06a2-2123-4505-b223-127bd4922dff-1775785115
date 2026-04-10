@@ -117,6 +117,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "ai_insights_related_booking_id_fkey"
+            columns: ["related_booking_id"]
+            isOneToOne: false
+            referencedRelation: "payment_tracking"
+            referencedColumns: ["booking_id"]
+          },
+          {
             foreignKeyName: "ai_insights_related_enquiry_id_fkey"
             columns: ["related_enquiry_id"]
             isOneToOne: false
@@ -272,6 +279,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "bookings"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_feedback_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "payment_tracking"
+            referencedColumns: ["booking_id"]
           },
           {
             foreignKeyName: "course_feedback_scheduled_class_id_fkey"
@@ -439,6 +453,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "documents_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "payment_tracking"
+            referencedColumns: ["booking_id"]
+          },
+          {
             foreignKeyName: "documents_course_id_fkey"
             columns: ["course_id"]
             isOneToOne: false
@@ -558,6 +579,79 @@ export type Database = {
         }
         Relationships: []
       }
+      evidence_capture: {
+        Row: {
+          booking_id: string | null
+          captured_at: string | null
+          captured_by: string | null
+          created_at: string | null
+          description: string | null
+          evidence_type: string
+          file_name: string
+          file_path: string
+          geolocation: Json | null
+          id: string
+          metadata: Json | null
+          mime_type: string | null
+          scheduled_class_id: string | null
+          synced_at: string | null
+        }
+        Insert: {
+          booking_id?: string | null
+          captured_at?: string | null
+          captured_by?: string | null
+          created_at?: string | null
+          description?: string | null
+          evidence_type: string
+          file_name: string
+          file_path: string
+          geolocation?: Json | null
+          id?: string
+          metadata?: Json | null
+          mime_type?: string | null
+          scheduled_class_id?: string | null
+          synced_at?: string | null
+        }
+        Update: {
+          booking_id?: string | null
+          captured_at?: string | null
+          captured_by?: string | null
+          created_at?: string | null
+          description?: string | null
+          evidence_type?: string
+          file_name?: string
+          file_path?: string
+          geolocation?: Json | null
+          id?: string
+          metadata?: Json | null
+          mime_type?: string | null
+          scheduled_class_id?: string | null
+          synced_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evidence_capture_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evidence_capture_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "payment_tracking"
+            referencedColumns: ["booking_id"]
+          },
+          {
+            foreignKeyName: "evidence_capture_scheduled_class_id_fkey"
+            columns: ["scheduled_class_id"]
+            isOneToOne: false
+            referencedRelation: "scheduled_classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_counter: {
         Row: {
           current_number: number | null
@@ -572,6 +666,182 @@ export type Database = {
           id?: number
         }
         Relationships: []
+      }
+      notification_log: {
+        Row: {
+          channel: string
+          created_at: string | null
+          error_message: string | null
+          failed_at: string | null
+          id: string
+          message: string | null
+          metadata: Json | null
+          notification_type: string
+          recipient_email: string | null
+          recipient_phone: string | null
+          sent_at: string | null
+          status: string
+          subject: string | null
+        }
+        Insert: {
+          channel: string
+          created_at?: string | null
+          error_message?: string | null
+          failed_at?: string | null
+          id?: string
+          message?: string | null
+          metadata?: Json | null
+          notification_type: string
+          recipient_email?: string | null
+          recipient_phone?: string | null
+          sent_at?: string | null
+          status: string
+          subject?: string | null
+        }
+        Update: {
+          channel?: string
+          created_at?: string | null
+          error_message?: string | null
+          failed_at?: string | null
+          id?: string
+          message?: string | null
+          metadata?: Json | null
+          notification_type?: string
+          recipient_email?: string | null
+          recipient_phone?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+        }
+        Relationships: []
+      }
+      notification_preferences: {
+        Row: {
+          channel: string
+          created_at: string | null
+          enabled: boolean | null
+          id: string
+          notification_type: string
+          updated_at: string | null
+          user_email: string
+        }
+        Insert: {
+          channel: string
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          notification_type: string
+          updated_at?: string | null
+          user_email: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          notification_type?: string
+          updated_at?: string | null
+          user_email?: string
+        }
+        Relationships: []
+      }
+      payment_plan_installments: {
+        Row: {
+          amount: number
+          created_at: string | null
+          due_date: string
+          id: string
+          installment_number: number
+          paid_amount: number | null
+          paid_at: string | null
+          payment_plan_id: string | null
+          status: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          due_date: string
+          id?: string
+          installment_number: number
+          paid_amount?: number | null
+          paid_at?: string | null
+          payment_plan_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          due_date?: string
+          id?: string
+          installment_number?: number
+          paid_amount?: number | null
+          paid_at?: string | null
+          payment_plan_id?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_plan_installments_payment_plan_id_fkey"
+            columns: ["payment_plan_id"]
+            isOneToOne: false
+            referencedRelation: "payment_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_plans: {
+        Row: {
+          booking_id: string | null
+          created_at: string | null
+          frequency: string
+          id: string
+          installment_amount: number
+          installments: number
+          start_date: string
+          status: string | null
+          total_amount: number
+          updated_at: string | null
+        }
+        Insert: {
+          booking_id?: string | null
+          created_at?: string | null
+          frequency: string
+          id?: string
+          installment_amount: number
+          installments: number
+          start_date: string
+          status?: string | null
+          total_amount: number
+          updated_at?: string | null
+        }
+        Update: {
+          booking_id?: string | null
+          created_at?: string | null
+          frequency?: string
+          id?: string
+          installment_amount?: number
+          installments?: number
+          start_date?: string
+          status?: string | null
+          total_amount?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_plans_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_plans_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "payment_tracking"
+            referencedColumns: ["booking_id"]
+          },
+        ]
       }
       payments: {
         Row: {
@@ -617,6 +887,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "bookings"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "payment_tracking"
+            referencedColumns: ["booking_id"]
           },
         ]
       }
@@ -811,7 +1088,41 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      payment_tracking: {
+        Row: {
+          balance_due: number | null
+          booking_date: string | null
+          booking_id: string | null
+          booking_status: string | null
+          course_code: string | null
+          course_name: string | null
+          days_overdue: number | null
+          paid_amount: number | null
+          payment_status: string | null
+          start_datetime: string | null
+          student_email: string | null
+          student_name: string | null
+          total_amount: number | null
+        }
+        Relationships: []
+      }
+      student_analytics: {
+        Row: {
+          avg_rating: number | null
+          cancelled_courses: number | null
+          completed_courses: number | null
+          first_booking_date: string | null
+          last_booking_date: string | null
+          lifetime_value: number | null
+          outstanding_balance: number | null
+          student_email: string | null
+          student_name: string | null
+          student_phone: string | null
+          total_bookings: number | null
+          total_paid: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       calculate_churn_risk: { Args: { p_booking_id: string }; Returns: Json }
@@ -852,6 +1163,10 @@ export type Database = {
           p_metadata?: Json
           p_user_id?: string
         }
+        Returns: undefined
+      }
+      schedule_payment_reminder: {
+        Args: { p_booking_id: string }
         Returns: undefined
       }
       universal_search: {
