@@ -1,6 +1,6 @@
 ---
 title: Admin Profile Page
-status: in_progress
+status: done
 priority: medium
 type: feature
 tags: [admin, profile, settings, account]
@@ -24,13 +24,13 @@ Features:
 - Delete account option
 
 ## Checklist
-- [ ] Create admin profile page layout
-- [ ] Add profile information form
-- [ ] Implement password change functionality
-- [ ] Add avatar upload with preview
-- [ ] Create notification preferences section
-- [ ] Add theme and language settings
-- [ ] Display user role badges
-- [ ] Show account creation date
-- [ ] Add recent activity section
-- [ ] Implement form validation and error handling
+- [x] Create admin profile page layout
+- [x] Add profile information form
+- [x] Implement password change functionality
+- [x] Add avatar upload with preview
+- [x] Create notification preferences section
+- [x] Add theme and language settings
+- [x] Display user role badges
+- [x] Show account creation date
+- [x] Add recent activity section
+- [x] Implement form validation and error handling
