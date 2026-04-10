@@ -38,7 +38,7 @@ export const notificationService = {
 
       // For the new schema, we map NotificationType to specific boolean columns
       let enabled = true; // Default to true if no prefs
-      const channel = "email";
+      const channel: "email" | "sms" | "both" = "email";
       
       if (prefs) {
         // Map types to columns
