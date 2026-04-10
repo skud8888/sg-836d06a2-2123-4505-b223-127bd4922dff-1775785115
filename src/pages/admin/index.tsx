@@ -1,184 +1,209 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
+import { Navigation } from "@/components/Navigation";
+import { AdminWelcomeTour } from "@/components/AdminWelcomeTour";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Users, Calendar, BookOpen, Mail, BarChart3, Brain, Shield, FileText, DollarSign, UserCheck } from "lucide-react";
+import { rbacService } from "@/services/rbacService";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Calendar,
+  Users,
+  BookOpen,
+  BarChart3,
+  FileText,
+  UserCog,
+  MessageSquare,
+  Brain,
+  Shield,
+  DollarSign,
+  User
+} from "lucide-react";
 
 export default function AdminDashboard() {
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string>("");
 
   useEffect(() => {
     checkAuth();
   }, []);
 
   const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
       router.push("/admin/login");
+      return;
     }
+
+    const role = await rbacService.getUserPrimaryRole();
+    if (!role) {
+      router.push("/admin/login");
+      return;
+    }
+
+    setUserRole(role);
+    setUserName(user.user_metadata?.full_name || user.email || "Admin");
+    setLoading(false);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 py-8">
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const dashboardCards = [
+    {
+      title: "Bookings",
+      description: "Manage student enrollments",
+      icon: Calendar,
+      href: "/admin/bookings",
+      color: "text-blue-600 dark:text-blue-400",
+      tourId: "bookings"
+    },
+    {
+      title: "Students",
+      description: "View student records",
+      icon: Users,
+      href: "/admin/students",
+      color: "text-green-600 dark:text-green-400",
+      tourId: "students"
+    },
+    {
+      title: "Calendar",
+      description: "Schedule classes",
+      icon: Calendar,
+      href: "/admin/calendar",
+      color: "text-purple-600 dark:text-purple-400",
+      tourId: "calendar"
+    },
+    {
+      title: "Courses",
+      description: "Manage course templates",
+      icon: BookOpen,
+      href: "/admin/courses",
+      color: "text-orange-600 dark:text-orange-400"
+    },
+    {
+      title: "Trainers",
+      description: "Instructor management",
+      icon: UserCog,
+      href: "/admin/trainers",
+      color: "text-indigo-600 dark:text-indigo-400"
+    },
+    {
+      title: "Enquiries",
+      description: "Contact form submissions",
+      icon: MessageSquare,
+      href: "/admin/enquiries",
+      color: "text-pink-600 dark:text-pink-400"
+    },
+    {
+      title: "Analytics",
+      description: "Business insights",
+      icon: BarChart3,
+      href: "/admin/analytics",
+      color: "text-red-600 dark:text-red-400",
+      tourId: "analytics"
+    },
+    {
+      title: "AI Insights",
+      description: "Predictive analytics",
+      icon: Brain,
+      href: "/admin/ai-insights",
+      color: "text-cyan-600 dark:text-cyan-400",
+      tourId: "ai-insights",
+      badge: "AI"
+    },
+    {
+      title: "Payments",
+      description: "Payment tracking",
+      icon: DollarSign,
+      href: "/admin/payments",
+      color: "text-emerald-600 dark:text-emerald-400"
+    },
+    {
+      title: "User Management",
+      description: "Manage admin roles",
+      icon: Shield,
+      href: "/admin/users",
+      color: "text-yellow-600 dark:text-yellow-400",
+      show: userRole === "super_admin"
+    },
+    {
+      title: "Audit Logs",
+      description: "System activity",
+      icon: FileText,
+      href: "/admin/audit-logs",
+      color: "text-slate-600 dark:text-slate-400",
+      show: userRole === "super_admin" || userRole === "admin"
+    }
+  ];
 
   return (
     <div className="min-h-screen bg-background">
+      <Navigation />
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold mb-2">Admin Dashboard</h1>
-        <p className="text-muted-foreground mb-8">Manage your training center</p>
+        <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">Welcome back, {userName}!</h1>
+            <p className="text-muted-foreground">
+              {userRole && `Logged in as ${userRole.replace("_", " ")}`}
+            </p>
+          </div>
+          <div className="flex items-center gap-3" data-tour="user-menu">
+            <AdminWelcomeTour autoStart={true} />
+            <Link href="/admin/profile">
+              <Button variant="outline">
+                <User className="h-4 w-4 mr-2" />
+                Profile
+              </Button>
+            </Link>
+          </div>
+        </div>
+
+        <div className="mb-6" data-tour="search">
+          <p className="text-sm text-muted-foreground">
+            💡 Tip: Press <kbd className="px-2 py-1 text-xs bg-muted rounded">Cmd+K</kbd> to open universal search
+          </p>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Link href="/admin/bookings">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-primary" />
-                  Bookings
-                </CardTitle>
-                <CardDescription>
-                  Manage course bookings and payments
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </Link>
-
-          <Link href="/admin/students">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <UserCheck className="h-5 w-5 text-primary" />
-                  Students
-                </CardTitle>
-                <CardDescription>
-                  Student records and enrollment history
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </Link>
-
-          <Link href="/admin/payments">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <DollarSign className="h-5 w-5 text-primary" />
-                  Payments
-                </CardTitle>
-                <CardDescription>
-                  Track outstanding balances and aging
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </Link>
-
-          <Link href="/admin/calendar">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-primary" />
-                  Calendar
-                </CardTitle>
-                <CardDescription>
-                  View schedule and manage classes
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </Link>
-
-          <Link href="/admin/courses">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BookOpen className="h-5 w-5 text-primary" />
-                  Courses
-                </CardTitle>
-                <CardDescription>
-                  Manage course templates and schedules
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </Link>
-
-          <Link href="/admin/trainers">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5 text-primary" />
-                  Trainers
-                </CardTitle>
-                <CardDescription>
-                  Manage trainer profiles
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </Link>
-
-          <Link href="/admin/enquiries">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Mail className="h-5 w-5 text-primary" />
-                  Enquiries
-                </CardTitle>
-                <CardDescription>
-                  View contact form submissions
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </Link>
-
-          <Link href="/admin/analytics">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5 text-primary" />
-                  Analytics
-                </CardTitle>
-                <CardDescription>
-                  Business metrics and insights
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </Link>
-
-          <Link href="/admin/ai-insights">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Brain className="h-5 w-5 text-primary" />
-                  AI Insights
-                </CardTitle>
-                <CardDescription>
-                  Smart predictions and automation
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </Link>
-
-          <Link href="/admin/users">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-primary" />
-                  User Management
-                </CardTitle>
-                <CardDescription>
-                  Manage roles and permissions
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </Link>
-
-          <Link href="/admin/audit-logs">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-primary" />
-                  Audit Logs
-                </CardTitle>
-                <CardDescription>
-                  System activity and compliance
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </Link>
+          {dashboardCards
+            .filter(card => card.show !== false)
+            .map((card, index) => (
+              <Link key={index} href={card.href}>
+                <Card 
+                  className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+                  data-tour={card.tourId}
+                >
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div className={`h-12 w-12 rounded-lg bg-background flex items-center justify-center group-hover:scale-110 transition-transform ${card.color}`}>
+                        <card.icon className="h-6 w-6" />
+                      </div>
+                      {card.badge && (
+                        <Badge variant="secondary" className="text-xs">
+                          {card.badge}
+                        </Badge>
+                      )}
+                    </div>
+                    <CardTitle className="mt-4">{card.title}</CardTitle>
+                    <CardDescription>{card.description}</CardDescription>
+                  </CardHeader>
+                </Card>
+              </Link>
+            ))}
         </div>
       </div>
     </div>
