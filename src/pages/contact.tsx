@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Link from "next/link";
 import { Navigation } from "@/components/Navigation";
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
@@ -295,7 +296,9 @@ export default function ContactPage() {
 
                     <p className="text-sm text-muted-foreground text-center">
                       By submitting this form, you agree to our{" "}
-                      <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a>
+                      <Link href="/privacy" className="text-primary hover:underline">
+                        Privacy Policy
+                      </Link>
                     </p>
                   </form>
                 )}
