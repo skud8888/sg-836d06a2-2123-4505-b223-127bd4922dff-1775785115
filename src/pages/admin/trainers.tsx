@@ -23,10 +23,15 @@ export default function Trainers() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTrainer, setEditingTrainer] = useState<Profile | null>(null);
   
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    email: string;
+    full_name: string;
+    role: "trainer" | "admin";
+    phone: string;
+  }>({
     email: "",
     full_name: "",
-    role: "trainer" as const,
+    role: "trainer",
     phone: ""
   });
 
