@@ -1,6 +1,6 @@
 ---
 title: Invoice generation and document automation
-status: in_progress
+status: done
 priority: medium
 type: feature
 tags: [invoicing, pdf, automation]
@@ -13,9 +13,9 @@ position: 7
 Replace manual QuickBooks invoice creation with automated PDF invoice generation. Generate invoices automatically after booking, track invoice numbers, support deposit and full payment invoices, include GST calculations.
 
 ## Checklist
-- [ ] Install PDF generation library (react-pdf or jsPDF)
-- [ ] Create invoice template component with GST
-- [ ] Add invoice generation to booking flow
-- [ ] Store invoice PDFs in Supabase Storage
-- [ ] Add download invoice feature to admin dashboard
-- [ ] Create invoice numbering system
+- [x] Install PDF generation library (react-pdf or jsPDF)
+- [x] Create invoice template component with GST
+- [x] Add invoice generation to booking flow
+- [x] Store invoice PDFs in Supabase Storage
+- [x] Add download invoice feature to admin dashboard
+- [x] Create invoice numbering system

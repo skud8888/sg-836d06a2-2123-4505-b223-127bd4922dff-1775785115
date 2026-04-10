@@ -1,6 +1,6 @@
 ---
 title: Public contact form and enquiry management
-status: in_progress
+status: done
 priority: low
 type: feature
 tags: [contact, public, enquiries]
@@ -13,8 +13,8 @@ position: 9
 Replace phone-only enquiries with online contact form. Capture enquiry details, course interest, preferred dates. Store in database for admin follow-up. Send auto-response email to enquirer.
 
 ## Checklist
-- [ ] Create public contact form page
-- [ ] Add enquiries database table
-- [ ] Build admin enquiries dashboard
+- [x] Create public contact form page
+- [x] Add enquiries database table
+- [x] Build admin enquiries dashboard
 - [ ] Set up auto-response email
-- [ ] Add enquiry status tracking
+- [x] Add enquiry status tracking

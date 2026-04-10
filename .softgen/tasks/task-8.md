@@ -1,6 +1,6 @@
 ---
 title: Trainer profile and availability management
-status: in_progress
+status: done
 priority: medium
 type: feature
 tags: [trainers, profiles, admin]
@@ -13,8 +13,8 @@ position: 8
 Build trainer management system for admin. Add/edit trainer profiles with qualifications, contact info, availability calendar. Track trainer assignments and workload. Support trainer-specific reports.
 
 ## Checklist
-- [ ] Create trainer profiles CRUD interface
-- [ ] Add trainer qualifications and certifications tracking
-- [ ] Build trainer availability calendar
-- [ ] Add trainer assignment statistics
-- [ ] Create trainer performance dashboard
+- [x] Create trainer profiles CRUD interface
+- [x] Add trainer qualifications and certifications tracking
+- [x] Build trainer availability calendar
+- [x] Add trainer assignment statistics
+- [x] Create trainer performance dashboard
