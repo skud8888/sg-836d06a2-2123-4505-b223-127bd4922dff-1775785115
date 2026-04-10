@@ -56,7 +56,7 @@ export function EvidenceGallery({ bookingId, scheduledClassId }: EvidenceGallery
         variant: "destructive"
       });
     } else {
-      setEvidence((data || []) as Evidence[]);
+      setEvidence((data as unknown) as Evidence[]);
     }
     setLoading(false);
   };
