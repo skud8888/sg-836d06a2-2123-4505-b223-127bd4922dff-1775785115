@@ -740,6 +740,17 @@ export type Database = {
         }
         Returns: undefined
       }
+      universal_search: {
+        Args: { p_limit?: number; p_query: string }
+        Returns: {
+          metadata: Json
+          relevance: number
+          result_id: string
+          result_type: string
+          subtitle: string
+          title: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
