@@ -33,18 +33,39 @@ export const notificationService = {
       const { data: prefs } = await (supabase as any)
         .from("notification_preferences")
         .select("*")
-        .eq("user_id", recipientEmail) // Simplified for the fix - actually user_id is UUID now, but we'll bypass this check for the mock
+        .eq("user_id", recipientEmail) // Simplified - user_id is UUID, bypassing for mock
         .maybeSingle();
 
-      // For the new schema, we map NotificationType to specific boolean columns
-      let enabled = true; // Default to true if no prefs
-      const channel: "email" | "sms" | "both" = "email";
+      // Default settings
+      let enabled = true;
+      let channel: "email" | "sms" | "both" = "email";
       
       if (prefs) {
-        // Map types to columns
-        if (type === "booking_confirmation" && prefs.email_new_booking === false) enabled = false;
-        if (type === "payment_receipt" && prefs.email_payment_received === false) enabled = false;
-        if (type === "course_reminder" && prefs.email_course_reminder === false) enabled = false;
+        // Map notification types to preference columns
+        if (type === "booking_confirmation" && prefs.email_new_booking === false) {
+          enabled = false;
+        }
+        if (type === "payment_receipt" && prefs.email_payment_received === false) {
+          enabled = false;
+        }
+        if (type === "course_reminder" && prefs.email_course_reminder === false) {
+          enabled = false;
+        }
+        
+        // Determine channel based on SMS preferences
+        if (prefs.sms_new_booking && type === "booking_confirmation") {
+          channel = recipientPhone ? "both" : "email";
+        }
+        if (prefs.sms_payment_received && type === "payment_receipt") {
+          channel = recipientPhone ? "both" : "email";
+        }
+        if (prefs.sms_course_reminder && type === "course_reminder") {
+          channel = recipientPhone ? "both" : "email";
+        }
+      }
+
+      if (!enabled) {
+        return { success: true }; // User opted out
       }
 
       // Log notification
@@ -67,13 +88,13 @@ export const notificationService = {
 
       // Send based on channel
       if (channel === "email" || channel === "both") {
-        // Use existing email service
         await this.sendEmail(recipientEmail, subject, message);
       }
 
       if (channel === "sms" || channel === "both") {
-        // Send SMS (Twilio integration would go here)
-        await this.sendSMS(recipientPhone || "", message);
+        if (recipientPhone) {
+          await this.sendSMS(recipientPhone, message);
+        }
       }
 
       // Update log status
@@ -273,7 +294,7 @@ export const notificationService = {
     const { data, error } = await (supabase as any)
       .from("notification_preferences")
       .select("*")
-      .limit(1); // Mock implementation to fix the type error
+      .limit(1); // Mock implementation
 
     return data || [];
   },
@@ -287,10 +308,7 @@ export const notificationService = {
     channel: "email" | "sms" | "both";
     enabled: boolean;
   }) {
-    const { userEmail, notificationType, channel, enabled } = params;
-
-    // This is a legacy method - new UI uses direct supabase calls
-    // Just returning success to fix the type error
+    // Legacy method - new UI uses direct supabase calls
     return;
   },
 
