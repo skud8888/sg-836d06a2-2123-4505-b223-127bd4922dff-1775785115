@@ -10,7 +10,7 @@ position: 39
 ---
 
 ## Notes
-Create Supabase Edge Function that executes automated database backups on schedule. Support full and incremental backups, encryption, verification, and remote storage. Integrate with backup_configurations and backup_history tables.
+Create Supabase Edge Function that executes automated database backups on schedule. Support full and incremental backups, encryption, verification, and remote storage. Integrate with backup_config and backup_history tables.
 
 Features:
 - Execute full database dumps
