@@ -77,9 +77,8 @@ export default function BookingPage() {
       const { data: booking, error: bookingError } = await supabase
         .from("bookings")
         .insert({
-          scheduled_class_id: classId,
-          student_first_name: formData.firstName,
-          student_last_name: formData.lastName,
+          class_id: classId,
+          student_name: `${formData.firstName} ${formData.lastName}`.trim(),
           student_email: formData.email,
           student_phone: formData.phone,
           usi_number: formData.usiNumber || null,
