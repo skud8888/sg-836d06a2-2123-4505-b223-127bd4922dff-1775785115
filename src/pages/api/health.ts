@@ -66,8 +66,8 @@ async function checkDatabase(): Promise<ServiceHealth> {
   
   try {
     // Simple query to check database connectivity
-    const { error } = await supabase
-      .from("courses")
+    const { error } = await (supabase as any)
+      .from("profiles")
       .select("id")
       .limit(1);
 

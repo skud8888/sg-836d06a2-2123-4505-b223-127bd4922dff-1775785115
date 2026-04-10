@@ -358,3 +358,123 @@ export default function SystemHealth() {
     </div>
   );
 }
+
+async function checkDatabase(): Promise<ServiceHealth> {
+  const startTime = Date.now();
+  
+  try {
+    // Simple query to check database connectivity
+    const { error } = await (supabase as any)
+      .from("profiles")
+      .select("id")
+      .limit(1);
+
+    const responseTime = Date.now() - startTime;
+
+    if (error) {
+      return {
+        status: "down",
+        responseTime,
+        message: error.message
+      };
+    }
+
+    return {
+      status: responseTime > 1000 ? "degraded" : "operational",
+      responseTime
+    };
+  } catch (error: any) {
+    return {
+      status: "down",
+      responseTime: Date.now() - startTime,
+      message: error.message
+    };
+  }
+}
+
+async function checkAuth(): Promise<ServiceHealth> {
+  const startTime = Date.now();
+  
+  try {
+    // Check if we can get session (doesn't require authenticated user)
+    const { error } = await supabase.auth.getSession();
+    const responseTime = Date.now() - startTime;
+
+    if (error) {
+      return {
+        status: "down",
+        responseTime,
+        message: error.message
+      };
+    }
+
+    return {
+      status: responseTime > 1000 ? "degraded" : "operational",
+      responseTime
+    };
+  } catch (error: any) {
+    return {
+      status: "down",
+      responseTime: Date.now() - startTime,
+      message: error.message
+    };
+  }
+}
+
+async function checkStorage(): Promise<ServiceHealth> {
+  const startTime = Date.now();
+  
+  try {
+    // Try to list buckets (public operation)
+    const { error } = await supabase.storage.listBuckets();
+    const responseTime = Date.now() - startTime;
+
+    if (error) {
+      return {
+        status: "down",
+        responseTime,
+        message: error.message
+      };
+    }
+
+    return {
+      status: responseTime > 1000 ? "degraded" : "operational",
+      responseTime
+    };
+  } catch (error: any) {
+    return {
+      status: "down",
+      responseTime: Date.now() - startTime,
+      message: error.message
+    };
+  }
+}
+
+async function checkAPI(): Promise<ServiceHealth> {
+  const startTime = Date.now();
+  
+  try {
+    // Check if API route is responsive
+    const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/hello`);
+    const responseTime = Date.now() - startTime;
+
+    if (!response.ok) {
+      return {
+        status: "degraded",
+        responseTime,
+        message: `HTTP ${response.status}`
+      };
+    }
+
+    return {
+      status: responseTime > 1000 ? "degraded" : "operational",
+      responseTime
+    };
+  } catch (error: any) {
+    return {
+      status: "down",
+      responseTime: Date.now() - startTime,
+      message: error.message
+    };
+  }
+}
