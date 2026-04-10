@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import Link from "next/link";
 import { Navigation } from "@/components/Navigation";
 import { supabase } from "@/integrations/supabase/client";
 import { emailService } from "@/services/emailService";
@@ -10,10 +11,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DocumentUpload } from "@/components/DocumentUpload";
 import { DocumentList } from "@/components/DocumentList";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Users, DollarSign, Calendar, Mail, Phone, FileText, Upload } from "lucide-react";
+import { Search, Users, DollarSign, Calendar, Mail, Phone, FileText, Upload, ArrowLeft, Edit } from "lucide-react";
 import { format } from "date-fns";
 import type { Tables } from "@/integrations/supabase/types";
 import {

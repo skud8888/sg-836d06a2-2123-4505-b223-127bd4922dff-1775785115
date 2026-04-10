@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { supabase } from "@/integrations/supabase/client";
 import { Navigation } from "@/components/Navigation";
 import { SEO } from "@/components/SEO";
+import { DocumentList } from "@/components/DocumentList";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
