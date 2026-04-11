@@ -32,10 +32,7 @@ interface CourseDetails {
   duration_hours: number;
   price_full: number;
   price_deposit: number;
-  capacity: number;
-  start_date: string;
-  end_date: string;
-  instructor: string;
+  max_students: number;
 }
 
 export default function EnrollmentPage() {
@@ -57,19 +54,22 @@ export default function EnrollmentPage() {
     emergency_phone: ""
   });
 
+  const courseIdStr = typeof courseId === 'string' ? courseId : Array.isArray(courseId) ? courseId[0] : '';
+
   useEffect(() => {
-    if (courseId) {
+    if (courseIdStr) {
       loadCourseDetails();
     }
-  }, [courseId]);
+  }, [courseIdStr]);
 
   const loadCourseDetails = async () => {
+    if (!courseIdStr) return;
     setLoading(true);
     try {
       const { data, error } = await supabase
         .from("course_templates")
         .select("*")
-        .eq("id", courseId)
+        .eq("id", courseIdStr)
         .single();
 
       if (error) throw error;
@@ -81,10 +81,7 @@ export default function EnrollmentPage() {
         duration_hours: data.duration_hours,
         price_full: data.price_full,
         price_deposit: data.price_deposit,
-        capacity: data.capacity,
-        start_date: data.start_date,
-        end_date: data.end_date,
-        instructor: data.instructor
+        max_students: data.max_students
       });
 
     } catch (err: any) {
@@ -154,7 +151,7 @@ export default function EnrollmentPage() {
       const { data: enrollment, error: enrollError } = await supabase
         .from("enrollments")
         .insert({
-          course_template_id: courseId,
+          course_template_id: courseIdStr,
           student_id: studentId,
           status: "pending",
           payment_status: paymentType === "full" ? "paid" : "partial",
@@ -176,7 +173,7 @@ export default function EnrollmentPage() {
           },
           body: JSON.stringify({
             amount: amountPaid,
-            courseId: courseId,
+            courseId: courseIdStr,
             enrollmentId: enrollment.id,
             studentEmail: enrollmentForm.email,
             studentName: enrollmentForm.full_name
@@ -256,22 +253,14 @@ export default function EnrollmentPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm">{course.duration_hours} hours</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">Max {course.capacity} students</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">{new Date(course.start_date).toLocaleDateString()}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <BookOpen className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">{course.instructor}</span>
+                    <span className="text-sm">Max {course.max_students} students</span>
                   </div>
                 </div>
               </CardContent>

@@ -90,20 +90,23 @@ export default function CourseBuilderPage() {
     video_url: ""
   });
 
+  const courseIdStr = typeof courseId === 'string' ? courseId : Array.isArray(courseId) ? courseId[0] : '';
+
   useEffect(() => {
-    if (courseId) {
+    if (courseIdStr) {
       loadCourseContent();
     }
-  }, [courseId]);
+  }, [courseIdStr]);
 
   const loadCourseContent = async () => {
+    if (!courseIdStr) return;
     setLoading(true);
     try {
       // Load course details
       const { data: courseData, error: courseError } = await supabase
         .from("course_templates")
         .select("name")
-        .eq("id", courseId)
+        .eq("id", courseIdStr)
         .single();
 
       if (courseError) throw courseError;
@@ -140,7 +143,7 @@ export default function CourseBuilderPage() {
             )
           )
         `)
-        .eq("course_id", courseId)
+        .eq("course_id", courseIdStr)
         .order("order_index", { ascending: true });
 
       if (modulesError) throw modulesError;
@@ -193,7 +196,7 @@ export default function CourseBuilderPage() {
       const { error } = await supabase
         .from("course_modules")
         .insert({
-          course_id: courseId,
+          course_id: courseIdStr,
           title: moduleForm.title,
           description: moduleForm.description,
           duration_hours: moduleForm.duration_hours,
@@ -235,8 +238,8 @@ export default function CourseBuilderPage() {
 
     setSaving(true);
     try {
-      const module = modules.find(m => m.id === selectedModuleId);
-      const lessonCount = module?.lessons.length || 0;
+      const targetModule = modules.find(m => m.id === selectedModuleId);
+      const lessonCount = targetModule?.lessons.length || 0;
 
       const { error } = await supabase
         .from("course_lessons")
