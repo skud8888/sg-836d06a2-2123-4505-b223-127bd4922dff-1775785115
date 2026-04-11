@@ -30,7 +30,6 @@ interface Course {
   price_full: number;
   price_deposit: number;
   max_students: number;
-  category: string | null;
   created_at: string;
 }
 
@@ -41,7 +40,6 @@ export default function CoursesPage() {
   const [loading, setLoading] = useState(true);
   const [courses, setCourses] = useState<Course[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("all");
 
   useEffect(() => {
     loadCourses();
@@ -71,13 +69,9 @@ export default function CoursesPage() {
   };
 
   const filteredCourses = courses.filter(course => {
-    const matchesSearch = course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         course.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = categoryFilter === "all" || course.category === categoryFilter;
-    return matchesSearch && matchesCategory;
+    return course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+           course.description.toLowerCase().includes(searchQuery.toLowerCase());
   });
-
-  const categories = Array.from(new Set(courses.map(c => c.category).filter(Boolean))) as string[];
 
   return (
     <>
@@ -111,20 +105,6 @@ export default function CoursesPage() {
                     className="pl-10"
                   />
                 </div>
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                  <SelectTrigger className="w-full md:w-48">
-                    <Filter className="h-4 w-4 mr-2" />
-                    <SelectValue placeholder="All Categories" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    {categories.map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
             </div>
           </div>
@@ -143,19 +123,18 @@ export default function CoursesPage() {
                   <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-semibold mb-2">No courses found</h3>
                   <p className="text-muted-foreground mb-6">
-                    {searchQuery || categoryFilter !== "all"
-                      ? "Try adjusting your search or filters"
+                    {searchQuery
+                      ? "Try adjusting your search"
                       : "Check back soon for new courses"}
                   </p>
-                  {(searchQuery || categoryFilter !== "all") && (
+                  {searchQuery && (
                     <Button
                       variant="outline"
                       onClick={() => {
                         setSearchQuery("");
-                        setCategoryFilter("all");
                       }}
                     >
-                      Clear Filters
+                      Clear Search
                     </Button>
                   )}
                 </CardContent>
@@ -167,9 +146,6 @@ export default function CoursesPage() {
                     <CardHeader>
                       <div className="flex items-start justify-between mb-2">
                         <CardTitle className="text-xl">{course.name}</CardTitle>
-                        {course.category && (
-                          <Badge variant="outline">{course.category}</Badge>
-                        )}
                       </div>
                       <CardDescription className="line-clamp-3">
                         {course.description}
