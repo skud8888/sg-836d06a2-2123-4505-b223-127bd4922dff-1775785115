@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
+import { SEO } from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import { rbacService } from "@/services/rbacService";
 import { Button } from "@/components/ui/button";
@@ -9,12 +10,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Lock, Loader2 } from "lucide-react";
 import Link from "next/link";
 
-export default function AdminLogin() {
+export default function AdminLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    // Show success message if password was just updated
+    if (router.query.password_updated === "true") {
+      // Could add a success alert here if desired
+    }
+  }, [router.query]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,25 +88,34 @@ export default function AdminLogin() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                disabled={loading}
+                autoComplete="email"
               />
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <Link href="/admin/reset-password" className="text-sm text-primary hover:underline">
+                  Forgot password?
+                </Link>
+              </div>
               <Input
                 id="password"
                 type="password"
+                placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                disabled={loading}
+                autoComplete="current-password"
               />
             </div>
+
             {error && (
               <div className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded">
                 {error}
               </div>
             )}
+
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? (
                 <>
