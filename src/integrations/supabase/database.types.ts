@@ -1605,6 +1605,7 @@ export type Database = {
     }
     Functions: {
       calculate_churn_risk: { Args: { p_booking_id: string }; Returns: Json }
+      check_user_role: { Args: { check_role: string }; Returns: boolean }
       complete_signature: {
         Args: {
           p_request_id: string
@@ -1632,6 +1633,7 @@ export type Database = {
         Args: { p_action: string; p_resource: string; p_user_id: string }
         Returns: boolean
       }
+      is_admin: { Args: never; Returns: boolean }
       log_audit_event: {
         Args: {
           p_action: string
