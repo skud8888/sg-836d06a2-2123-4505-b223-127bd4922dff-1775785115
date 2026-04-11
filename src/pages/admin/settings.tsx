@@ -40,7 +40,6 @@ interface ProfileData {
 
 interface RoleData {
   role: string;
-  created_at: string;
 }
 
 export default function AdminSettingsPage() {
@@ -130,7 +129,7 @@ export default function AdminSettingsPage() {
       // Load user role
       const { data: roleData, error: roleError } = await supabase
         .from("user_roles")
-        .select("role, created_at")
+        .select("role")
         .eq("user_id", userId)
         .single();
 
