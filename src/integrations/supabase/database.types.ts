@@ -139,6 +139,51 @@ export type Database = {
           },
         ]
       }
+      attendance_records: {
+        Row: {
+          created_at: string | null
+          enrollment_id: string
+          id: string
+          notes: string | null
+          session_date: string
+          status: string | null
+          student_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          enrollment_id: string
+          id?: string
+          notes?: string | null
+          session_date: string
+          status?: string | null
+          student_id: string
+        }
+        Update: {
+          created_at?: string | null
+          enrollment_id?: string
+          id?: string
+          notes?: string | null
+          session_date?: string
+          status?: string | null
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_records_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_records_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       backup_config: {
         Row: {
           backup_location: string | null
@@ -593,6 +638,53 @@ export type Database = {
         }
         Relationships: []
       }
+      course_waitlist: {
+        Row: {
+          course_template_id: string
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          notified_at: string | null
+          position: number
+          status: string | null
+          student_email: string
+          student_name: string
+          student_phone: string | null
+        }
+        Insert: {
+          course_template_id: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          notified_at?: string | null
+          position: number
+          status?: string | null
+          student_email: string
+          student_name: string
+          student_phone?: string | null
+        }
+        Update: {
+          course_template_id?: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          notified_at?: string | null
+          position?: number
+          status?: string | null
+          student_email?: string
+          student_name?: string
+          student_phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_waitlist_course_template_id_fkey"
+            columns: ["course_template_id"]
+            isOneToOne: false
+            referencedRelation: "course_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_audit_logs: {
         Row: {
           action: string
@@ -791,6 +883,78 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      email_queue: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          html_content: string
+          id: string
+          metadata: Json | null
+          recipient_email: string
+          sent_at: string | null
+          status: string | null
+          subject: string
+          template_type: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          html_content: string
+          id?: string
+          metadata?: Json | null
+          recipient_email: string
+          sent_at?: string | null
+          status?: string | null
+          subject: string
+          template_type?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          html_content?: string
+          id?: string
+          metadata?: Json | null
+          recipient_email?: string
+          sent_at?: string | null
+          status?: string | null
+          subject?: string
+          template_type?: string | null
+        }
+        Relationships: []
+      }
+      email_templates: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          html_template: string
+          id: string
+          name: string
+          subject: string
+          updated_at: string | null
+          variables: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          html_template: string
+          id?: string
+          name: string
+          subject: string
+          updated_at?: string | null
+          variables?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          html_template?: string
+          id?: string
+          name?: string
+          subject?: string
+          updated_at?: string | null
+          variables?: Json | null
+        }
+        Relationships: []
       }
       enquiries: {
         Row: {
@@ -1054,6 +1218,51 @@ export type Database = {
             columns: ["lesson_id"]
             isOneToOne: false
             referencedRelation: "course_lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_completions: {
+        Row: {
+          completed: boolean | null
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          lesson_id: string
+          notes: string | null
+          student_progress_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          lesson_id: string
+          notes?: string | null
+          student_progress_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          lesson_id?: string
+          notes?: string | null
+          student_progress_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_completions_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "course_lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_completions_student_progress_id_fkey"
+            columns: ["student_progress_id"]
+            isOneToOne: false
+            referencedRelation: "student_progress"
             referencedColumns: ["id"]
           },
         ]
@@ -1615,6 +1824,70 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "payment_tracking"
             referencedColumns: ["booking_id"]
+          },
+        ]
+      }
+      student_progress: {
+        Row: {
+          certificate_issued: boolean | null
+          completed_at: string | null
+          completion_percentage: number | null
+          course_template_id: string
+          created_at: string | null
+          enrollment_id: string
+          id: string
+          started_at: string | null
+          status: string | null
+          student_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          certificate_issued?: boolean | null
+          completed_at?: string | null
+          completion_percentage?: number | null
+          course_template_id: string
+          created_at?: string | null
+          enrollment_id: string
+          id?: string
+          started_at?: string | null
+          status?: string | null
+          student_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          certificate_issued?: boolean | null
+          completed_at?: string | null
+          completion_percentage?: number | null
+          course_template_id?: string
+          created_at?: string | null
+          enrollment_id?: string
+          id?: string
+          started_at?: string | null
+          status?: string | null
+          student_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_progress_course_template_id_fkey"
+            columns: ["course_template_id"]
+            isOneToOne: false
+            referencedRelation: "course_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_progress_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: true
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_progress_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
         ]
       }
