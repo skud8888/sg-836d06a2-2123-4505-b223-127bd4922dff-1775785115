@@ -1,6 +1,6 @@
 ---
 title: Admin Signup Flow
-status: in_progress
+status: done
 priority: urgent
 type: feature
 tags: [auth, admin, signup]
@@ -13,13 +13,13 @@ position: 44
 Create dedicated admin signup page with automatic super_admin role assignment for first user. Include validation, email confirmation, and secure onboarding.
 
 ## Checklist
-- [ ] Create /admin/signup page
-- [ ] Check if any admins exist (first user = super_admin)
-- [ ] Email/password validation
-- [ ] Create user in Supabase Auth
-- [ ] Create profile record
-- [ ] Assign appropriate role
-- [ ] Send welcome email
-- [ ] Redirect to onboarding
-- [ ] Add link from login page
-- [ ] Test signup flow
+- [x] Create /admin/signup page
+- [x] Check if any admins exist (first user = super_admin)
+- [x] Email/password validation
+- [x] Create user in Supabase Auth
+- [x] Create profile record
+- [x] Assign appropriate role
+- [x] Send welcome email
+- [x] Redirect to onboarding
+- [x] Add link from login page
+- [x] Test signup flow

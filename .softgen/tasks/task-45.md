@@ -1,6 +1,6 @@
 ---
 title: Admin Onboarding Wizard
-status: in_progress
+status: done
 priority: urgent
 type: feature
 tags: [onboarding, admin, wizard]
@@ -13,14 +13,14 @@ position: 45
 Multi-step onboarding wizard for new admins. Guide through profile setup, training center configuration, notification preferences, and initial course creation.
 
 ## Checklist
-- [ ] Create onboarding wizard component
-- [ ] Step 1: Welcome & profile completion
-- [ ] Step 2: Training center details
-- [ ] Step 3: Notification preferences
-- [ ] Step 4: Create first course template (optional)
-- [ ] Step 5: Invite team members (optional)
-- [ ] Progress indicator
-- [ ] Skip/complete later options
-- [ ] Save progress
-- [ ] Redirect to admin dashboard when complete
-- [ ] Mark onboarding as completed in database
+- [x] Create onboarding wizard component
+- [x] Step 1: Welcome & profile completion
+- [x] Step 2: Training center details
+- [x] Step 3: Notification preferences
+- [x] Step 4: Create first course template (optional)
+- [x] Step 5: Invite team members (optional)
+- [x] Progress indicator
+- [x] Skip/complete later options
+- [x] Save progress
+- [x] Redirect to admin dashboard when complete
+- [x] Mark onboarding as completed in database

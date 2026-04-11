@@ -190,11 +190,13 @@ export default function AdminOnboardingPage() {
         .from("notification_preferences")
         .upsert({
           user_id: userId,
-          email_bookings: notificationData.emailBookings,
-          email_payments: notificationData.emailPayments,
-          email_enquiries: notificationData.emailEnquiries,
-          sms_bookings: notificationData.smsBookings,
-          sms_payments: notificationData.smsPayments
+          email_new_booking: notificationData.emailBookings,
+          email_payment_received: notificationData.emailPayments,
+          email_new_enquiry: notificationData.emailEnquiries,
+          sms_new_booking: notificationData.smsBookings,
+          sms_payment_received: notificationData.smsPayments
+        }, {
+          onConflict: "user_id"
         });
 
       if (prefError) throw prefError;
