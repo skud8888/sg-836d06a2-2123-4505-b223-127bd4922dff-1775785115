@@ -1,6 +1,6 @@
 ---
 title: Waitlist System
-status: in_progress
+status: done
 priority: high
 type: feature
 tags: [waitlist, enrollment, automation]
@@ -13,12 +13,12 @@ position: 51
 Complete waitlist management system allowing students to join waitlists when courses are full, with automatic notifications when spots become available.
 
 ## Checklist
-- [ ] Create waitlist database table
-- [ ] Build "Join Waitlist" functionality on full courses
-- [ ] Waitlist position tracking
-- [ ] Auto-notification when spot opens
-- [ ] Convert waitlist to enrollment
-- [ ] Admin waitlist management page
-- [ ] Waitlist expiration (24-48 hours to claim spot)
-- [ ] Email notifications for waitlist updates
-- [ ] Test complete waitlist flow
+- [x] Create waitlist database table
+- [x] Build "Join Waitlist" functionality on full courses
+- [x] Waitlist position tracking
+- [x] Auto-notification when spot opens
+- [x] Convert waitlist to enrollment
+- [x] Admin waitlist management page
+- [x] Waitlist expiration (24-48 hours to claim spot)
+- [x] Email notifications for waitlist updates
+- [x] Test complete waitlist flow

@@ -24,6 +24,7 @@ import {
   ArrowRight,
   CreditCard
 } from "lucide-react";
+import { emailTriggerService } from "@/services/emailTriggerService";
 
 interface CourseDetails {
   id: string;
