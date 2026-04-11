@@ -1,6 +1,6 @@
 ---
 title: Student Enrollment Workflow
-status: in_progress
+status: done
 priority: high
 type: feature
 tags: [student, enrollment, booking, payment]
@@ -13,15 +13,15 @@ position: 49
 Complete student enrollment system with course browsing, online booking, Stripe payment integration, and enrollment confirmation with receipts.
 
 ## Checklist
-- [ ] Create enrollments database table
-- [ ] Build public course catalog page
-- [ ] Course detail page with enrollment button
-- [ ] Enrollment form (student information)
-- [ ] Payment options (full/deposit/installment)
-- [ ] Stripe Checkout integration
-- [ ] Enrollment confirmation page
-- [ ] Send confirmation email with receipt
-- [ ] Student portal enrollment history
-- [ ] Admin enrollment management
-- [ ] Waitlist functionality
-- [ ] Test complete enrollment flow
+- [x] Create enrollments database table
+- [x] Build public course catalog page
+- [x] Course detail page with enrollment button
+- [x] Enrollment form (student information)
+- [x] Payment options (full/deposit/installment)
+- [x] Stripe Checkout integration
+- [x] Enrollment confirmation page
+- [x] Send confirmation email with receipt
+- [x] Student portal enrollment history
+- [x] Admin enrollment management
+- [x] Waitlist functionality
+- [x] Test complete enrollment flow

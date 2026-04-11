@@ -1,307 +1,234 @@
-import { useEffect, useState } from "react";
-import { Navigation } from "@/components/Navigation";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
+import Link from "next/link";
 import { SEO } from "@/components/SEO";
-import { supabase } from "@/integrations/supabase/client";
+import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Calendar, MapPin, Users, DollarSign, Search, Filter } from "lucide-react";
-import { format, isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
-import Link from "next/link";
-import type { Tables } from "@/integrations/supabase/types";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Loader2,
+  Search,
+  Clock,
+  Users,
+  DollarSign,
+  Calendar,
+  BookOpen,
+  ArrowRight,
+  Filter
+} from "lucide-react";
 
-type ScheduledClass = Tables<"scheduled_classes"> & {
-  course_templates: Pick<Tables<"course_templates">, "name" | "code" | "description" | "price_full" | "price_deposit"> | null;
-  bookings: { count: number }[];
-};
+interface Course {
+  id: string;
+  name: string;
+  description: string;
+  duration_hours: number;
+  price_full: number;
+  price_deposit: number;
+  max_students: number;
+  category: string | null;
+  created_at: string;
+}
 
-export default function Courses() {
-  const [classes, setClasses] = useState<ScheduledClass[]>([]);
-  const [filteredClasses, setFilteredClasses] = useState<ScheduledClass[]>([]);
+export default function CoursesPage() {
+  const router = useRouter();
+  const { toast } = useToast();
+
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [courseFilter, setCourseFilter] = useState("all");
-  const [locationFilter, setLocationFilter] = useState("all");
-  const [dateFilter, setDateFilter] = useState("all");
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
 
   useEffect(() => {
-    fetchAvailableClasses();
+    loadCourses();
   }, []);
 
-  useEffect(() => {
-    applyFilters();
-  }, [searchTerm, courseFilter, locationFilter, dateFilter, classes]);
+  const loadCourses = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("course_templates")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-  const fetchAvailableClasses = async () => {
-    const { data, error } = await supabase
-      .from("scheduled_classes")
-      .select(`
-        *,
-        course_templates(name, code, description, price_full, price_deposit),
-        bookings(count)
-      `)
-      .eq("status", "scheduled")
-      .gte("start_datetime", new Date().toISOString())
-      .order("start_datetime", { ascending: true });
+      if (error) throw error;
 
-    console.log("Fetched classes:", { data, error });
-
-    if (data) {
-      setClasses(data as any);
-    }
-    setLoading(false);
-  };
-
-  const applyFilters = () => {
-    let filtered = [...classes];
-
-    // Search filter
-    if (searchTerm) {
-      const search = searchTerm.toLowerCase();
-      filtered = filtered.filter(
-        (c) =>
-          c.course_templates?.name.toLowerCase().includes(search) ||
-          c.course_templates?.code.toLowerCase().includes(search) ||
-          c.course_templates?.description?.toLowerCase().includes(search) ||
-          c.location?.toLowerCase().includes(search)
-      );
-    }
-
-    // Course type filter
-    if (courseFilter !== "all") {
-      filtered = filtered.filter(
-        (c) => c.course_templates?.code === courseFilter
-      );
-    }
-
-    // Location filter
-    if (locationFilter !== "all") {
-      filtered = filtered.filter((c) => c.location === locationFilter);
-    }
-
-    // Date filter
-    if (dateFilter !== "all") {
-      const now = new Date();
-      const today = startOfDay(now);
-      const weekEnd = endOfDay(new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000));
-      const monthEnd = endOfDay(new Date(now.getFullYear(), now.getMonth() + 1, 0));
-
-      filtered = filtered.filter((c) => {
-        const classDate = new Date(c.start_datetime);
-        if (dateFilter === "week") {
-          return isAfter(classDate, today) && isBefore(classDate, weekEnd);
-        } else if (dateFilter === "month") {
-          return isAfter(classDate, today) && isBefore(classDate, monthEnd);
-        }
-        return true;
+      setCourses(data || []);
+    } catch (err: any) {
+      console.error("Error loading courses:", err);
+      toast({
+        title: "Error",
+        description: "Failed to load courses",
+        variant: "destructive"
       });
+    } finally {
+      setLoading(false);
     }
-
-    setFilteredClasses(filtered);
   };
 
-  const getUniqueCourseCodes = () => {
-    const codes = new Set<string>();
-    classes.forEach((c) => {
-      if (c.course_templates?.code) {
-        codes.add(c.course_templates.code);
-      }
-    });
-    return Array.from(codes);
-  };
+  const filteredCourses = courses.filter(course => {
+    const matchesSearch = course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         course.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = categoryFilter === "all" || course.category === categoryFilter;
+    return matchesSearch && matchesCategory;
+  });
 
-  const getUniqueLocations = () => {
-    const locations = new Set<string>();
-    classes.forEach((c) => {
-      if (c.location) {
-        locations.add(c.location);
-      }
-    });
-    return Array.from(locations);
-  };
-
-  const isClassFull = (classItem: ScheduledClass) => {
-    const bookingCount = classItem.bookings?.[0]?.count || 0;
-    return bookingCount >= classItem.max_students;
-  };
+  const categories = Array.from(new Set(courses.map(c => c.category).filter(Boolean))) as string[];
 
   return (
     <>
       <SEO
-        title="Available Courses | GTS Training"
-        description="Browse upcoming training courses and book your spot"
+        title="Training Courses - GTS Training"
+        description="Browse our comprehensive training courses"
       />
-      <Navigation />
-      <main className="min-h-screen bg-background py-12">
-        <div className="max-w-6xl mx-auto px-4 space-y-8">
-          <div className="text-center space-y-4">
-            <h1 className="text-4xl font-heading font-bold">Available Courses</h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Browse our upcoming training sessions and secure your spot today
-            </p>
-          </div>
 
-          {/* Search and Filters */}
-          <Card>
-            <CardContent className="pt-6">
-              <div className="space-y-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+      <Navigation />
+
+      <div className="min-h-screen bg-background">
+        {/* Hero Section */}
+        <section className="bg-gradient-to-br from-primary/10 via-primary/5 to-background pt-24 pb-12">
+          <div className="container mx-auto px-4">
+            <div className="max-w-3xl mx-auto text-center">
+              <h1 className="text-4xl md:text-5xl font-bold mb-4">
+                Our Training Courses
+              </h1>
+              <p className="text-xl text-muted-foreground mb-8">
+                Professional training programs designed to help you succeed
+              </p>
+
+              {/* Search and Filter */}
+              <div className="flex flex-col md:flex-row gap-4 mb-8">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search courses, codes, or locations..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9"
+                    placeholder="Search courses..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
                   />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Select value={courseFilter} onValueChange={setCourseFilter}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="All Courses" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Courses</SelectItem>
-                      {getUniqueCourseCodes().map((code) => (
-                        <SelectItem key={code} value={code}>
-                          {code}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select value={locationFilter} onValueChange={setLocationFilter}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="All Locations" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Locations</SelectItem>
-                      {getUniqueLocations().map((location) => (
-                        <SelectItem key={location} value={location}>
-                          {location}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select value={dateFilter} onValueChange={setDateFilter}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="All Dates" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Dates</SelectItem>
-                      <SelectItem value="week">This Week</SelectItem>
-                      <SelectItem value="month">This Month</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger className="w-full md:w-48">
+                    <Filter className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="All Categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {categories.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Results Count */}
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">
-              Showing {filteredClasses.length} of {classes.length} courses
-            </p>
-            {(searchTerm || courseFilter !== "all" || locationFilter !== "all" || dateFilter !== "all") && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setSearchTerm("");
-                  setCourseFilter("all");
-                  setLocationFilter("all");
-                  setDateFilter("all");
-                }}
-              >
-                Clear Filters
-              </Button>
-            )}
+            </div>
           </div>
+        </section>
 
-          {loading ? (
-            <div className="text-center py-12">Loading courses...</div>
-          ) : filteredClasses.length === 0 ? (
-            <Card>
-              <CardContent className="py-12 text-center text-muted-foreground">
-                No courses match your search criteria. Try adjusting your filters.
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid gap-6">
-              {filteredClasses.map((classItem) => {
-                const isFull = isClassFull(classItem);
-                return (
-                  <Card key={classItem.id} className={isFull ? "opacity-60" : ""}>
+        {/* Courses Grid */}
+        <section className="py-12">
+          <div className="container mx-auto px-4">
+            {loading ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : filteredCourses.length === 0 ? (
+              <Card className="max-w-md mx-auto">
+                <CardContent className="pt-12 pb-12 text-center">
+                  <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No courses found</h3>
+                  <p className="text-muted-foreground mb-6">
+                    {searchQuery || categoryFilter !== "all"
+                      ? "Try adjusting your search or filters"
+                      : "Check back soon for new courses"}
+                  </p>
+                  {(searchQuery || categoryFilter !== "all") && (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setSearchQuery("");
+                        setCategoryFilter("all");
+                      }}
+                    >
+                      Clear Filters
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredCourses.map((course) => (
+                  <Card key={course.id} className="flex flex-col hover:shadow-lg transition-shadow">
                     <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <CardTitle className="text-2xl">
-                              {classItem.course_templates?.name || "Course"}
-                            </CardTitle>
-                            {isFull && (
-                              <Badge variant="destructive">Fully Booked</Badge>
-                            )}
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            {classItem.course_templates?.code}
-                          </p>
-                          {classItem.course_templates?.description && (
-                            <p className="mt-2 text-muted-foreground">
-                              {classItem.course_templates.description}
-                            </p>
+                      <div className="flex items-start justify-between mb-2">
+                        <CardTitle className="text-xl">{course.name}</CardTitle>
+                        {course.category && (
+                          <Badge variant="outline">{course.category}</Badge>
+                        )}
+                      </div>
+                      <CardDescription className="line-clamp-3">
+                        {course.description}
+                      </CardDescription>
+                    </CardHeader>
+
+                    <CardContent className="flex-1 flex flex-col justify-between">
+                      <div className="space-y-3 mb-6">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Clock className="h-4 w-4" />
+                          <span>{course.duration_hours} hours</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Users className="h-4 w-4" />
+                          <span>Max {course.max_students} students</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <DollarSign className="h-4 w-4 text-primary" />
+                          <span className="font-semibold text-lg">${course.price_full}</span>
+                          {course.price_deposit > 0 && (
+                            <span className="text-sm text-muted-foreground">
+                              or ${course.price_deposit} deposit
+                            </span>
                           )}
                         </div>
                       </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-6">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
-                          <span>
-                            {format(new Date(classItem.start_datetime), "MMM d, yyyy")}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4 text-muted-foreground" />
-                          <span>{classItem.location || "TBA"}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Users className="h-4 w-4 text-muted-foreground" />
-                          <span>
-                            {classItem.bookings?.[0]?.count || 0} / {classItem.max_students} enrolled
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <DollarSign className="h-4 w-4 text-muted-foreground" />
-                          <span>
-                            ${classItem.course_templates?.price_full} (${classItem.course_templates?.price_deposit} deposit to secure)
-                          </span>
-                        </div>
-                      </div>
 
-                      <div className="pt-4 flex gap-3">
-                        {isFull ? (
-                          <Button disabled className="w-full md:w-auto">
-                            Fully Booked
-                          </Button>
-                        ) : (
-                          <Link href={`/booking/${classItem.id}`}>
-                            <Button className="w-full md:w-auto">
-                              Book Now
-                            </Button>
-                          </Link>
-                        )}
-                      </div>
+                      <Link href={`/enroll/${course.id}`}>
+                        <Button className="w-full">
+                          Enroll Now
+                          <ArrowRight className="h-4 w-4 ml-2" />
+                        </Button>
+                      </Link>
                     </CardContent>
                   </Card>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </main>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="bg-primary/5 py-16">
+          <div className="container mx-auto px-4 text-center">
+            <h2 className="text-3xl font-bold mb-4">
+              Can&apos;t Find What You&apos;re Looking For?
+            </h2>
+            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+              Contact us to discuss custom training programs tailored to your needs
+            </p>
+            <Link href="/contact">
+              <Button size="lg">
+                Contact Us
+                <ArrowRight className="h-5 w-5 ml-2" />
+              </Button>
+            </Link>
+          </div>
+        </section>
+      </div>
     </>
   );
 }
