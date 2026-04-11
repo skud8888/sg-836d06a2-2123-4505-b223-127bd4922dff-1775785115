@@ -218,9 +218,9 @@ export default function AdminOnboardingPage() {
           .from("course_templates")
           .insert({
             name: courseData.courseName,
+            code: courseData.courseName.substring(0, 3).toUpperCase() + '-101',
             duration_hours: parseInt(courseData.duration) || 0,
-            price: parseFloat(courseData.price) || 0,
-            status: "active",
+            price_full: parseFloat(courseData.price) || 0,
             description: `Initial course template created during onboarding`
           });
 

@@ -1079,34 +1079,49 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address: string | null
           avatar_url: string | null
+          bio: string | null
           created_at: string | null
           email: string | null
           full_name: string | null
           id: string
+          onboarding_completed: boolean | null
+          organization_name: string | null
           phone: string | null
           role: string
           updated_at: string | null
+          website: string | null
         }
         Insert: {
+          address?: string | null
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string | null
           email?: string | null
           full_name?: string | null
           id: string
+          onboarding_completed?: boolean | null
+          organization_name?: string | null
           phone?: string | null
           role?: string
           updated_at?: string | null
+          website?: string | null
         }
         Update: {
+          address?: string | null
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
+          onboarding_completed?: boolean | null
+          organization_name?: string | null
           phone?: string | null
           role?: string
           updated_at?: string | null
+          website?: string | null
         }
         Relationships: []
       }
