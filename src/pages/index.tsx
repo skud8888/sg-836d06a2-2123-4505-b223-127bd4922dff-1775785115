@@ -17,7 +17,6 @@ import {
   TrendingUp,
   Clock,
   Award,
-  File,
   FileText,
   CreditCard,
   Bell,
@@ -57,7 +56,7 @@ export default function HomePage() {
       color: "text-orange-600 dark:text-orange-400"
     },
     {
-      icon: File,
+      icon: FileText,
       title: "Complete Records",
       description: "Comprehensive student profiles with enrollment history, documents, and payment tracking.",
       color: "text-purple-600 dark:text-purple-400"
@@ -81,7 +80,7 @@ export default function HomePage() {
       color: "text-emerald-600 dark:text-emerald-400"
     },
     {
-      icon: File,
+      icon: FileText,
       title: "Automated Receipts",
       description: "Instant receipt generation and email delivery for all transactions.",
       color: "text-indigo-600 dark:text-indigo-400"
@@ -93,7 +92,7 @@ export default function HomePage() {
       color: "text-pink-600 dark:text-pink-400"
     },
     {
-      icon: File,
+      icon: FileText,
       title: "Centralized Hub",
       description: "All documents linked to students, courses, and bookings in one organized system.",
       color: "text-violet-600 dark:text-violet-400"

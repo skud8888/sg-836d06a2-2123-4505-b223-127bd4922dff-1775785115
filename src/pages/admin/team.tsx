@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
-import { sendEmail } from "@/services/emailService";
+import { emailService } from "@/services/emailService";
 import { 
   Loader2, 
   UserPlus, 
@@ -205,8 +205,7 @@ export default function TeamManagementPage() {
       // Send invitation email
       const inviteLink = `${window.location.origin}/admin/signup?token=${token}`;
       
-      await sendEmail({
-        to: inviteForm.email,
+      await emailService.sendEmail(inviteForm.email, {
         subject: "You've been invited to join GTS Training",
         html: `
           <h2>Team Invitation</h2>
@@ -254,8 +253,7 @@ export default function TeamManagementPage() {
       const inviteLink = `${window.location.origin}/admin/signup?token=${invitation.token}`;
       
       // Resend email
-      await sendEmail({
-        to: email,
+      await emailService.sendEmail(email, {
         subject: "Reminder: You've been invited to join GTS Training",
         html: `
           <h2>Team Invitation Reminder</h2>
