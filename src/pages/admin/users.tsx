@@ -60,35 +60,46 @@ export default function UsersManagement() {
   const fetchUsers = async () => {
     setLoading(true);
 
-    // Get all users from auth.users
-    const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+    try {
+      // Get all users from profiles table with their roles
+      const { data: profilesData, error: profilesError } = await supabase
+        .from("profiles")
+        .select(`
+          id,
+          email,
+          full_name,
+          created_at
+        `)
+        .order("created_at", { ascending: false });
 
-    if (authError) {
-      console.error("Error fetching users:", authError);
+      if (profilesError) throw profilesError;
+
+      // Get all role assignments
+      const { data: roleAssignments, error: rolesError } = await supabase
+        .from("user_roles")
+        .select("*");
+
+      if (rolesError) throw rolesError;
+
+      // Map users with their roles
+      const usersWithRoles = (profilesData || []).map(user => ({
+        id: user.id,
+        email: user.email || "",
+        created_at: user.created_at,
+        roles: roleAssignments?.filter(r => r.user_id === user.id).map(r => r.role) || []
+      }));
+
+      setUsers(usersWithRoles);
+    } catch (err: any) {
+      console.error("Error fetching users:", err);
       toast({
         title: "Error",
         description: "Failed to load users",
         variant: "destructive"
       });
+    } finally {
       setLoading(false);
-      return;
     }
-
-    // Get all role assignments
-    const { data: roleAssignments } = await supabase
-      .from("user_roles")
-      .select("*");
-
-    // Map users with their roles
-    const usersWithRoles = authUsers.users.map(user => ({
-      id: user.id,
-      email: user.email || "",
-      created_at: user.created_at,
-      roles: roleAssignments?.filter(r => r.user_id === user.id).map(r => r.role) || []
-    }));
-
-    setUsers(usersWithRoles);
-    setLoading(false);
   };
 
   const handleAssignRole = async () => {
