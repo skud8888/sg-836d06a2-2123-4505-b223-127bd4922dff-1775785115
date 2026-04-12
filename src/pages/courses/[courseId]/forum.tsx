@@ -20,16 +20,16 @@ interface Thread {
   content: string;
   created_at: string;
   is_pinned: boolean;
-  is_resolved: boolean;
-  upvotes: number;
+  is_answered: boolean;
+  upvotes_count: number;
   reply_count: number;
   profiles: {
     full_name: string;
     email: string;
+    user_roles?: Array<{
+      role: string;
+    }>;
   };
-  user_roles: Array<{
-    role: string;
-  }>;
 }
 
 interface Reply {
@@ -41,10 +41,10 @@ interface Reply {
   profiles: {
     full_name: string;
     email: string;
+    user_roles?: Array<{
+      role: string;
+    }>;
   };
-  user_roles: Array<{
-    role: string;
-  }>;
 }
 
 export default function CourseForumPage() {
@@ -91,10 +91,13 @@ export default function CourseForumPage() {
         .from("discussion_threads")
         .select(`
           *,
-          profiles (full_name, email),
-          user_roles (role)
+          profiles (
+            full_name, 
+            email,
+            user_roles (role)
+          )
         `)
-        .eq("course_id", courseIdStr)
+        .eq("course_template_id", courseIdStr)
         .order("is_pinned", { ascending: false })
         .order("created_at", { ascending: false });
 
@@ -111,7 +114,7 @@ export default function CourseForumPage() {
           return {
             ...thread,
             reply_count: count || 0
-          };
+          } as Thread;
         })
       );
 
@@ -134,15 +137,18 @@ export default function CourseForumPage() {
         .from("discussion_replies")
         .select(`
           *,
-          profiles (full_name, email),
-          user_roles (role)
+          profiles (
+            full_name, 
+            email,
+            user_roles (role)
+          )
         `)
         .eq("thread_id", threadId)
         .order("is_instructor_answer", { ascending: false })
         .order("created_at", { ascending: true });
 
       if (error) throw error;
-      setReplies(data || []);
+      setReplies(data as unknown as Reply[] || []);
     } catch (err: any) {
       console.error("Error loading replies:", err);
     }
@@ -160,8 +166,8 @@ export default function CourseForumPage() {
       const { error } = await supabase
         .from("discussion_threads")
         .insert({
-          course_id: courseIdStr,
-          user_id: session.user.id,
+          course_template_id: courseIdStr,
+          author_id: session.user.id,
           title: threadForm.title,
           content: threadForm.content
         });
@@ -209,7 +215,7 @@ export default function CourseForumPage() {
         .from("discussion_replies")
         .insert({
           thread_id: selectedThread.id,
-          user_id: session.user.id,
+          author_id: session.user.id,
           content: replyContent,
           is_instructor_answer: isInstructor
         });
@@ -241,7 +247,7 @@ export default function CourseForumPage() {
 
       const { error } = await supabase
         .from("discussion_threads")
-        .update({ upvotes: thread.upvotes + 1 })
+        .update({ upvotes_count: thread.upvotes_count + 1 })
         .eq("id", threadId);
 
       if (error) throw error;
@@ -279,7 +285,7 @@ export default function CourseForumPage() {
     try {
       const { error } = await supabase
         .from("discussion_threads")
-        .update({ is_resolved: true })
+        .update({ is_answered: true })
         .eq("id", threadId);
 
       if (error) throw error;
@@ -305,7 +311,7 @@ export default function CourseForumPage() {
     return (
       thread.title.toLowerCase().includes(searchLower) ||
       thread.content.toLowerCase().includes(searchLower) ||
-      thread.profiles.full_name?.toLowerCase().includes(searchLower)
+      thread.profiles?.full_name?.toLowerCase().includes(searchLower)
     );
   });
 
@@ -313,10 +319,13 @@ export default function CourseForumPage() {
     if (name) {
       return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
     }
-    return email[0].toUpperCase();
+    if (email) {
+      return email[0].toUpperCase();
+    }
+    return '?';
   };
 
-  const getUserRole = (roles: Array<{ role: string }>) => {
+  const getUserRole = (roles?: Array<{ role: string }>) => {
     if (!roles || roles.length === 0) return null;
     const role = roles[0].role;
     if (role === 'trainer' || role === 'admin' || role === 'super_admin') {
@@ -455,7 +464,7 @@ export default function CourseForumPage() {
                       <div className="flex items-start gap-4">
                         <Avatar>
                           <AvatarFallback>
-                            {getUserInitials(thread.profiles.full_name, thread.profiles.email)}
+                            {getUserInitials(thread.profiles?.full_name, thread.profiles?.email)}
                           </AvatarFallback>
                         </Avatar>
 
@@ -467,7 +476,7 @@ export default function CourseForumPage() {
                                 {thread.is_pinned && (
                                   <Pin className="h-4 w-4 text-primary" />
                                 )}
-                                {thread.is_resolved && (
+                                {thread.is_answered && (
                                   <Badge variant="outline" className="text-green-600 border-green-600">
                                     <CheckCircle className="h-3 w-3 mr-1" />
                                     Resolved
@@ -475,10 +484,10 @@ export default function CourseForumPage() {
                                 )}
                               </div>
                               <p className="text-sm text-muted-foreground mb-2">
-                                {thread.profiles.full_name || thread.profiles.email}
-                                {getUserRole(thread.user_roles) && (
+                                {thread.profiles?.full_name || thread.profiles?.email}
+                                {getUserRole(thread.profiles?.user_roles) && (
                                   <Badge variant="secondary" className="ml-2 text-xs">
-                                    {getUserRole(thread.user_roles)}
+                                    {getUserRole(thread.profiles?.user_roles)}
                                   </Badge>
                                 )}
                               </p>
@@ -496,7 +505,7 @@ export default function CourseForumPage() {
                               className="flex items-center gap-1 hover:text-primary"
                             >
                               <ThumbsUp className="h-4 w-4" />
-                              {thread.upvotes}
+                              {thread.upvotes_count}
                             </button>
                             <span className="flex items-center gap-1">
                               <MessageSquare className="h-4 w-4" />
@@ -521,15 +530,15 @@ export default function CourseForumPage() {
                       <div className="flex-1">
                         <CardTitle>{selectedThread.title}</CardTitle>
                         <CardDescription>
-                          Posted by {selectedThread.profiles.full_name || selectedThread.profiles.email}
-                          {getUserRole(selectedThread.user_roles) && (
+                          Posted by {selectedThread.profiles?.full_name || selectedThread.profiles?.email}
+                          {getUserRole(selectedThread.profiles?.user_roles) && (
                             <Badge variant="secondary" className="ml-2">
-                              {getUserRole(selectedThread.user_roles)}
+                              {getUserRole(selectedThread.profiles?.user_roles)}
                             </Badge>
                           )}
                         </CardDescription>
                       </div>
-                      {!selectedThread.is_resolved && (
+                      {!selectedThread.is_answered && (
                         <Button
                           size="sm"
                           variant="outline"
@@ -557,22 +566,22 @@ export default function CourseForumPage() {
                           <div key={reply.id} className="flex gap-3">
                             <Avatar>
                               <AvatarFallback>
-                                {getUserInitials(reply.profiles.full_name, reply.profiles.email)}
+                                {getUserInitials(reply.profiles?.full_name, reply.profiles?.email)}
                               </AvatarFallback>
                             </Avatar>
 
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
                                 <span className="font-medium text-sm">
-                                  {reply.profiles.full_name || reply.profiles.email}
+                                  {reply.profiles?.full_name || reply.profiles?.email}
                                 </span>
-                                {getUserRole(reply.user_roles) && (
+                                {getUserRole(reply.profiles?.user_roles) && (
                                   <Badge variant="secondary" className="text-xs">
-                                    {getUserRole(reply.user_roles)}
+                                    {getUserRole(reply.profiles?.user_roles)}
                                   </Badge>
                                 )}
                                 {reply.is_instructor_answer && (
-                                  <Badge className="text-xs bg-green-600">
+                                  <Badge className="text-xs bg-green-600 text-white hover:bg-green-700">
                                     <Star className="h-3 w-3 mr-1" />
                                     Instructor Answer
                                   </Badge>
