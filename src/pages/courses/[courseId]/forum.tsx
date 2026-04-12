@@ -114,7 +114,7 @@ export default function CourseForumPage() {
           return {
             ...thread,
             reply_count: count || 0
-          } as Thread;
+          } as unknown as Thread;
         })
       );
 
