@@ -1,6 +1,6 @@
 ---
 title: Course Discussion Forums
-status: in_progress
+status: done
 priority: high
 type: feature
 tags: [forum, discussion, community, q&a]
@@ -13,17 +13,17 @@ position: 55
 Interactive discussion forums for each course with threaded conversations, instructor Q&A, student collaboration, file attachments, and moderation tools.
 
 ## Checklist
-- [ ] Create discussion_threads database table
-- [ ] Create discussion_replies table
-- [ ] Build forum interface for each course
-- [ ] Threaded conversation UI
-- [ ] Rich text editor for posts
-- [ ] File/image attachment support
-- [ ] Mark replies as "Instructor Answer"
-- [ ] Upvote/helpful button system
-- [ ] Search discussions
-- [ ] Subscribe to thread notifications
-- [ ] Moderation tools (edit/delete/pin)
-- [ ] Student can ask questions
-- [ ] Email notifications for replies
-- [ ] Test complete forum workflow
+- [x] Create discussion_threads database table
+- [x] Create discussion_replies table
+- [x] Build forum interface for each course
+- [x] Threaded conversation UI
+- [x] Rich text editor for posts
+- [x] File/image attachment support
+- [x] Mark replies as "Instructor Answer"
+- [x] Upvote/helpful button system
+- [x] Search discussions
+- [x] Subscribe to thread notifications
+- [x] Moderation tools (edit/delete/pin)
+- [x] Student can ask questions
+- [x] Email notifications for replies
+- [x] Test complete forum workflow

@@ -1,6 +1,6 @@
 ---
 title: Certificate Generation System
-status: in_progress
+status: done
 priority: high
 type: feature
 tags: [certificates, pdf, completion]
@@ -13,16 +13,16 @@ position: 53
 Professional certificate generation system with customizable templates, digital signatures, unique certificate numbers, and automatic delivery via email upon course completion.
 
 ## Checklist
-- [ ] Create certificates database table
-- [ ] Create certificate_templates table
-- [ ] Build PDF generation service
-- [ ] Design default certificate template
-- [ ] Certificate numbering system (unique IDs)
-- [ ] Digital signature/seal integration
-- [ ] Auto-generate on course completion
-- [ ] Email delivery with PDF attachment
-- [ ] Certificate verification page (public)
-- [ ] Admin certificate template editor
-- [ ] Student certificate download portal
-- [ ] Reissue certificate functionality
-- [ ] Test complete certificate workflow
+- [x] Create certificates database table
+- [x] Create certificate_templates table
+- [x] Build PDF generation service
+- [x] Design default certificate template
+- [x] Certificate numbering system (unique IDs)
+- [x] Digital signature/seal integration
+- [x] Auto-generate on course completion
+- [x] Email delivery with PDF attachment
+- [x] Certificate verification page (public)
+- [x] Admin certificate template editor
+- [x] Student certificate download portal
+- [x] Reissue certificate functionality
+- [x] Test complete certificate workflow
