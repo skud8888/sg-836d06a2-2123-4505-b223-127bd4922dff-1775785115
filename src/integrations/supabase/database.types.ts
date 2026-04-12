@@ -367,6 +367,123 @@ export type Database = {
           },
         ]
       }
+      certificate_templates: {
+        Row: {
+          background_url: string | null
+          body_template: string
+          border_style: string | null
+          color_scheme: Json | null
+          created_at: string | null
+          font_family: string | null
+          footer_text: string | null
+          header_text: string | null
+          id: string
+          is_default: boolean | null
+          logo_url: string | null
+          name: string
+          signature_url: string | null
+          template_type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          background_url?: string | null
+          body_template: string
+          border_style?: string | null
+          color_scheme?: Json | null
+          created_at?: string | null
+          font_family?: string | null
+          footer_text?: string | null
+          header_text?: string | null
+          id?: string
+          is_default?: boolean | null
+          logo_url?: string | null
+          name: string
+          signature_url?: string | null
+          template_type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          background_url?: string | null
+          body_template?: string
+          border_style?: string | null
+          color_scheme?: Json | null
+          created_at?: string | null
+          font_family?: string | null
+          footer_text?: string | null
+          header_text?: string | null
+          id?: string
+          is_default?: boolean | null
+          logo_url?: string | null
+          name?: string
+          signature_url?: string | null
+          template_type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      certificates: {
+        Row: {
+          certificate_number: string
+          completion_date: string | null
+          course_template_id: string
+          created_at: string | null
+          id: string
+          instructor_name: string | null
+          instructor_signature: string | null
+          issue_date: string
+          pdf_url: string | null
+          status: string | null
+          student_id: string
+          updated_at: string | null
+          verification_code: string | null
+        }
+        Insert: {
+          certificate_number: string
+          completion_date?: string | null
+          course_template_id: string
+          created_at?: string | null
+          id?: string
+          instructor_name?: string | null
+          instructor_signature?: string | null
+          issue_date?: string
+          pdf_url?: string | null
+          status?: string | null
+          student_id: string
+          updated_at?: string | null
+          verification_code?: string | null
+        }
+        Update: {
+          certificate_number?: string
+          completion_date?: string | null
+          course_template_id?: string
+          created_at?: string | null
+          id?: string
+          instructor_name?: string | null
+          instructor_signature?: string | null
+          issue_date?: string
+          pdf_url?: string | null
+          status?: string | null
+          student_id?: string
+          updated_at?: string | null
+          verification_code?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certificates_course_template_id_fkey"
+            columns: ["course_template_id"]
+            isOneToOne: false
+            referencedRelation: "course_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "certificates_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_templates: {
         Row: {
           created_at: string | null
@@ -678,6 +795,156 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "course_waitlist_course_template_id_fkey"
+            columns: ["course_template_id"]
+            isOneToOne: false
+            referencedRelation: "course_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discussion_replies: {
+        Row: {
+          attachments: Json | null
+          author_id: string
+          content: string
+          created_at: string | null
+          id: string
+          is_helpful: boolean | null
+          is_instructor_answer: boolean | null
+          parent_reply_id: string | null
+          thread_id: string
+          updated_at: string | null
+          upvotes_count: number | null
+        }
+        Insert: {
+          attachments?: Json | null
+          author_id: string
+          content: string
+          created_at?: string | null
+          id?: string
+          is_helpful?: boolean | null
+          is_instructor_answer?: boolean | null
+          parent_reply_id?: string | null
+          thread_id: string
+          updated_at?: string | null
+          upvotes_count?: number | null
+        }
+        Update: {
+          attachments?: Json | null
+          author_id?: string
+          content?: string
+          created_at?: string | null
+          id?: string
+          is_helpful?: boolean | null
+          is_instructor_answer?: boolean | null
+          parent_reply_id?: string | null
+          thread_id?: string
+          updated_at?: string | null
+          upvotes_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discussion_replies_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discussion_replies_parent_reply_id_fkey"
+            columns: ["parent_reply_id"]
+            isOneToOne: false
+            referencedRelation: "discussion_replies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discussion_replies_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "discussion_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discussion_threads: {
+        Row: {
+          author_id: string
+          category: string | null
+          content: string
+          course_lesson_id: string | null
+          course_module_id: string | null
+          course_template_id: string
+          created_at: string | null
+          id: string
+          is_answered: boolean | null
+          is_locked: boolean | null
+          is_pinned: boolean | null
+          replies_count: number | null
+          title: string
+          updated_at: string | null
+          upvotes_count: number | null
+          views_count: number | null
+        }
+        Insert: {
+          author_id: string
+          category?: string | null
+          content: string
+          course_lesson_id?: string | null
+          course_module_id?: string | null
+          course_template_id: string
+          created_at?: string | null
+          id?: string
+          is_answered?: boolean | null
+          is_locked?: boolean | null
+          is_pinned?: boolean | null
+          replies_count?: number | null
+          title: string
+          updated_at?: string | null
+          upvotes_count?: number | null
+          views_count?: number | null
+        }
+        Update: {
+          author_id?: string
+          category?: string | null
+          content?: string
+          course_lesson_id?: string | null
+          course_module_id?: string | null
+          course_template_id?: string
+          created_at?: string | null
+          id?: string
+          is_answered?: boolean | null
+          is_locked?: boolean | null
+          is_pinned?: boolean | null
+          replies_count?: number | null
+          title?: string
+          updated_at?: string | null
+          upvotes_count?: number | null
+          views_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discussion_threads_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discussion_threads_course_lesson_id_fkey"
+            columns: ["course_lesson_id"]
+            isOneToOne: false
+            referencedRelation: "course_lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discussion_threads_course_module_id_fkey"
+            columns: ["course_module_id"]
+            isOneToOne: false
+            referencedRelation: "course_modules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discussion_threads_course_template_id_fkey"
             columns: ["course_template_id"]
             isOneToOne: false
             referencedRelation: "course_templates"
@@ -1131,6 +1398,74 @@ export type Database = {
           },
         ]
       }
+      instructor_payouts: {
+        Row: {
+          commission_rate: number | null
+          courses_completed: number | null
+          created_at: string | null
+          id: string
+          instructor_id: string
+          instructor_share: number | null
+          notes: string | null
+          paid_at: string | null
+          payment_method: string | null
+          payment_reference: string | null
+          period_end: string
+          period_start: string
+          platform_fee: number | null
+          status: string | null
+          students_taught: number | null
+          total_revenue: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          commission_rate?: number | null
+          courses_completed?: number | null
+          created_at?: string | null
+          id?: string
+          instructor_id: string
+          instructor_share?: number | null
+          notes?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          period_end: string
+          period_start: string
+          platform_fee?: number | null
+          status?: string | null
+          students_taught?: number | null
+          total_revenue?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          commission_rate?: number | null
+          courses_completed?: number | null
+          created_at?: string | null
+          id?: string
+          instructor_id?: string
+          instructor_share?: number | null
+          notes?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          period_end?: string
+          period_start?: string
+          platform_fee?: number | null
+          status?: string | null
+          students_taught?: number | null
+          total_revenue?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instructor_payouts_instructor_id_fkey"
+            columns: ["instructor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invitations: {
         Row: {
           accepted_at: string | null
@@ -1548,6 +1883,66 @@ export type Database = {
           },
         ]
       }
+      payout_rules: {
+        Row: {
+          commission_rate: number
+          course_template_id: string | null
+          created_at: string | null
+          effective_from: string | null
+          effective_to: string | null
+          id: string
+          instructor_id: string | null
+          is_active: boolean | null
+          minimum_payout: number | null
+          payment_method: string | null
+          payout_schedule: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          commission_rate?: number
+          course_template_id?: string | null
+          created_at?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
+          id?: string
+          instructor_id?: string | null
+          is_active?: boolean | null
+          minimum_payout?: number | null
+          payment_method?: string | null
+          payout_schedule?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          commission_rate?: number
+          course_template_id?: string | null
+          created_at?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
+          id?: string
+          instructor_id?: string | null
+          is_active?: boolean | null
+          minimum_payout?: number | null
+          payment_method?: string | null
+          payout_schedule?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payout_rules_course_template_id_fkey"
+            columns: ["course_template_id"]
+            isOneToOne: false
+            referencedRelation: "course_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payout_rules_instructor_id_fkey"
+            columns: ["instructor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           address: string | null
@@ -1938,6 +2333,42 @@ export type Database = {
           user_role?: string | null
         }
         Relationships: []
+      }
+      thread_subscriptions: {
+        Row: {
+          id: string
+          subscribed_at: string | null
+          thread_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          subscribed_at?: string | null
+          thread_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          subscribed_at?: string | null
+          thread_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "thread_subscriptions_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "discussion_threads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "thread_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_feedback: {
         Row: {
