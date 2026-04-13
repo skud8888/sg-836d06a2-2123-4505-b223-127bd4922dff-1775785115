@@ -156,25 +156,39 @@ export default function UserManagementPage() {
     if (!createForm.email || !createForm.password) return;
     
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email: createForm.email,
-        password: createForm.password,
-        options: {
-          data: {
-            full_name: createForm.fullName
-          }
-        }
-      });
-
-      if (error) throw error;
-      
-      if (data.user && createForm.role !== "student") {
-        await supabase
-          .from("user_roles")
-          .insert({ user_id: data.user.id, role: createForm.role });
+      // Get auth token for API authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Authentication required",
+          description: "Please log in again",
+          variant: "destructive"
+        });
+        return;
       }
 
-      await auditService.logUserCreated(data.user?.id || "", createForm.email, [createForm.role]);
+      // Call server-side API route
+      const response = await fetch("/api/admin/create-user", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          email: createForm.email,
+          password: createForm.password,
+          fullName: createForm.fullName,
+          role: createForm.role
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to create user");
+      }
+
+      await auditService.logUserCreated(result.user.id, createForm.email, [createForm.role]);
 
       toast({ title: "User created successfully" });
       setIsCreateOpen(false);
@@ -223,6 +237,99 @@ export default function UserManagementPage() {
       fetchUsers();
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Authentication required",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Call server-side API route
+      const response = await fetch("/api/admin/delete-user", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ userId: userToDelete.id })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to delete user");
+      }
+
+      await auditService.logUserDeleted(userToDelete.id, userToDelete.email || "");
+
+      toast({ title: "User deleted successfully" });
+      setIsDeleteDialogOpen(false);
+      setUserToDelete(null);
+      fetchUsers();
+    } catch (error: any) {
+      toast({
+        title: "Error deleting user",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!resetForm.userId || !resetForm.newPassword) return;
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Authentication required",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Call server-side API route
+      const response = await fetch("/api/admin/reset-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          userId: resetForm.userId,
+          newPassword: resetForm.newPassword
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to reset password");
+      }
+
+      const user = users.find(u => u.id === resetForm.userId);
+      if (user) {
+        await auditService.logPasswordReset(resetForm.userId, user.email || "", "direct");
+      }
+
+      toast({ title: "Password reset successfully" });
+      setIsResetDialogOpen(false);
+      setResetForm({ userId: "", newPassword: "" });
+    } catch (error: any) {
+      toast({
+        title: "Error resetting password",
+        description: error.message,
+        variant: "destructive"
+      });
     }
   };
 
