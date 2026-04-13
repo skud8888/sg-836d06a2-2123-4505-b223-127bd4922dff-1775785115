@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Navigation } from "@/components/Navigation";
 import { AdminWelcomeTour } from "@/components/AdminWelcomeTour";
 import { ActivityFeed } from "@/components/ActivityFeed";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { supabase } from "@/integrations/supabase/client";
 import { rbacService } from "@/services/rbacService";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -233,6 +234,7 @@ export default function AdminDashboard() {
     <>
       <Navigation />
       <AdminWelcomeTour />
+      <OfflineIndicator />
       <div className="min-h-screen bg-slate-50 pt-20">
         <div className="container mx-auto px-4 py-8">
           <div className="mb-8 flex items-center justify-between flex-wrap gap-4">

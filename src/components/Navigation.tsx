@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ThemeSwitch } from "@/components/ThemeSwitch";
+import { NotificationCenter } from "@/components/NotificationCenter";
+import { supabase } from "@/integrations/supabase/client";
 import { Menu, X, BookOpen, ChevronDown } from "lucide-react";
 import {
   DropdownMenu,
@@ -12,6 +14,23 @@ import {
 
 export function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    checkAuth();
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  const checkAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setIsAuthenticated(!!session);
+  };
 
   const navLinks = [
     { href: "/courses", label: "Courses" },
@@ -52,6 +71,9 @@ export function Navigation() {
 
           <div className="hidden md:flex items-center gap-3">
             <ThemeSwitch />
+            
+            {/* Show notification center if authenticated */}
+            {isAuthenticated && <NotificationCenter />}
             
             {/* Student Portal Dropdown */}
             <DropdownMenu>
@@ -101,6 +123,7 @@ export function Navigation() {
             <div className="pt-4 space-y-3 border-t">
               <div className="flex items-center gap-3 mb-3">
                 <ThemeSwitch />
+                {isAuthenticated && <NotificationCenter />}
               </div>
               <div className="text-sm font-semibold text-muted-foreground mb-2">Student Portal</div>
               {studentPortalLinks.map((link) => (

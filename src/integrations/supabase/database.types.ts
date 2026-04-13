@@ -541,6 +541,77 @@ export type Database = {
           },
         ]
       }
+      class_attendance: {
+        Row: {
+          booking_id: string
+          check_in_time: string | null
+          checked_in_by: string | null
+          class_id: string
+          created_at: string | null
+          id: string
+          notes: string | null
+          status: string
+          student_email: string
+          student_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          booking_id: string
+          check_in_time?: string | null
+          checked_in_by?: string | null
+          class_id: string
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          status: string
+          student_email: string
+          student_name: string
+          updated_at?: string | null
+        }
+        Update: {
+          booking_id?: string
+          check_in_time?: string | null
+          checked_in_by?: string | null
+          class_id?: string
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          status?: string
+          student_email?: string
+          student_name?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_attendance_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_attendance_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "payment_tracking"
+            referencedColumns: ["booking_id"]
+          },
+          {
+            foreignKeyName: "class_attendance_checked_in_by_fkey"
+            columns: ["checked_in_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_attendance_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "scheduled_classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_templates: {
         Row: {
           created_at: string | null
@@ -1788,6 +1859,53 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          link: string | null
+          message: string
+          metadata: Json | null
+          read_at: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          link?: string | null
+          message: string
+          metadata?: Json | null
+          read_at?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          link?: string | null
+          message?: string
+          metadata?: Json | null
+          read_at?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_plan_installments: {
         Row: {
           amount: number
@@ -2649,6 +2767,17 @@ export type Database = {
           p_new_file_path: string
           p_new_filename: string
           p_uploaded_by: string
+        }
+        Returns: string
+      }
+      create_notification: {
+        Args: {
+          p_link?: string
+          p_message: string
+          p_metadata?: Json
+          p_title: string
+          p_type: string
+          p_user_id: string
         }
         Returns: string
       }
