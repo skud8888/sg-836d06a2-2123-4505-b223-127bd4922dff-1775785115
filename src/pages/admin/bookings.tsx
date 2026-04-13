@@ -5,6 +5,7 @@ import { Navigation } from "@/components/Navigation";
 import { supabase } from "@/integrations/supabase/client";
 import { emailService } from "@/services/emailService";
 import { exportService } from "@/services/exportService";
+import { signatureService } from "@/services/signatureService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,7 +19,7 @@ import { DocumentList } from "@/components/DocumentList";
 import { EvidenceCapture } from "@/components/EvidenceCapture";
 import { EvidenceGallery } from "@/components/EvidenceGallery";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Users, DollarSign, Calendar, Mail, Phone, FileText, Upload, ArrowLeft, Edit, Download, Camera } from "lucide-react";
+import { Search, Users, DollarSign, Calendar, Mail, Phone, FileText, Upload, ArrowLeft, Edit, Download, Camera, Check, Copy, Bell } from "lucide-react";
 import { format } from "date-fns";
 import type { Tables } from "@/integrations/supabase/types";
 import {
@@ -36,6 +37,8 @@ type Booking = Tables<"bookings"> & {
   }) | null;
 };
 
+type SignatureRequest = Tables<"signature_requests">;
+
 export default function BookingsDashboard() {
   const router = useRouter();
   const { toast } = useToast();
@@ -46,6 +49,8 @@ export default function BookingsDashboard() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [paymentFilter, setPaymentFilter] = useState("all");
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [signatureRequests, setSignatureRequests] = useState<SignatureRequest[]>([]);
+  const [loadingSignatures, setLoadingSignatures] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
@@ -112,9 +117,59 @@ export default function BookingsDashboard() {
     setFilteredBookings(filtered);
   };
 
-  const handleOpenDialog = (booking: Booking) => {
+  const handleOpenDialog = async (booking: Booking) => {
     setSelectedBooking(booking);
     setDialogOpen(true);
+    
+    // Load signature requests for this booking
+    setLoadingSignatures(true);
+    const requests = await signatureService.getBookingSignatureRequests(booking.id);
+    setSignatureRequests(requests);
+    setLoadingSignatures(false);
+  };
+
+  const handleSendSignatureRequest = async () => {
+    if (!selectedBooking) return;
+
+    try {
+      const { request, error } = await signatureService.createSignatureRequest({
+        bookingId: selectedBooking.id,
+        documentType: 'enrollment_contract',
+        recipientName: selectedBooking.student_name,
+        recipientEmail: selectedBooking.student_email,
+        expiresInDays: 7
+      });
+
+      if (error) throw error;
+
+      toast({ 
+        title: "Signature request sent",
+        description: `Email sent to ${selectedBooking.student_email}`
+      });
+
+      // Reload signature requests
+      const requests = await signatureService.getBookingSignatureRequests(selectedBooking.id);
+      setSignatureRequests(requests);
+    } catch (error: any) {
+      toast({
+        title: "Error sending signature request",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleSendReminder = async (requestId: string) => {
+    try {
+      await signatureService.sendSignatureReminder(requestId);
+      toast({ title: "Reminder sent successfully" });
+    } catch (error: any) {
+      toast({
+        title: "Error sending reminder",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   };
 
   const handleUpdateStatus = async (status: string) => {
@@ -194,6 +249,16 @@ export default function BookingsDashboard() {
       case "paid": return "default";
       case "partial": return "secondary";
       case "unpaid": return "destructive";
+      default: return "secondary";
+    }
+  };
+
+  const getSignatureStatusColor = (status: string) => {
+    switch (status) {
+      case "signed": return "default";
+      case "sent": return "secondary";
+      case "pending": return "outline";
+      case "expired": return "destructive";
       default: return "secondary";
     }
   };
@@ -414,8 +479,16 @@ export default function BookingsDashboard() {
             </DialogHeader>
             {selectedBooking && (
               <Tabs defaultValue="details" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-4">
                   <TabsTrigger value="details">Details & Payment</TabsTrigger>
+                  <TabsTrigger value="signatures">
+                    Signatures
+                    {signatureRequests.length > 0 && (
+                      <Badge variant="secondary" className="ml-2">
+                        {signatureRequests.length}
+                      </Badge>
+                    )}
+                  </TabsTrigger>
                   <TabsTrigger value="documents">Documents</TabsTrigger>
                   <TabsTrigger value="evidence">Evidence</TabsTrigger>
                 </TabsList>
@@ -552,6 +625,130 @@ export default function BookingsDashboard() {
                       </CardContent>
                     </Card>
                   </div>
+                </TabsContent>
+
+                <TabsContent value="signatures" className="space-y-4 mt-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold">Signature Requests</h3>
+                    <Button onClick={handleSendSignatureRequest}>
+                      <Mail className="h-4 w-4 mr-2" />
+                      Send Signature Request
+                    </Button>
+                  </div>
+
+                  {loadingSignatures ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      Loading signature requests...
+                    </div>
+                  ) : signatureRequests.length === 0 ? (
+                    <Card className="border-dashed">
+                      <CardContent className="pt-6">
+                        <div className="text-center py-8">
+                          <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                          <h4 className="font-semibold mb-2">No signature requests yet</h4>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            Send a signature request to collect the student's enrollment contract
+                          </p>
+                          <Button onClick={handleSendSignatureRequest}>
+                            <Mail className="h-4 w-4 mr-2" />
+                            Send First Signature Request
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="space-y-3">
+                      {signatureRequests.map((request) => (
+                        <Card key={request.id}>
+                          <CardContent className="pt-6">
+                            <div className="flex items-start justify-between mb-4">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <h4 className="font-semibold">
+                                    {request.document_type.replace(/_/g, " ").toUpperCase()}
+                                  </h4>
+                                  <Badge variant={getSignatureStatusColor(request.status)}>
+                                    {request.status}
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                  Recipient: {request.recipient_name} ({request.recipient_email})
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4 text-sm mb-4">
+                              <div>
+                                <span className="text-muted-foreground">Created:</span>{" "}
+                                <span className="font-medium">
+                                  {format(new Date(request.created_at), "PPP")}
+                                </span>
+                              </div>
+                              {request.sent_at && (
+                                <div>
+                                  <span className="text-muted-foreground">Sent:</span>{" "}
+                                  <span className="font-medium">
+                                    {format(new Date(request.sent_at), "PPP")}
+                                  </span>
+                                </div>
+                              )}
+                              {request.signed_at && (
+                                <div>
+                                  <span className="text-muted-foreground">Signed:</span>{" "}
+                                  <span className="font-medium text-green-600">
+                                    {format(new Date(request.signed_at), "PPP 'at' p")}
+                                  </span>
+                                </div>
+                              )}
+                              {request.expires_at && (
+                                <div>
+                                  <span className="text-muted-foreground">Expires:</span>{" "}
+                                  <span className={`font-medium ${new Date(request.expires_at) < new Date() ? 'text-red-600' : ''}`}>
+                                    {format(new Date(request.expires_at), "PPP")}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="flex gap-2">
+                              {request.status === "signed" ? (
+                                <Button variant="outline" size="sm" disabled>
+                                  <Check className="h-4 w-4 mr-2" />
+                                  Completed
+                                </Button>
+                              ) : (
+                                <>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(
+                                        `${window.location.origin}/sign/${request.id}`
+                                      );
+                                      toast({ title: "Link copied to clipboard" });
+                                    }}
+                                  >
+                                    <Copy className="h-4 w-4 mr-2" />
+                                    Copy Link
+                                  </Button>
+                                  {request.status === "sent" && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleSendReminder(request.id)}
+                                    >
+                                      <Bell className="h-4 w-4 mr-2" />
+                                      Send Reminder
+                                    </Button>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
                 </TabsContent>
 
                 <TabsContent value="documents" className="space-y-4 mt-4">
