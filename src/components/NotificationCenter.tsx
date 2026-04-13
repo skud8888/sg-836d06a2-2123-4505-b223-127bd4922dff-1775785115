@@ -24,16 +24,23 @@ export function NotificationCenter() {
 
   useEffect(() => {
     loadNotifications();
-    subscribeToNotifications();
+    
+    const subscription = subscribeToNotifications();
+    
+    return () => {
+      subscription.then(unsubscribe => unsubscribe && unsubscribe());
+    };
   }, []);
 
   const subscribeToNotifications = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    // CRITICAL FIX: Set up .on() callback BEFORE calling .subscribe()
+    // Use a unique channel name to avoid conflicts
+    const channelName = `notifications-${user.id}-${Date.now()}`;
+    
     const channel = supabase
-      .channel("notifications")
+      .channel(channelName)
       .on(
         "postgres_changes",
         {
@@ -48,7 +55,7 @@ export function NotificationCenter() {
           setUnreadCount((prev) => prev + 1);
         }
       )
-      .subscribe(); // Call .subscribe() LAST
+      .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
