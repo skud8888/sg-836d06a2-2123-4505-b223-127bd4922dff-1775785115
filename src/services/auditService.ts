@@ -1,186 +1,170 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { Tables } from "@/integrations/supabase/types";
 
-export type AuditLog = Tables<"system_audit_logs">;
+type ActionCategory = 'user_management' | 'authentication' | 'course_management' | 'booking_management' | 'payment' | 'system' | 'content';
+type Severity = 'info' | 'warning' | 'error' | 'critical';
 
-export type AuditAction = 
-  | "CREATE" 
-  | "UPDATE" 
-  | "DELETE" 
-  | "VIEW" 
-  | "EXPORT" 
-  | "LOGIN" 
-  | "LOGOUT"
-  | "ROLE_CHANGE"
-  | "PERMISSION_GRANT"
-  | "PAYMENT_RECORDED";
+interface AuditLogParams {
+  action: string;
+  actionCategory: ActionCategory;
+  severity?: Severity;
+  details: string;
+  metadata?: Record<string, any>;
+  affectedUserId?: string;
+}
 
-export type ResourceType = 
-  | "booking" 
-  | "document" 
-  | "user" 
-  | "payment" 
-  | "course"
-  | "trainer"
-  | "enquiry"
-  | "feedback";
-
-/**
- * System Audit Logging Service
- */
 export const auditService = {
-  /**
-   * Log an audit event
-   */
-  async logEvent(params: {
-    action: AuditAction;
-    resourceType: ResourceType;
-    resourceId?: string;
-    oldValues?: any;
-    newValues?: any;
-    metadata?: any;
-  }): Promise<{ success: boolean; logId?: string; error?: any }> {
+  async logEvent({
+    action,
+    actionCategory,
+    severity = 'info',
+    details,
+    metadata = {},
+    affectedUserId
+  }: AuditLogParams) {
     try {
-      const { data, error } = await supabase.rpc("log_audit_event", {
-        p_action: params.action,
-        p_resource_type: params.resourceType,
-        p_resource_id: params.resourceId || null,
-        p_old_values: params.oldValues || null,
-        p_new_values: params.newValues || null,
-        p_metadata: params.metadata || {}
-      });
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-      if (error) throw error;
+      // Get client info
+      const ipAddress = metadata.ipAddress || 'unknown';
+      const userAgent = metadata.userAgent || navigator.userAgent;
 
-      return { success: true, logId: data };
-    } catch (error: any) {
-      console.error("Audit log error:", error);
-      return { success: false, error };
-    }
-  },
+      const { error } = await supabase
+        .from("audit_logs")
+        .insert({
+          user_id: user.id,
+          action,
+          action_category: actionCategory,
+          severity,
+          details,
+          metadata: metadata,
+          affected_user_id: affectedUserId,
+          ip_address: ipAddress,
+          user_agent: userAgent
+        });
 
-  /**
-   * Get audit logs with filters
-   */
-  async getLogs(params?: {
-    userId?: string;
-    action?: AuditAction;
-    resourceType?: ResourceType;
-    resourceId?: string;
-    startDate?: Date;
-    endDate?: Date;
-    limit?: number;
-  }): Promise<AuditLog[]> {
-    let query = supabase
-      .from("system_audit_logs")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (params?.userId) {
-      query = query.eq("user_id", params.userId);
-    }
-
-    if (params?.action) {
-      query = query.eq("action", params.action);
-    }
-
-    if (params?.resourceType) {
-      query = query.eq("resource_type", params.resourceType);
-    }
-
-    if (params?.resourceId) {
-      query = query.eq("resource_id", params.resourceId);
-    }
-
-    if (params?.startDate) {
-      query = query.gte("created_at", params.startDate.toISOString());
-    }
-
-    if (params?.endDate) {
-      query = query.lte("created_at", params.endDate.toISOString());
-    }
-
-    if (params?.limit) {
-      query = query.limit(params.limit);
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
-      console.error("Get audit logs error:", error);
-      return [];
-    }
-
-    return data || [];
-  },
-
-  /**
-   * Get logs for a specific resource
-   */
-  async getResourceHistory(resourceType: ResourceType, resourceId: string): Promise<AuditLog[]> {
-    return this.getLogs({ resourceType, resourceId });
-  },
-
-  /**
-   * Get recent activity for current user
-   */
-  async getMyActivity(limit: number = 50): Promise<AuditLog[]> {
-    const { data: user } = await supabase.auth.getUser();
-    if (!user.user) return [];
-
-    return this.getLogs({ userId: user.user.id, limit });
-  },
-
-  /**
-   * Export audit logs to CSV
-   */
-  async exportLogs(params?: {
-    startDate?: Date;
-    endDate?: Date;
-    action?: AuditAction;
-    resourceType?: ResourceType;
-  }): Promise<string> {
-    const logs = await this.getLogs(params);
-
-    // Create CSV header
-    const headers = [
-      "Timestamp",
-      "User Email",
-      "User Role",
-      "Action",
-      "Resource Type",
-      "Resource ID",
-      "Details"
-    ];
-
-    // Create CSV rows
-    const rows = logs.map(log => [
-      log.created_at,
-      log.user_email || "System",
-      log.user_role || "N/A",
-      log.action,
-      log.resource_type,
-      log.resource_id || "",
-      JSON.stringify(log.metadata || {})
-    ]);
-
-    // Combine into CSV string
-    const csv = [
-      headers.join(","),
-      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
-    ].join("\n");
-
-    // Log the export action
-    await this.logEvent({
-      action: "EXPORT",
-      resourceType: "booking",
-      metadata: {
-        export_type: "audit_logs",
-        filter: params,
-        record_count: logs.length
+      if (error) {
+        console.error("Error logging audit event:", error);
       }
-    });
+    } catch (error) {
+      console.error("Error in auditService:", error);
+    }
+  },
 
-    return csv;
+  // Convenience methods for common actions
+  async logUserCreated(userId: string, email: string, roles: string[]) {
+    return this.logEvent({
+      action: 'user_created',
+      actionCategory: 'user_management',
+      severity: 'info',
+      details: `Created user: ${email}`,
+      metadata: { email, roles },
+      affectedUserId: userId
+    });
+  },
+
+  async logUserDeleted(userId: string, email: string) {
+    return this.logEvent({
+      action: 'user_deleted',
+      actionCategory: 'user_management',
+      severity: 'warning',
+      details: `Deleted user: ${email}`,
+      metadata: { email },
+      affectedUserId: userId
+    });
+  },
+
+  async logUserUpdated(userId: string, email: string, changes: Record<string, any>) {
+    return this.logEvent({
+      action: 'user_updated',
+      actionCategory: 'user_management',
+      severity: 'info',
+      details: `Updated user: ${email}`,
+      metadata: { email, changes },
+      affectedUserId: userId
+    });
+  },
+
+  async logRoleAssigned(userId: string, email: string, role: string) {
+    return this.logEvent({
+      action: 'role_assigned',
+      actionCategory: 'user_management',
+      severity: 'warning',
+      details: `Assigned role '${role}' to ${email}`,
+      metadata: { email, role },
+      affectedUserId: userId
+    });
+  },
+
+  async logRoleRemoved(userId: string, email: string, role: string) {
+    return this.logEvent({
+      action: 'role_removed',
+      actionCategory: 'user_management',
+      severity: 'warning',
+      details: `Removed role '${role}' from ${email}`,
+      metadata: { email, role },
+      affectedUserId: userId
+    });
+  },
+
+  async logPasswordReset(userId: string, email: string, method: 'direct' | 'email') {
+    return this.logEvent({
+      action: 'password_reset',
+      actionCategory: 'authentication',
+      severity: 'warning',
+      details: `Reset password for ${email} (${method})`,
+      metadata: { email, method },
+      affectedUserId: userId
+    });
+  },
+
+  async logBulkAction(action: string, userCount: number, details: string) {
+    return this.logEvent({
+      action: `bulk_${action}`,
+      actionCategory: 'user_management',
+      severity: 'warning',
+      details: `${details} (${userCount} users)`,
+      metadata: { userCount, action }
+    });
+  },
+
+  async logLogin(email: string, success: boolean) {
+    return this.logEvent({
+      action: success ? 'login_success' : 'login_failed',
+      actionCategory: 'authentication',
+      severity: success ? 'info' : 'warning',
+      details: success ? `Successful login: ${email}` : `Failed login attempt: ${email}`,
+      metadata: { email, success }
+    });
+  },
+
+  async logPayment(enrollmentId: string, amount: number, status: string) {
+    return this.logEvent({
+      action: 'payment_processed',
+      actionCategory: 'payment',
+      severity: status === 'success' ? 'info' : 'error',
+      details: `Payment ${status}: $${amount}`,
+      metadata: { enrollmentId, amount, status }
+    });
+  },
+
+  async logCourseCreated(courseId: string, courseName: string) {
+    return this.logEvent({
+      action: 'course_created',
+      actionCategory: 'course_management',
+      severity: 'info',
+      details: `Created course: ${courseName}`,
+      metadata: { courseId, courseName }
+    });
+  },
+
+  async logBookingCreated(bookingId: string, studentEmail: string) {
+    return this.logEvent({
+      action: 'booking_created',
+      actionCategory: 'booking_management',
+      severity: 'info',
+      details: `Created booking for ${studentEmail}`,
+      metadata: { bookingId, studentEmail }
+    });
   }
 };
