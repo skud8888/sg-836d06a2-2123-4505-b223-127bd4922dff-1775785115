@@ -23,7 +23,7 @@ interface Student {
 
 export default function ClassAttendancePage() {
   const router = useRouter();
-  const { classId } = router.query;
+  const classId = router.query.classId as string;
   const { toast } = useToast();
   
   const [loading, setLoading] = useState(true);
@@ -117,7 +117,7 @@ export default function ClassAttendancePage() {
         const { error } = await supabase
           .from("class_attendance")
           .upsert({
-            class_id: classId as string,
+            class_id: classId,
             booking_id: student.bookingId,
             student_name: student.studentName,
             student_email: student.studentEmail,

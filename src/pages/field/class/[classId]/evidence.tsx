@@ -12,7 +12,7 @@ import Link from "next/link";
 
 export default function ClassEvidencePage() {
   const router = useRouter();
-  const { classId } = router.query;
+  const classId = router.query.classId as string;
   
   const [loading, setLoading] = useState(true);
   const [className, setClassName] = useState("");
