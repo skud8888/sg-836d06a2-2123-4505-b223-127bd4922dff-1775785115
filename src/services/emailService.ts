@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { format } from "date-fns";
 
 type Booking = Tables<"bookings">;
 type ScheduledClass = Tables<"scheduled_classes">;

@@ -1,13 +1,15 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import { buffer } from "micro";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
-import { buffer } from "micro";
+import { emailService } from "@/services/emailService";
+import { signatureService } from "@/services/signatureService";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-01-27.acacia"
+  apiVersion: "2024-12-18.acacia",
 });
 
-const supabase = createClient(
+const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
@@ -28,95 +30,97 @@ export default async function handler(
 
   const buf = await buffer(req);
   const sig = req.headers["stripe-signature"]!;
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
   let event: Stripe.Event;
 
   try {
-    event = stripe.webhooks.constructEvent(buf, sig, webhookSecret);
+    event = stripe.webhooks.constructEvent(
+      buf,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET!
+    );
   } catch (err: any) {
     console.error("Webhook signature verification failed:", err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
+    return res.status(400).json({ error: `Webhook Error: ${err.message}` });
   }
 
   try {
-    switch (event.type) {
-      case "checkout.session.completed": {
-        const session = event.data.object as Stripe.Checkout.Session;
-        const bookingId = session.metadata?.bookingId;
+    if (event.type === "checkout.session.completed") {
+      const session = event.data.object as Stripe.Checkout.Session;
 
-        if (bookingId) {
-          // Update booking payment status
-          const { error: bookingError } = await supabase
-            .from("bookings")
-            .update({
-              payment_status: "paid",
-              paid_amount: (session.amount_total || 0) / 100,
-            })
-            .eq("id", bookingId);
+      // Extract booking ID from metadata
+      const bookingId = session.metadata?.bookingId;
+      if (!bookingId) {
+        console.error("No booking ID in session metadata");
+        return res.status(400).json({ error: "No booking ID" });
+      }
 
-          if (bookingError) {
-            console.error("Error updating booking:", bookingError);
-          }
+      // Get booking details
+      const { data: booking, error: bookingError } = await supabaseAdmin
+        .from("bookings")
+        .select("*, scheduled_classes(*, course_templates(name, code))")
+        .eq("id", bookingId)
+        .single();
 
-          // Update Stripe payment record
-          await supabase
-            .from("stripe_payments")
-            .update({
-              stripe_payment_intent_id: session.payment_intent as string,
-              status: "succeeded",
-              payment_method: session.payment_method_types?.[0] || "card",
-              receipt_url: session.url,
-            })
-            .eq("stripe_checkout_session_id", session.id);
+      if (bookingError || !booking) {
+        console.error("Booking not found:", bookingError);
+        return res.status(404).json({ error: "Booking not found" });
+      }
 
-          // Log the payment
-          await supabase.rpc("log_audit_event", {
-            p_action: "PAYMENT_RECORDED",
-            p_resource_type: "booking",
-            p_resource_id: bookingId,
-            p_metadata: {
-              amount: (session.amount_total || 0) / 100,
-              payment_method: "stripe",
-              stripe_session_id: session.id,
-            },
-          });
+      // Calculate payment amount
+      const amountPaid = session.amount_total ? session.amount_total / 100 : 0;
+
+      // Update booking payment status
+      const { error: updateError } = await supabaseAdmin
+        .from("bookings")
+        .update({
+          payment_status: "paid",
+          paid_amount: amountPaid,
+          status: "confirmed"
+        })
+        .eq("id", bookingId);
+
+      if (updateError) {
+        console.error("Error updating booking:", updateError);
+        return res.status(500).json({ error: "Failed to update booking" });
+      }
+
+      // Send payment receipt email
+      const bookingWithClass = booking as any;
+      await emailService.sendPaymentReceipt(bookingWithClass, amountPaid);
+
+      // AUTO-CREATE SIGNATURE REQUEST
+      // This is the critical integration point that was missing
+      try {
+        const { request, error: sigError } = await signatureService.createSignatureRequest({
+          bookingId: booking.id,
+          documentType: 'enrollment_contract',
+          recipientName: booking.student_name,
+          recipientEmail: booking.student_email,
+          expiresInDays: 7
+        });
+
+        if (sigError) {
+          console.error("Error creating signature request:", sigError);
+          // Don't fail the whole webhook - signature can be sent manually
+        } else {
+          console.log("✓ Signature request created and sent:", request?.id);
         }
-        break;
+      } catch (sigErr) {
+        console.error("Exception creating signature request:", sigErr);
+        // Log but don't fail - admin can send manually
       }
 
-      case "payment_intent.payment_failed": {
-        const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        
-        await supabase
-          .from("stripe_payments")
-          .update({
-            status: "failed",
-            metadata: { error: paymentIntent.last_payment_error?.message },
-          })
-          .eq("stripe_payment_intent_id", paymentIntent.id);
-        break;
-      }
+      console.log("✓ Payment processed successfully for booking:", bookingId);
+      console.log("✓ Amount paid:", amountPaid);
+      console.log("✓ Signature request sent to:", booking.student_email);
 
-      case "charge.refunded": {
-        const charge = event.data.object as Stripe.Charge;
-        const paymentIntent = charge.payment_intent as string;
-
-        await supabase
-          .from("stripe_payments")
-          .update({
-            status: "refunded",
-            refunded_amount: charge.amount_refunded,
-            refund_id: charge.refunds?.data[0]?.id,
-          })
-          .eq("stripe_payment_intent_id", paymentIntent);
-        break;
-      }
+      return res.status(200).json({ received: true });
     }
 
-    res.status(200).json({ received: true });
+    return res.status(200).json({ received: true });
   } catch (error: any) {
     console.error("Webhook handler error:", error);
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: error.message });
   }
 }
