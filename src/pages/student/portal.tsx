@@ -277,11 +277,14 @@ export default function StudentPortalPage() {
                       <p className="text-muted-foreground mb-6">
                         Browse our course catalog to get started
                       </p>
-                      <Link href="/courses">
-                        <Button>
-                          Browse Courses
+                      <div className="flex gap-2">
+                        <Button className="flex-1" variant="outline" asChild>
+                          <Link href="/courses">Browse Courses</Link>
                         </Button>
-                      </Link>
+                        <Button className="flex-1" variant="outline" asChild>
+                          <Link href="/student/certificates">My Certificates</Link>
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 ) : (

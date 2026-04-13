@@ -42,18 +42,21 @@ export default function EnrollmentConfirmation() {
       .from("enrollments")
       .select(`
         id,
-        student_name,
-        student_email,
+        amount_paid,
+        payment_status,
+        student:profiles!student_id (
+          full_name,
+          email
+        ),
         scheduled_classes!inner (
           id,
-          class_date,
-          class_time,
+          start_datetime,
           location,
           course_templates!inner (
             name
           )
         ),
-        payments!inner (
+        payments (
           amount,
           status
         ),
@@ -67,19 +70,29 @@ export default function EnrollmentConfirmation() {
     if (!error && data) {
       const classData = data.scheduled_classes as any;
       const courseData = classData?.course_templates;
-      const paymentData = Array.isArray(data.payments) ? data.payments[0] : data.payments;
-      const certificateData = Array.isArray(data.certificates) ? data.certificates[0] : data.certificates;
+      const paymentData = Array.isArray(data.payments) && data.payments.length > 0 ? data.payments[0] : null;
+      const certificateData = Array.isArray(data.certificates) && data.certificates.length > 0 ? data.certificates[0] : null;
+      const studentData = data.student as any;
+
+      // Extract date and time from start_datetime
+      let classDate = "";
+      let classTime = "";
+      if (classData?.start_datetime) {
+        const dateObj = new Date(classData.start_datetime);
+        classDate = dateObj.toISOString();
+        classTime = dateObj.toLocaleTimeString("en-AU", { hour: '2-digit', minute: '2-digit' });
+      }
 
       setEnrollment({
         id: data.id,
         course_name: courseData?.name || "Unknown Course",
-        class_date: classData?.class_date || "",
-        class_time: classData?.class_time || "",
+        class_date: classDate,
+        class_time: classTime,
         location: classData?.location || "",
-        student_name: data.student_name || "",
-        student_email: data.student_email || "",
-        amount_paid: (paymentData as any)?.amount || 0,
-        payment_status: (paymentData as any)?.status || "pending",
+        student_name: studentData?.full_name || "Student",
+        student_email: studentData?.email || "",
+        amount_paid: (paymentData as any)?.amount || Number(data.amount_paid) || 0,
+        payment_status: (paymentData as any)?.status || data.payment_status || "pending",
         certificate_id: (certificateData as any)?.id
       });
     }

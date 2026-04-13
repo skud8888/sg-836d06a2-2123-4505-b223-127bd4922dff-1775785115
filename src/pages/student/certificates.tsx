@@ -49,39 +49,24 @@ export default function StudentCertificates() {
   const loadCertificates = async (userId: string) => {
     setLoading(true);
 
-    // Get user profile to match certificates by email
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("email")
-      .eq("id", userId)
-      .single();
-
-    if (!profile?.email) {
-      setLoading(false);
-      return;
-    }
-
-    // Get certificates by student email
+    // Get certificates by student id
     const { data, error } = await supabase
       .from("certificates")
       .select(`
         id,
         certificate_number,
         issue_date,
-        expiry_date,
-        student_name,
-        certificate_url,
+        completion_date,
+        pdf_url,
         status,
-        enrollments!inner (
-          student_email,
-          scheduled_classes!inner (
-            course_templates!inner (
-              name
-            )
-          )
+        student:profiles!student_id (
+          full_name
+        ),
+        course:course_templates!course_template_id (
+          name
         )
       `)
-      .eq("enrollments.student_email", profile.email)
+      .eq("student_id", userId)
       .order("issue_date", { ascending: false });
 
     if (error) {
@@ -96,18 +81,17 @@ export default function StudentCertificates() {
     }
 
     const formattedCertificates = (data || []).map((cert: any) => {
-      const enrollmentData = cert.enrollments;
-      const classData = enrollmentData?.scheduled_classes;
-      const courseData = classData?.course_templates;
+      const studentData = cert.student as any;
+      const courseData = cert.course as any;
 
       return {
         id: cert.id,
         certificate_number: cert.certificate_number,
         issue_date: cert.issue_date,
-        expiry_date: cert.expiry_date,
+        expiry_date: null, // Certificates don't have expiry_date in current schema
         course_name: courseData?.name || "Unknown Course",
-        student_name: cert.student_name,
-        certificate_url: cert.certificate_url,
+        student_name: studentData?.full_name || "Student",
+        certificate_url: cert.pdf_url, // Maps pdf_url to certificate_url
         status: cert.status
       };
     });
@@ -323,11 +307,11 @@ export default function StudentCertificates() {
       {/* Document Previewer */}
       {selectedCertificate?.certificate_url && (
         <DocumentPreviewer
-          isOpen={previewOpen}
+          open={previewOpen}
           onClose={() => setPreviewOpen(false)}
-          fileUrl={selectedCertificate.certificate_url}
-          fileName={`Certificate_${selectedCertificate.certificate_number}.pdf`}
-          fileType="application/pdf"
+          documentUrl={selectedCertificate.certificate_url}
+          documentName={`Certificate_${selectedCertificate.certificate_number}.pdf`}
+          documentType="application/pdf"
         />
       )}
     </>
