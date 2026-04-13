@@ -17,7 +17,11 @@ import {
   Award,
   Calendar,
   DollarSign,
-  LogOut
+  LogOut,
+  FileText,
+  MessageSquare,
+  Download,
+  Eye
 } from "lucide-react";
 import Link from "next/link";
 
@@ -207,6 +211,48 @@ export default function StudentPortalPage() {
                 Logout
               </Button>
             </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <Link href="/courses">
+              <Card className="hover:shadow-lg transition-all cursor-pointer">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                      <BookOpen className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <CardTitle className="text-lg">Browse Courses</CardTitle>
+                  </div>
+                </CardHeader>
+              </Card>
+            </Link>
+            
+            <Link href="/student/feedback">
+              <Card className="hover:shadow-lg transition-all cursor-pointer">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                      <MessageSquare className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    </div>
+                    <CardTitle className="text-lg">Submit Feedback</CardTitle>
+                  </div>
+                </CardHeader>
+              </Card>
+            </Link>
+
+            <Link href="/admin/certificates">
+              <Card className="hover:shadow-lg transition-all cursor-pointer">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                      <Award className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <CardTitle className="text-lg">My Certificates</CardTitle>
+                  </div>
+                </CardHeader>
+              </Card>
+            </Link>
           </div>
 
           {loading ? (

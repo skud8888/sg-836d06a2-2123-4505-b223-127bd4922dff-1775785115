@@ -851,6 +851,7 @@ export default function HomePage() {
                   <li><Link href="/about" className="hover:text-primary transition-colors">About Us</Link></li>
                   <li><Link href="/contact" className="hover:text-primary transition-colors">Contact</Link></li>
                   <li><Link href="/admin/login" className="hover:text-primary transition-colors">Admin Login</Link></li>
+                  <li><Link href="/student/feedback" className="hover:text-primary transition-colors">Submit Feedback</Link></li>
                 </ul>
               </div>
 

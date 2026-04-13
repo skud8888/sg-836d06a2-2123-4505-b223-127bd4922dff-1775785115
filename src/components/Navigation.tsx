@@ -2,7 +2,13 @@ import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ThemeSwitch } from "@/components/ThemeSwitch";
-import { Menu, X, BookOpen } from "lucide-react";
+import { Menu, X, BookOpen, ChevronDown } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -13,6 +19,12 @@ export function Navigation() {
     { href: "/pricing", label: "Pricing" },
     { href: "/about", label: "About" },
     { href: "/contact", label: "Contact" }
+  ];
+
+  const studentPortalLinks = [
+    { href: "/student/portal", label: "My Dashboard" },
+    { href: "/student/feedback", label: "Submit Feedback" },
+    { href: "/courses", label: "Browse Courses" }
   ];
 
   return (
@@ -40,9 +52,26 @@ export function Navigation() {
 
           <div className="hidden md:flex items-center gap-3">
             <ThemeSwitch />
-            <Link href="/student/portal">
-              <Button variant="outline">Student Portal</Button>
-            </Link>
+            
+            {/* Student Portal Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  Student Portal
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                {studentPortalLinks.map((link) => (
+                  <DropdownMenuItem key={link.href} asChild>
+                    <Link href={link.href} className="cursor-pointer">
+                      {link.label}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <Link href="/admin/login">
               <Button>Admin Login</Button>
             </Link>
@@ -73,10 +102,18 @@ export function Navigation() {
               <div className="flex items-center gap-3 mb-3">
                 <ThemeSwitch />
               </div>
-              <Link href="/student/portal" className="block" onClick={() => setMobileMenuOpen(false)}>
-                <Button variant="outline" className="w-full">Student Portal</Button>
-              </Link>
-              <Link href="/admin/login" className="block" onClick={() => setMobileMenuOpen(false)}>
+              <div className="text-sm font-semibold text-muted-foreground mb-2">Student Portal</div>
+              {studentPortalLinks.map((link) => (
+                <Link 
+                  key={link.href} 
+                  href={link.href} 
+                  className="block pl-4 hover:text-primary transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {link.label}
+                </Link>
+              ))}
+              <Link href="/admin/login" className="block pt-3" onClick={() => setMobileMenuOpen(false)}>
                 <Button className="w-full">Admin Login</Button>
               </Link>
             </div>

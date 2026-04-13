@@ -10,6 +10,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Calendar,
   Users,
   BookOpen,
@@ -22,7 +29,13 @@ import {
   DollarSign,
   User,
   Activity,
-  Database
+  Database,
+  Settings,
+  LogOut,
+  GraduationCap,
+  ChevronDown,
+  RefreshCw,
+  Award
 } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -52,6 +65,11 @@ export default function AdminDashboard() {
     setUserRole(role);
     setUserName(user.user_metadata?.full_name || user.email || "Admin");
     setLoading(false);
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.push("/admin/login");
   };
 
   if (loading) {
@@ -136,6 +154,21 @@ export default function AdminDashboard() {
       color: "text-emerald-600 dark:text-emerald-400"
     },
     {
+      title: "Certificates",
+      description: "Generate certificates",
+      icon: Award,
+      href: "/admin/certificates",
+      color: "text-yellow-600 dark:text-yellow-400",
+      badge: "NEW"
+    },
+    {
+      title: "Instructor Payouts",
+      description: "Revenue sharing",
+      icon: DollarSign,
+      href: "/admin/instructor-payouts",
+      color: "text-lime-600 dark:text-lime-400"
+    },
+    {
       title: "Feedback",
       description: "User feedback & bugs",
       icon: MessageSquare,
@@ -158,6 +191,7 @@ export default function AdminDashboard() {
       icon: FileText,
       href: "/admin/audit-logs",
       color: "text-slate-600 dark:text-slate-400",
+      badge: "NEW",
       show: userRole === "super_admin" || userRole === "admin"
     },
     {
@@ -177,6 +211,21 @@ export default function AdminDashboard() {
       color: "text-violet-600 dark:text-violet-400",
       badge: "NEW",
       show: userRole === "super_admin"
+    },
+    {
+      title: "Waitlist",
+      description: "Manage waiting lists",
+      icon: Users,
+      href: "/admin/waitlist",
+      color: "text-amber-600 dark:text-amber-400"
+    },
+    {
+      title: "Team Management",
+      description: "Staff & permissions",
+      icon: Users,
+      href: "/admin/team",
+      color: "text-sky-600 dark:text-sky-400",
+      show: userRole === "super_admin" || userRole === "admin"
     }
   ];
 
@@ -194,12 +243,41 @@ export default function AdminDashboard() {
               </p>
             </div>
             <div className="flex items-center gap-3" data-tour="user-menu">
-              <Link href="/admin/profile">
-                <Button variant="outline">
-                  <User className="h-4 w-4 mr-2" />
-                  Profile
-                </Button>
-              </Link>
+              {/* Profile Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="gap-2">
+                    <User className="h-4 w-4" />
+                    {userName}
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin/profile" className="cursor-pointer">
+                      <User className="h-4 w-4 mr-2" />
+                      My Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin/settings" className="cursor-pointer">
+                      <Settings className="h-4 w-4 mr-2" />
+                      Settings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin/onboarding" className="cursor-pointer">
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Restart Tutorial
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="text-red-600 cursor-pointer">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
 
