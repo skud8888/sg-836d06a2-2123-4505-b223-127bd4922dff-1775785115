@@ -181,69 +181,71 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <Navigation />
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
-          <div>
-            <h1 className="text-3xl font-bold">Welcome back, {userName}!</h1>
-            <p className="text-muted-foreground">
-              {userRole && `Logged in as ${userRole.replace("_", " ")}`}
+      <AdminWelcomeTour />
+      <div className="min-h-screen bg-slate-50 pt-20">
+        <div className="container mx-auto px-4 py-8">
+          <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <h1 className="text-3xl font-bold">Welcome back, {userName}!</h1>
+              <p className="text-muted-foreground">
+                {userRole && `Logged in as ${userRole.replace("_", " ")}`}
+              </p>
+            </div>
+            <div className="flex items-center gap-3" data-tour="user-menu">
+              <Link href="/admin/profile">
+                <Button variant="outline">
+                  <User className="h-4 w-4 mr-2" />
+                  Profile
+                </Button>
+              </Link>
+            </div>
+          </div>
+
+          <div className="mb-6" data-tour="search">
+            <p className="text-sm text-muted-foreground">
+              💡 Tip: Press <kbd className="px-2 py-1 text-xs bg-muted rounded">Cmd+K</kbd> to open universal search
             </p>
           </div>
-          <div className="flex items-center gap-3" data-tour="user-menu">
-            <AdminWelcomeTour autoStart={true} />
-            <Link href="/admin/profile">
-              <Button variant="outline">
-                <User className="h-4 w-4 mr-2" />
-                Profile
-              </Button>
-            </Link>
-          </div>
-        </div>
 
-        <div className="mb-6" data-tour="search">
-          <p className="text-sm text-muted-foreground">
-            💡 Tip: Press <kbd className="px-2 py-1 text-xs bg-muted rounded">Cmd+K</kbd> to open universal search
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          {/* Main dashboard cards */}
-          <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-            {dashboardCards
-              .filter(card => card.show !== false)
-              .map((card, index) => (
-                <Link key={index} href={card.href}>
-                  <Card 
-                    className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer"
-                    data-tour={card.tourId}
-                  >
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div className={`h-12 w-12 rounded-lg bg-background flex items-center justify-center group-hover:scale-110 transition-transform ${card.color}`}>
-                          <card.icon className="h-6 w-6" />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            {/* Main dashboard cards */}
+            <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+              {dashboardCards
+                .filter(card => card.show !== false)
+                .map((card, index) => (
+                  <Link key={index} href={card.href}>
+                    <Card 
+                      className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+                      data-tour={card.tourId}
+                    >
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div className={`h-12 w-12 rounded-lg bg-background flex items-center justify-center group-hover:scale-110 transition-transform ${card.color}`}>
+                            <card.icon className="h-6 w-6" />
+                          </div>
+                          {card.badge && (
+                            <Badge variant="secondary" className="text-xs">
+                              {card.badge}
+                            </Badge>
+                          )}
                         </div>
-                        {card.badge && (
-                          <Badge variant="secondary" className="text-xs">
-                            {card.badge}
-                          </Badge>
-                        )}
-                      </div>
-                      <CardTitle className="mt-4">{card.title}</CardTitle>
-                      <CardDescription>{card.description}</CardDescription>
-                    </CardHeader>
-                  </Card>
-                </Link>
-              ))}
-          </div>
+                        <CardTitle className="mt-4">{card.title}</CardTitle>
+                        <CardDescription>{card.description}</CardDescription>
+                      </CardHeader>
+                    </Card>
+                  </Link>
+                ))}
+            </div>
 
-          {/* Activity Feed */}
-          <div className="lg:col-span-1">
-            <ActivityFeed limit={15} />
+            {/* Activity Feed */}
+            <div className="lg:col-span-1">
+              <ActivityFeed limit={15} />
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
