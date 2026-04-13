@@ -95,8 +95,9 @@ export const exportService = {
 
     // Log export
     await auditService.logEvent({
-      action: "EXPORT",
-      resourceType: "booking",
+      action: "export_csv",
+      actionCategory: "system",
+      details: "Exported bookings to CSV",
       metadata: {
         export_type: "csv",
         filters: params,
@@ -155,8 +156,9 @@ export const exportService = {
     ].join("\n");
 
     await auditService.logEvent({
-      action: "EXPORT",
-      resourceType: "enquiry",
+      action: "export_csv",
+      actionCategory: "system",
+      details: "Exported enquiries to CSV",
       metadata: {
         export_type: "csv",
         filters: params,
@@ -237,8 +239,9 @@ export const exportService = {
     ].join("\n");
 
     await auditService.logEvent({
-      action: "EXPORT",
-      resourceType: "feedback",
+      action: "export_csv",
+      actionCategory: "system",
+      details: "Exported feedback to CSV",
       metadata: {
         export_type: "csv",
         filters: params,

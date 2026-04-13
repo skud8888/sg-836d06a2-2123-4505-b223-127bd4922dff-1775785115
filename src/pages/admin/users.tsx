@@ -1,27 +1,33 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import Link from "next/link";
-import { Navigation } from "@/components/Navigation";
 import { supabase } from "@/integrations/supabase/client";
-import { rbacService, type UserRole } from "@/services/rbacService";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { auditService } from "@/services/auditService";
+import { Navigation } from "@/components/Navigation";
+import { 
+  Users, Search, Shield, MoreVertical, Key, Trash2, 
+  UserPlus, Mail, ShieldAlert, CheckSquare, XSquare,
+  ChevronDown
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Search, UserPlus, Shield, Trash2, Mail, KeyRound, Edit, Ban, CheckCircle } from "lucide-react";
-import { format } from "date-fns";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,98 +38,110 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-type User = {
+interface Profile {
   id: string;
-  email: string;
+  email: string | null;
   full_name: string | null;
   created_at: string;
   roles: string[];
-  last_sign_in?: string;
-  is_banned?: boolean;
-};
+}
 
-type DialogType = "roles" | "create" | "edit" | "reset" | null;
-
-export default function UsersManagement() {
+export default function UserManagementPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const [users, setUsers] = useState<User[]>([]);
+  
+  const [users, setUsers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [dialogType, setDialogType] = useState<DialogType>(null);
-  const [newRole, setNewRole] = useState<UserRole | "">("");
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [userToDelete, setUserToDelete] = useState<User | null>(null);
-  const [actionLoading, setActionLoading] = useState(false);
-
-  // Form states
-  const [createForm, setCreateForm] = useState({
-    email: "",
-    password: "",
-    full_name: "",
-    role: "" as UserRole | ""
-  });
-
-  const [editForm, setEditForm] = useState({
-    email: "",
-    full_name: ""
-  });
-
-  const [resetPasswordForm, setResetPasswordForm] = useState({
-    newPassword: "",
-    confirmPassword: ""
-  });
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  
+  // Dialog States
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<Profile | null>(null);
+  
+  // Create User State
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [createForm, setCreateForm] = useState({ email: "", password: "", fullName: "", role: "student" });
+  
+  // Role Dialog State
+  const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
+  const [selectedUserForRoles, setSelectedUserForRoles] = useState<Profile | null>(null);
 
   useEffect(() => {
-    checkPermissions();
-    fetchUsers();
+    checkAccessAndLoadData();
   }, []);
 
-  const checkPermissions = async () => {
-    const canManageUsers = await rbacService.hasPermission("users", "read");
-    if (!canManageUsers) {
-      router.push("/admin");
-      return;
-    }
+  const checkAccessAndLoadData = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push("/admin/login");
+        return;
+      }
 
-    const superAdmin = await rbacService.isSuperAdmin();
-    setIsSuperAdmin(superAdmin);
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .eq('role', 'super_admin')
+        .single();
+
+      if (!roleData) {
+        toast({
+          title: "Access Denied",
+          description: "Super Admin privileges required.",
+          variant: "destructive"
+        });
+        router.push("/admin");
+        return;
+      }
+
+      await fetchUsers();
+    } catch (err) {
+      console.error("Access check error:", err);
+    }
   };
 
   const fetchUsers = async () => {
-    setLoading(true);
-
     try {
-      // Get all users from profiles table with their roles
+      setLoading(true);
+      
       const { data: profilesData, error: profilesError } = await supabase
         .from("profiles")
-        .select("id, email, full_name, created_at")
+        .select("*")
         .order("created_at", { ascending: false });
 
       if (profilesError) throw profilesError;
 
-      // Get all role assignments
-      const { data: roleAssignments, error: rolesError } = await supabase
+      const { data: rolesData, error: rolesError } = await supabase
         .from("user_roles")
         .select("*");
 
       if (rolesError) throw rolesError;
 
-      // Map users with their roles
-      const usersWithRoles = (profilesData || []).map(user => ({
-        id: user.id,
-        email: user.email || "",
-        full_name: user.full_name || null,
-        created_at: user.created_at,
-        roles: roleAssignments?.filter(r => r.user_id === user.id).map(r => r.role) || []
+      const combinedUsers = profilesData.map((profile) => ({
+        ...profile,
+        roles: rolesData
+          .filter(r => r.user_id === profile.id)
+          .map(r => r.role)
       }));
 
-      setUsers(usersWithRoles);
-    } catch (err: any) {
-      console.error("Error fetching users:", err);
+      setUsers(combinedUsers);
+      setSelectedUsers([]);
+    } catch (error: any) {
+      console.error("Error loading users:", error);
       toast({
         title: "Error",
         description: "Failed to load users",
@@ -135,659 +153,402 @@ export default function UsersManagement() {
   };
 
   const handleCreateUser = async () => {
-    if (!createForm.email || !createForm.password) {
-      toast({
-        title: "Validation Error",
-        description: "Email and password are required",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setActionLoading(true);
+    if (!createForm.email || !createForm.password) return;
+    
     try {
-      // Create user via Supabase Auth Admin API
-      const { data, error } = await supabase.auth.admin.createUser({
+      const { data, error } = await supabase.auth.signUp({
         email: createForm.email,
         password: createForm.password,
-        email_confirm: true,
-        user_metadata: {
-          full_name: createForm.full_name || createForm.email
-        }
-      });
-
-      if (error) throw error;
-
-      // Assign role if selected
-      if (createForm.role && data.user) {
-        await rbacService.assignRole(data.user.id, createForm.role);
-      }
-
-      toast({ title: "User created successfully" });
-      setDialogType(null);
-      setCreateForm({ email: "", password: "", full_name: "", role: "" });
-      fetchUsers();
-    } catch (err: any) {
-      console.error("Error creating user:", err);
-      toast({
-        title: "Error",
-        description: err.message || "Failed to create user",
-        variant: "destructive"
-      });
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleEditUser = async () => {
-    if (!selectedUser) return;
-
-    setActionLoading(true);
-    try {
-      // Update user metadata
-      const { error: updateError } = await supabase.auth.admin.updateUserById(
-        selectedUser.id,
-        {
-          email: editForm.email,
-          user_metadata: {
-            full_name: editForm.full_name
+        options: {
+          data: {
+            full_name: createForm.fullName
           }
         }
-      );
-
-      if (updateError) throw updateError;
-
-      // Update profile
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({
-          email: editForm.email,
-          full_name: editForm.full_name
-        })
-        .eq("id", selectedUser.id);
-
-      if (profileError) throw profileError;
-
-      toast({ title: "User updated successfully" });
-      setDialogType(null);
-      fetchUsers();
-    } catch (err: any) {
-      console.error("Error updating user:", err);
-      toast({
-        title: "Error",
-        description: err.message || "Failed to update user",
-        variant: "destructive"
-      });
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleResetPassword = async () => {
-    if (!selectedUser) return;
-
-    if (resetPasswordForm.newPassword !== resetPasswordForm.confirmPassword) {
-      toast({
-        title: "Validation Error",
-        description: "Passwords do not match",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (resetPasswordForm.newPassword.length < 8) {
-      toast({
-        title: "Validation Error",
-        description: "Password must be at least 8 characters",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setActionLoading(true);
-    try {
-      const { error } = await supabase.auth.admin.updateUserById(
-        selectedUser.id,
-        { password: resetPasswordForm.newPassword }
-      );
-
-      if (error) throw error;
-
-      toast({ title: "Password reset successfully" });
-      setDialogType(null);
-      setResetPasswordForm({ newPassword: "", confirmPassword: "" });
-    } catch (err: any) {
-      console.error("Error resetting password:", err);
-      toast({
-        title: "Error",
-        description: err.message || "Failed to reset password",
-        variant: "destructive"
-      });
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleDeleteUser = async () => {
-    if (!userToDelete) return;
-
-    setActionLoading(true);
-    try {
-      // Delete user via Supabase Auth Admin API
-      const { error } = await supabase.auth.admin.deleteUser(userToDelete.id);
-
-      if (error) throw error;
-
-      toast({ title: "User deleted successfully" });
-      setDeleteDialogOpen(false);
-      setUserToDelete(null);
-      fetchUsers();
-    } catch (err: any) {
-      console.error("Error deleting user:", err);
-      toast({
-        title: "Error",
-        description: err.message || "Failed to delete user",
-        variant: "destructive"
-      });
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleSendPasswordReset = async (userEmail: string) => {
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(userEmail, {
-        redirectTo: `${window.location.origin}/admin/update-password`
       });
 
       if (error) throw error;
+      
+      if (data.user && createForm.role !== "student") {
+        await supabase
+          .from("user_roles")
+          .insert({ user_id: data.user.id, role: createForm.role });
+      }
 
+      await auditService.logUserCreated(data.user?.id || "", createForm.email, [createForm.role]);
+
+      toast({ title: "User created successfully" });
+      setIsCreateOpen(false);
+      setCreateForm({ email: "", password: "", fullName: "", role: "student" });
+      fetchUsers();
+    } catch (error: any) {
       toast({
-        title: "Password reset email sent",
-        description: `Reset link sent to ${userEmail}`
-      });
-    } catch (err: any) {
-      console.error("Error sending password reset:", err);
-      toast({
-        title: "Error",
-        description: err.message || "Failed to send password reset email",
+        title: "Error creating user",
+        description: error.message,
         variant: "destructive"
       });
     }
   };
 
-  const handleAssignRole = async () => {
-    if (!selectedUser || !newRole) return;
+  const handleAssignRole = async (userId: string, role: string) => {
+    try {
+      const { error } = await supabase
+        .from("user_roles")
+        .insert({ user_id: userId, role });
 
-    setActionLoading(true);
-    const { success, error } = await rbacService.assignRole(selectedUser.id, newRole);
+      if (error) throw error;
+      
+      const user = users.find(u => u.id === userId);
+      if (user) await auditService.logRoleAssigned(userId, user.email || "", role);
 
-    if (success) {
-      toast({ title: "Role assigned successfully" });
-      setNewRole("");
+      toast({ title: "Role assigned" });
       fetchUsers();
-    } else {
-      toast({
-        title: "Error",
-        description: error?.message || "Failed to assign role",
-        variant: "destructive"
-      });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     }
-    setActionLoading(false);
   };
 
   const handleRemoveRole = async (userId: string, role: string) => {
-    setActionLoading(true);
-    const { success, error } = await rbacService.removeRole(userId, role as UserRole);
+    try {
+      const { error } = await supabase
+        .from("user_roles")
+        .delete()
+        .match({ user_id: userId, role });
 
-    if (success) {
-      toast({ title: "Role removed successfully" });
+      if (error) throw error;
+
+      const user = users.find(u => u.id === userId);
+      if (user) await auditService.logRoleRemoved(userId, user.email || "", role);
+
+      toast({ title: "Role removed" });
       fetchUsers();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+  // BULK ACTIONS
+  const toggleSelectAll = () => {
+    if (selectedUsers.length === filteredUsers.length) {
+      setSelectedUsers([]);
     } else {
-      toast({
-        title: "Error",
-        description: error?.message || "Failed to remove role",
-        variant: "destructive"
-      });
-    }
-    setActionLoading(false);
-  };
-
-  const getRoleBadgeColor = (role: string) => {
-    switch (role) {
-      case "super_admin":
-        return "bg-red-500 text-white";
-      case "admin":
-        return "bg-blue-500 text-white";
-      case "trainer":
-        return "bg-green-500 text-white";
-      case "receptionist":
-        return "bg-purple-500 text-white";
-      case "student":
-        return "bg-gray-500 text-white";
-      default:
-        return "";
+      setSelectedUsers(filteredUsers.map(u => u.id));
     }
   };
 
-  const openDialog = (type: DialogType, user?: User) => {
-    setDialogType(type);
-    if (user) {
-      setSelectedUser(user);
-      if (type === "edit") {
-        setEditForm({
-          email: user.email,
-          full_name: user.full_name || ""
-        });
+  const toggleSelectUser = (id: string) => {
+    if (selectedUsers.includes(id)) {
+      setSelectedUsers(selectedUsers.filter(userId => userId !== id));
+    } else {
+      setSelectedUsers([...selectedUsers, id]);
+    }
+  };
+
+  const handleBulkRoleAssign = async (role: string) => {
+    if (selectedUsers.length === 0) return;
+    try {
+      for (const userId of selectedUsers) {
+        // Skip if they already have the role
+        const user = users.find(u => u.id === userId);
+        if (user && !user.roles.includes(role)) {
+          await supabase.from("user_roles").insert({ user_id: userId, role });
+        }
       }
+      
+      await auditService.logBulkAction("role_assign", selectedUsers.length, `Assigned role ${role} to multiple users`);
+      
+      toast({ title: "Bulk role assignment successful" });
+      setSelectedUsers([]);
+      fetchUsers();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     }
   };
 
-  const filteredUsers = users.filter(
-    user =>
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.roles.some(role => role.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredUsers = users.filter(user => 
+    user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.roles.some(r => r.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <Navigation />
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <Link href="/admin">
-              <Button variant="ghost" size="sm" className="mb-2">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
-              </Button>
-            </Link>
-            <h1 className="text-3xl font-bold">User Management</h1>
-            <p className="text-muted-foreground">Manage users, roles, and permissions</p>
-          </div>
-          {isSuperAdmin && (
-            <Button onClick={() => openDialog("create")}>
-              <UserPlus className="h-4 w-4 mr-2" />
+      <div className="min-h-screen bg-slate-50 pt-20">
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900 tracking-tight">User Management</h1>
+              <p className="text-slate-500 mt-1">Manage system access, roles, and permissions</p>
+            </div>
+            <Button onClick={() => setIsCreateOpen(true)} className="gap-2 bg-indigo-600 hover:bg-indigo-700">
+              <UserPlus className="h-4 w-4" />
               Create User
             </Button>
-          )}
-        </div>
+          </div>
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>All Users</CardTitle>
-                <CardDescription>{filteredUsers.length} total users</CardDescription>
-              </div>
-              <div className="flex gap-3">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search users..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 w-64"
+          <Card className="border-slate-200 shadow-sm">
+            <CardHeader className="border-b border-slate-100 bg-white pb-4">
+              <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+                <div className="relative flex-1 max-w-md w-full">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <Input 
+                    placeholder="Search by email, name, or role..." 
+                    className="pl-9 w-full"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
+                
+                {selectedUsers.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="px-3 py-1 text-sm font-medium">
+                      {selectedUsers.length} selected
+                    </Badge>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="gap-2 border-indigo-200 text-indigo-700">
+                          Bulk Actions <ChevronDown className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuItem onClick={() => handleBulkRoleAssign("admin")}>
+                          Assign Admin Role
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleBulkRoleAssign("trainer")}>
+                          Assign Trainer Role
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="text-red-600 font-medium">
+                          Delete Selected
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                )}
               </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <p className="text-center text-muted-foreground py-8">Loading users...</p>
-            ) : filteredUsers.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">No users found</p>
-            ) : (
+            </CardHeader>
+            <CardContent className="p-0">
               <Table>
-                <TableHeader>
+                <TableHeader className="bg-slate-50/80">
                   <TableRow>
-                    <TableHead>User</TableHead>
+                    <TableHead className="w-[50px] pl-4">
+                      <Checkbox 
+                        checked={selectedUsers.length === filteredUsers.length && filteredUsers.length > 0}
+                        onCheckedChange={toggleSelectAll}
+                        aria-label="Select all"
+                      />
+                    </TableHead>
+                    <TableHead>User Details</TableHead>
                     <TableHead>Roles</TableHead>
-                    <TableHead>Joined</TableHead>
+                    <TableHead>Created</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredUsers.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{user.email}</p>
-                          {user.full_name && (
-                            <p className="text-sm text-muted-foreground">{user.full_name}</p>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {user.roles.length > 0 ? (
-                            user.roles.map((role) => (
-                              <Badge key={role} className={getRoleBadgeColor(role)}>
-                                {role.replace("_", " ")}
-                              </Badge>
-                            ))
-                          ) : (
-                            <Badge variant="outline">No roles</Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {format(new Date(user.created_at), "MMM d, yyyy")}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex gap-2 justify-end">
-                          {isSuperAdmin && (
-                            <>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => openDialog("roles", user)}
-                              >
-                                <Shield className="h-4 w-4 mr-1" />
-                                Roles
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => openDialog("edit", user)}
-                              >
-                                <Edit className="h-4 w-4 mr-1" />
-                                Edit
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => openDialog("reset", user)}
-                              >
-                                <KeyRound className="h-4 w-4 mr-1" />
-                                Reset
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleSendPasswordReset(user.email)}
-                              >
-                                <Mail className="h-4 w-4 mr-1" />
-                                Email
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => {
-                                  setUserToDelete(user);
-                                  setDeleteDialogOpen(true);
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </>
-                          )}
-                        </div>
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="h-32 text-center text-slate-500">
+                        Loading users...
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : filteredUsers.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="h-32 text-center text-slate-500">
+                        No users found matching your search.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredUsers.map((user) => (
+                      <TableRow key={user.id} className="hover:bg-slate-50/50 group">
+                        <TableCell className="pl-4">
+                          <Checkbox 
+                            checked={selectedUsers.includes(user.id)}
+                            onCheckedChange={() => toggleSelectUser(user.id)}
+                            aria-label={`Select ${user.email}`}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-medium text-slate-900">{user.full_name || "No Name"}</span>
+                            <span className="text-sm text-slate-500 flex items-center gap-1">
+                              <Mail className="h-3 w-3" />
+                              {user.email}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1">
+                            {user.roles.length === 0 ? (
+                              <Badge variant="outline" className="text-slate-500">Student</Badge>
+                            ) : (
+                              user.roles.map(role => (
+                                <Badge 
+                                  key={role} 
+                                  variant="secondary"
+                                  className={
+                                    role === 'super_admin' ? "bg-red-100 text-red-800 hover:bg-red-200" :
+                                    role === 'admin' ? "bg-blue-100 text-blue-800 hover:bg-blue-200" :
+                                    role === 'trainer' ? "bg-green-100 text-green-800 hover:bg-green-200" :
+                                    "bg-purple-100 text-purple-800 hover:bg-purple-200"
+                                  }
+                                >
+                                  {role.replace('_', ' ')}
+                                </Badge>
+                              ))
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm text-slate-500">
+                          {new Date(user.created_at).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => {
+                                setSelectedUserForRoles(user);
+                                setIsRoleDialogOpen(true);
+                              }}>
+                                <Shield className="h-4 w-4 mr-2" />
+                                Manage Roles
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem 
+                                className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                                onClick={() => {
+                                  setUserToDelete(user);
+                                  setIsDeleteDialogOpen(true);
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete User
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
-      {/* Create User Dialog */}
-      <Dialog open={dialogType === "create"} onOpenChange={() => setDialogType(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create New User</DialogTitle>
-            <DialogDescription>
-              Add a new user to the system and assign an initial role
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="create-email">Email *</Label>
-              <Input
-                id="create-email"
-                type="email"
-                value={createForm.email}
-                onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
-                placeholder="user@example.com"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="create-password">Password *</Label>
-              <Input
-                id="create-password"
-                type="password"
-                value={createForm.password}
-                onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
-                placeholder="Min 8 characters"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="create-name">Full Name</Label>
-              <Input
-                id="create-name"
-                value={createForm.full_name}
-                onChange={(e) => setCreateForm({ ...createForm, full_name: e.target.value })}
-                placeholder="John Doe"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="create-role">Initial Role (optional)</Label>
-              <Select
-                value={createForm.role}
-                onValueChange={(value) => setCreateForm({ ...createForm, role: value as UserRole })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select role..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="super_admin">Super Admin</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="trainer">Trainer</SelectItem>
-                  <SelectItem value="receptionist">Receptionist</SelectItem>
-                  <SelectItem value="student">Student</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogType(null)}>
-              Cancel
-            </Button>
-            <Button onClick={handleCreateUser} disabled={actionLoading}>
-              {actionLoading ? "Creating..." : "Create User"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit User Dialog */}
-      <Dialog open={dialogType === "edit"} onOpenChange={() => setDialogType(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
-            <DialogDescription>
-              Update user information for {selectedUser?.email}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="edit-email">Email</Label>
-              <Input
-                id="edit-email"
-                type="email"
-                value={editForm.email}
-                onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="edit-name">Full Name</Label>
-              <Input
-                id="edit-name"
-                value={editForm.full_name}
-                onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogType(null)}>
-              Cancel
-            </Button>
-            <Button onClick={handleEditUser} disabled={actionLoading}>
-              {actionLoading ? "Saving..." : "Save Changes"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Reset Password Dialog */}
-      <Dialog open={dialogType === "reset"} onOpenChange={() => setDialogType(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Reset Password</DialogTitle>
-            <DialogDescription>
-              Set a new password for {selectedUser?.email}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="new-password">New Password</Label>
-              <Input
-                id="new-password"
-                type="password"
-                value={resetPasswordForm.newPassword}
-                onChange={(e) => setResetPasswordForm({ ...resetPasswordForm, newPassword: e.target.value })}
-                placeholder="Min 8 characters"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="confirm-password">Confirm Password</Label>
-              <Input
-                id="confirm-password"
-                type="password"
-                value={resetPasswordForm.confirmPassword}
-                onChange={(e) => setResetPasswordForm({ ...resetPasswordForm, confirmPassword: e.target.value })}
-                placeholder="Re-enter password"
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogType(null)}>
-              Cancel
-            </Button>
-            <Button onClick={handleResetPassword} disabled={actionLoading}>
-              {actionLoading ? "Resetting..." : "Reset Password"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Manage Roles Dialog */}
-      <Dialog open={dialogType === "roles"} onOpenChange={() => setDialogType(null)}>
+      {/* Role Management Dialog */}
+      <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Manage User Roles</DialogTitle>
             <DialogDescription>
-              Assign or remove roles for {selectedUser?.email}
+              Assign or remove roles for {selectedUserForRoles?.email}
             </DialogDescription>
           </DialogHeader>
-
-          <div className="space-y-4">
-            <div>
-              <Label className="text-sm font-medium mb-2 block">Current Roles</Label>
+          <div className="space-y-4 py-4">
+            <div className="flex gap-2">
+              <Select onValueChange={(val) => handleAssignRole(selectedUserForRoles?.id || "", val)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Add new role..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="trainer">Trainer</SelectItem>
+                  <SelectItem value="receptionist">Receptionist</SelectItem>
+                  <SelectItem value="super_admin">Super Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2 mt-4">
+              <h4 className="text-sm font-medium text-slate-700">Current Roles</h4>
               <div className="flex flex-wrap gap-2">
-                {selectedUser?.roles.map((role) => (
-                  <Badge
-                    key={role}
-                    className={`${getRoleBadgeColor(role)} cursor-pointer`}
-                    onClick={() => handleRemoveRole(selectedUser.id, role)}
+                {selectedUserForRoles?.roles.map(role => (
+                  <Badge 
+                    key={role} 
+                    variant="secondary"
+                    className="flex items-center gap-1 px-2 py-1 cursor-pointer hover:bg-slate-200"
+                    onClick={() => handleRemoveRole(selectedUserForRoles.id, role)}
                   >
-                    {role.replace("_", " ")}
-                    <Trash2 className="h-3 w-3 ml-2" />
+                    {role.replace('_', ' ')}
+                    <span className="ml-1 text-slate-500 hover:text-red-500">×</span>
                   </Badge>
                 ))}
-                {selectedUser?.roles.length === 0 && (
-                  <p className="text-sm text-muted-foreground">No roles assigned</p>
+                {selectedUserForRoles?.roles.length === 0 && (
+                  <span className="text-sm text-slate-500 italic">No special roles (Student access only)</span>
                 )}
               </div>
-            </div>
-
-            <div>
-              <Label htmlFor="role">Assign New Role</Label>
-              <div className="flex gap-2 mt-2">
-                <Select value={newRole} onValueChange={(value) => setNewRole(value as UserRole)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select role..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="super_admin">Super Admin</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="trainer">Trainer</SelectItem>
-                    <SelectItem value="receptionist">Receptionist</SelectItem>
-                    <SelectItem value="student">Student</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button onClick={handleAssignRole} disabled={!newRole || actionLoading}>
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Assign
-                </Button>
-              </div>
-            </div>
-
-            <div className="bg-muted p-4 rounded-lg">
-              <h4 className="font-medium mb-2">Role Permissions</h4>
-              <ul className="text-sm space-y-1 text-muted-foreground">
-                <li><strong>Super Admin:</strong> Full system access, manage users</li>
-                <li><strong>Admin:</strong> Manage bookings, courses, view analytics</li>
-                <li><strong>Trainer:</strong> View assigned classes, update attendance</li>
-                <li><strong>Receptionist:</strong> Create bookings, accept payments</li>
-                <li><strong>Student:</strong> View own bookings and documents</li>
-              </ul>
+              <p className="text-xs text-slate-500 mt-2">Click a role badge to remove it.</p>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
 
+      {/* Create User Dialog */}
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New User</DialogTitle>
+            <DialogDescription>
+              Create a new user account instantly. They won't need to verify their email.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Email Address</Label>
+              <Input 
+                type="email" 
+                value={createForm.email}
+                onChange={(e) => setCreateForm({...createForm, email: e.target.value})}
+                placeholder="user@example.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Full Name</Label>
+              <Input 
+                value={createForm.fullName}
+                onChange={(e) => setCreateForm({...createForm, fullName: e.target.value})}
+                placeholder="John Doe"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Temporary Password</Label>
+              <Input 
+                type="password" 
+                value={createForm.password}
+                onChange={(e) => setCreateForm({...createForm, password: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Initial Role</Label>
+              <Select 
+                value={createForm.role}
+                onValueChange={(val) => setCreateForm({...createForm, role: val})}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="student">Student (No special access)</SelectItem>
+                  <SelectItem value="trainer">Trainer</SelectItem>
+                  <SelectItem value="receptionist">Receptionist</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogType(null)}>
-              Close
+            <Button variant="outline" onClick={() => setIsCreateOpen(false)}>Cancel</Button>
+            <Button onClick={handleCreateUser} className="bg-indigo-600 hover:bg-indigo-700">
+              Create User
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Delete User Confirmation */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete User?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete <strong>{userToDelete?.email}</strong> and all associated data.
-              This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteUser}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {actionLoading ? "Deleting..." : "Delete User"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+    </>
   );
 }
