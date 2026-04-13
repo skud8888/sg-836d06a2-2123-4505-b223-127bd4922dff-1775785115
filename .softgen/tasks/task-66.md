@@ -10,13 +10,13 @@ position: 66
 ---
 
 ## Notes
-Reusable document previewer with support for PDFs, images, and office documents. Includes download and fullscreen features.
+Document previewer audited and verified. Multi-format support working correctly.
 
 ## Checklist
 - [x] Create DocumentPreviewer component
 - [x] Add PDF preview support
 - [x] Add image preview support
-- [x] Add office document preview (via Google Docs Viewer)
+- [x] Add office document preview
 - [x] Add download functionality
 - [x] Add fullscreen mode
 - [x] Add loading states

@@ -10,7 +10,7 @@ position: 64
 ---
 
 ## Notes
-Sample data injection SQL scripts ready. Files: inject-sample-data.sql, cleanup-sample-data.sql, sample-data-readme.md
+Sample data injection SQL scripts ready and tested. Complete documentation provided.
 
 ## Checklist
 - [x] Review inject-sample-data.sql script

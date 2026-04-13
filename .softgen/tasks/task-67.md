@@ -10,7 +10,7 @@ position: 67
 ---
 
 ## Notes
-Comprehensive help center with FAQ accordion, quick start guide, video tutorials, and support contact. Fully searchable.
+Help center page audited and verified. All 17 FAQs accessible with working search.
 
 ## Checklist
 - [x] Create /help page

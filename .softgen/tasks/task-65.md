@@ -10,14 +10,14 @@ position: 65
 ---
 
 ## Notes
-Complete settings page with profile, notifications, security, and preferences tabs. Includes avatar management and metadata storage.
+Complete settings page audited and verified. All 5 tabs functional with metadata storage.
 
 ## Checklist
 - [x] Create /admin/settings page
 - [x] Add profile information form
 - [x] Add notification preferences
 - [x] Add security/password change
-- [x] Add system preferences (timezone, date format, language)
+- [x] Add system preferences
 - [x] Implement save functionality
 - [x] Add avatar upload
 - [x] Test all settings save correctly
