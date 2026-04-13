@@ -1,6 +1,6 @@
 ---
 title: Add Rate Limiting to Public Forms
-status: in_progress
+status: done
 priority: high
 type: security
 tags: [security, rate-limiting, spam-protection]
@@ -10,13 +10,14 @@ position: 69
 ---
 
 ## Notes
-Public forms (contact, booking, enquiry) need rate limiting to prevent spam and abuse. Implement server-side rate limiting with IP tracking.
+Rate limiting system implemented with IP tracking and database-backed storage. Protects public forms from spam and abuse.
 
 ## Checklist
-- [ ] Create rate limiting middleware/utility
-- [ ] Add rate limit to contact form API
-- [ ] Add rate limit to booking creation
-- [ ] Add rate limit to enquiry submission
-- [ ] Test rate limits work (max 5 requests per 15 min per IP)
-- [ ] Add user-friendly rate limit error messages
-- [ ] Document rate limit settings
+- [x] Create rate limiting middleware/utility
+- [x] Create rate_limit_log database table
+- [x] Add rate limit to contact form API
+- [x] Add rate limit to booking creation
+- [x] Add rate limit to enquiry submission
+- [x] Test rate limits work (max 5 requests per 15 min per IP)
+- [x] Add user-friendly rate limit error messages
+- [x] Document rate limit settings

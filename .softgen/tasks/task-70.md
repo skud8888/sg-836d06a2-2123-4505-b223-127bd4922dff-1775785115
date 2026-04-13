@@ -1,6 +1,6 @@
 ---
 title: Fix Student Certificate Access
-status: in_progress
+status: done
 priority: high
 type: bug
 tags: [certificates, student-portal, access]
@@ -10,13 +10,13 @@ position: 70
 ---
 
 ## Notes
-Student portal currently links to /admin/certificates which students can't access. Need dedicated student certificates page or update portal to show certificates inline.
+Created dedicated student certificates page with preview, download, and filtering. Updated student portal to link to correct page.
 
 ## Checklist
-- [ ] Create /pages/student/certificates.tsx
-- [ ] Fetch user's certificates from database
-- [ ] Display certificate list with details
-- [ ] Add download/view buttons
-- [ ] Add preview with DocumentPreviewer
-- [ ] Update student portal link to /student/certificates
-- [ ] Test certificate access for students
+- [x] Create /pages/student/certificates.tsx
+- [x] Fetch user's certificates from database
+- [x] Display certificate list with details
+- [x] Add download/view buttons
+- [x] Add preview with DocumentPreviewer
+- [x] Update student portal link to /student/certificates
+- [x] Test certificate access for students
