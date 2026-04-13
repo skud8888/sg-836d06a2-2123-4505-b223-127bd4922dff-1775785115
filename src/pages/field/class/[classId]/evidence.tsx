@@ -84,14 +84,12 @@ export default function ClassEvidencePage() {
 
         <div className="container mx-auto px-4 py-6 max-w-4xl">
           <EvidenceCapture 
-            contextType="class"
-            contextId={classId as string}
+            scheduledClassId={classId as string}
           />
           
           <div className="mt-8">
             <EvidenceGallery 
-              contextType="class"
-              contextId={classId as string}
+              scheduledClassId={classId as string}
             />
           </div>
         </div>

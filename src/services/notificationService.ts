@@ -115,4 +115,34 @@ export const notificationService = {
       metadata: { documentType },
     });
   },
+
+  /**
+   * Send feedback request to student
+   */
+  async sendFeedbackRequest(bookingId: string): Promise<void> {
+    const { data: booking } = await supabase
+      .from("bookings")
+      .select("student_email, scheduled_classes(course_templates(name))")
+      .eq("id", bookingId)
+      .single();
+
+    if (!booking || !booking.student_email) return;
+
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("email", booking.student_email)
+      .limit(1);
+
+    if (profiles && profiles.length > 0) {
+      await this.createNotification({
+        userId: profiles[0].id,
+        type: "feedback_request",
+        title: "Feedback Requested",
+        message: `Please provide feedback for ${booking.scheduled_classes?.course_templates?.name || 'your recent course'}`,
+        link: `/student/feedback`,
+        metadata: { bookingId },
+      });
+    }
+  },
 };
