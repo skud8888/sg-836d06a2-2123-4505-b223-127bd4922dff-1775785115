@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Search, UserPlus, Shield, Trash2 } from "lucide-react";
+import { ArrowLeft, Search, UserPlus, Shield, Trash2, Mail, KeyRound, Edit, Ban, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 import {
   Dialog,
@@ -22,13 +22,28 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type User = {
   id: string;
   email: string;
+  full_name: string | null;
   created_at: string;
   roles: string[];
+  last_sign_in?: string;
+  is_banned?: boolean;
 };
+
+type DialogType = "roles" | "create" | "edit" | "reset" | null;
 
 export default function UsersManagement() {
   const router = useRouter();
@@ -37,9 +52,30 @@ export default function UsersManagement() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogType, setDialogType] = useState<DialogType>(null);
   const [newRole, setNewRole] = useState<UserRole | "">("");
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  // Form states
+  const [createForm, setCreateForm] = useState({
+    email: "",
+    password: "",
+    full_name: "",
+    role: "" as UserRole | ""
+  });
+
+  const [editForm, setEditForm] = useState({
+    email: "",
+    full_name: ""
+  });
+
+  const [resetPasswordForm, setResetPasswordForm] = useState({
+    newPassword: "",
+    confirmPassword: ""
+  });
 
   useEffect(() => {
     checkPermissions();
@@ -64,12 +100,7 @@ export default function UsersManagement() {
       // Get all users from profiles table with their roles
       const { data: profilesData, error: profilesError } = await supabase
         .from("profiles")
-        .select(`
-          id,
-          email,
-          full_name,
-          created_at
-        `)
+        .select("id, email, full_name, created_at")
         .order("created_at", { ascending: false });
 
       if (profilesError) throw profilesError;
@@ -85,6 +116,7 @@ export default function UsersManagement() {
       const usersWithRoles = (profilesData || []).map(user => ({
         id: user.id,
         email: user.email || "",
+        full_name: user.full_name || null,
         created_at: user.created_at,
         roles: roleAssignments?.filter(r => r.user_id === user.id).map(r => r.role) || []
       }));
@@ -102,14 +134,196 @@ export default function UsersManagement() {
     }
   };
 
+  const handleCreateUser = async () => {
+    if (!createForm.email || !createForm.password) {
+      toast({
+        title: "Validation Error",
+        description: "Email and password are required",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      // Create user via Supabase Auth Admin API
+      const { data, error } = await supabase.auth.admin.createUser({
+        email: createForm.email,
+        password: createForm.password,
+        email_confirm: true,
+        user_metadata: {
+          full_name: createForm.full_name || createForm.email
+        }
+      });
+
+      if (error) throw error;
+
+      // Assign role if selected
+      if (createForm.role && data.user) {
+        await rbacService.assignRole(data.user.id, createForm.role);
+      }
+
+      toast({ title: "User created successfully" });
+      setDialogType(null);
+      setCreateForm({ email: "", password: "", full_name: "", role: "" });
+      fetchUsers();
+    } catch (err: any) {
+      console.error("Error creating user:", err);
+      toast({
+        title: "Error",
+        description: err.message || "Failed to create user",
+        variant: "destructive"
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleEditUser = async () => {
+    if (!selectedUser) return;
+
+    setActionLoading(true);
+    try {
+      // Update user metadata
+      const { error: updateError } = await supabase.auth.admin.updateUserById(
+        selectedUser.id,
+        {
+          email: editForm.email,
+          user_metadata: {
+            full_name: editForm.full_name
+          }
+        }
+      );
+
+      if (updateError) throw updateError;
+
+      // Update profile
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({
+          email: editForm.email,
+          full_name: editForm.full_name
+        })
+        .eq("id", selectedUser.id);
+
+      if (profileError) throw profileError;
+
+      toast({ title: "User updated successfully" });
+      setDialogType(null);
+      fetchUsers();
+    } catch (err: any) {
+      console.error("Error updating user:", err);
+      toast({
+        title: "Error",
+        description: err.message || "Failed to update user",
+        variant: "destructive"
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!selectedUser) return;
+
+    if (resetPasswordForm.newPassword !== resetPasswordForm.confirmPassword) {
+      toast({
+        title: "Validation Error",
+        description: "Passwords do not match",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (resetPasswordForm.newPassword.length < 8) {
+      toast({
+        title: "Validation Error",
+        description: "Password must be at least 8 characters",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      const { error } = await supabase.auth.admin.updateUserById(
+        selectedUser.id,
+        { password: resetPasswordForm.newPassword }
+      );
+
+      if (error) throw error;
+
+      toast({ title: "Password reset successfully" });
+      setDialogType(null);
+      setResetPasswordForm({ newPassword: "", confirmPassword: "" });
+    } catch (err: any) {
+      console.error("Error resetting password:", err);
+      toast({
+        title: "Error",
+        description: err.message || "Failed to reset password",
+        variant: "destructive"
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+
+    setActionLoading(true);
+    try {
+      // Delete user via Supabase Auth Admin API
+      const { error } = await supabase.auth.admin.deleteUser(userToDelete.id);
+
+      if (error) throw error;
+
+      toast({ title: "User deleted successfully" });
+      setDeleteDialogOpen(false);
+      setUserToDelete(null);
+      fetchUsers();
+    } catch (err: any) {
+      console.error("Error deleting user:", err);
+      toast({
+        title: "Error",
+        description: err.message || "Failed to delete user",
+        variant: "destructive"
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleSendPasswordReset = async (userEmail: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(userEmail, {
+        redirectTo: `${window.location.origin}/admin/update-password`
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Password reset email sent",
+        description: `Reset link sent to ${userEmail}`
+      });
+    } catch (err: any) {
+      console.error("Error sending password reset:", err);
+      toast({
+        title: "Error",
+        description: err.message || "Failed to send password reset email",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleAssignRole = async () => {
     if (!selectedUser || !newRole) return;
 
+    setActionLoading(true);
     const { success, error } = await rbacService.assignRole(selectedUser.id, newRole);
 
     if (success) {
       toast({ title: "Role assigned successfully" });
-      setDialogOpen(false);
       setNewRole("");
       fetchUsers();
     } else {
@@ -119,9 +333,11 @@ export default function UsersManagement() {
         variant: "destructive"
       });
     }
+    setActionLoading(false);
   };
 
   const handleRemoveRole = async (userId: string, role: string) => {
+    setActionLoading(true);
     const { success, error } = await rbacService.removeRole(userId, role as UserRole);
 
     if (success) {
@@ -134,6 +350,7 @@ export default function UsersManagement() {
         variant: "destructive"
       });
     }
+    setActionLoading(false);
   };
 
   const getRoleBadgeColor = (role: string) => {
@@ -153,9 +370,23 @@ export default function UsersManagement() {
     }
   };
 
+  const openDialog = (type: DialogType, user?: User) => {
+    setDialogType(type);
+    if (user) {
+      setSelectedUser(user);
+      if (type === "edit") {
+        setEditForm({
+          email: user.email,
+          full_name: user.full_name || ""
+        });
+      }
+    }
+  };
+
   const filteredUsers = users.filter(
     user =>
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.roles.some(role => role.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
@@ -172,8 +403,14 @@ export default function UsersManagement() {
               </Button>
             </Link>
             <h1 className="text-3xl font-bold">User Management</h1>
-            <p className="text-muted-foreground">Manage user roles and permissions</p>
+            <p className="text-muted-foreground">Manage users, roles, and permissions</p>
           </div>
+          {isSuperAdmin && (
+            <Button onClick={() => openDialog("create")}>
+              <UserPlus className="h-4 w-4 mr-2" />
+              Create User
+            </Button>
+          )}
         </div>
 
         <Card>
@@ -205,7 +442,7 @@ export default function UsersManagement() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Email</TableHead>
+                    <TableHead>User</TableHead>
                     <TableHead>Roles</TableHead>
                     <TableHead>Joined</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -214,15 +451,19 @@ export default function UsersManagement() {
                 <TableBody>
                   {filteredUsers.map((user) => (
                     <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.email}</TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{user.email}</p>
+                          {user.full_name && (
+                            <p className="text-sm text-muted-foreground">{user.full_name}</p>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
                           {user.roles.length > 0 ? (
                             user.roles.map((role) => (
-                              <Badge
-                                key={role}
-                                className={getRoleBadgeColor(role)}
-                              >
+                              <Badge key={role} className={getRoleBadgeColor(role)}>
                                 {role.replace("_", " ")}
                               </Badge>
                             ))
@@ -235,19 +476,54 @@ export default function UsersManagement() {
                         {format(new Date(user.created_at), "MMM d, yyyy")}
                       </TableCell>
                       <TableCell className="text-right">
-                        {isSuperAdmin && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              setSelectedUser(user);
-                              setDialogOpen(true);
-                            }}
-                          >
-                            <Shield className="h-4 w-4 mr-2" />
-                            Manage Roles
-                          </Button>
-                        )}
+                        <div className="flex gap-2 justify-end">
+                          {isSuperAdmin && (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => openDialog("roles", user)}
+                              >
+                                <Shield className="h-4 w-4 mr-1" />
+                                Roles
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => openDialog("edit", user)}
+                              >
+                                <Edit className="h-4 w-4 mr-1" />
+                                Edit
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => openDialog("reset", user)}
+                              >
+                                <KeyRound className="h-4 w-4 mr-1" />
+                                Reset
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleSendPasswordReset(user.email)}
+                              >
+                                <Mail className="h-4 w-4 mr-1" />
+                                Email
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => {
+                                  setUserToDelete(user);
+                                  setDeleteDialogOpen(true);
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -258,7 +534,169 @@ export default function UsersManagement() {
         </Card>
       </div>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      {/* Create User Dialog */}
+      <Dialog open={dialogType === "create"} onOpenChange={() => setDialogType(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New User</DialogTitle>
+            <DialogDescription>
+              Add a new user to the system and assign an initial role
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="create-email">Email *</Label>
+              <Input
+                id="create-email"
+                type="email"
+                value={createForm.email}
+                onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
+                placeholder="user@example.com"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="create-password">Password *</Label>
+              <Input
+                id="create-password"
+                type="password"
+                value={createForm.password}
+                onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
+                placeholder="Min 8 characters"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="create-name">Full Name</Label>
+              <Input
+                id="create-name"
+                value={createForm.full_name}
+                onChange={(e) => setCreateForm({ ...createForm, full_name: e.target.value })}
+                placeholder="John Doe"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="create-role">Initial Role (optional)</Label>
+              <Select
+                value={createForm.role}
+                onValueChange={(value) => setCreateForm({ ...createForm, role: value as UserRole })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select role..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="super_admin">Super Admin</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="trainer">Trainer</SelectItem>
+                  <SelectItem value="receptionist">Receptionist</SelectItem>
+                  <SelectItem value="student">Student</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogType(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateUser} disabled={actionLoading}>
+              {actionLoading ? "Creating..." : "Create User"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit User Dialog */}
+      <Dialog open={dialogType === "edit"} onOpenChange={() => setDialogType(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+            <DialogDescription>
+              Update user information for {selectedUser?.email}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="edit-email">Email</Label>
+              <Input
+                id="edit-email"
+                type="email"
+                value={editForm.email}
+                onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-name">Full Name</Label>
+              <Input
+                id="edit-name"
+                value={editForm.full_name}
+                onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogType(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleEditUser} disabled={actionLoading}>
+              {actionLoading ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset Password Dialog */}
+      <Dialog open={dialogType === "reset"} onOpenChange={() => setDialogType(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reset Password</DialogTitle>
+            <DialogDescription>
+              Set a new password for {selectedUser?.email}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="new-password">New Password</Label>
+              <Input
+                id="new-password"
+                type="password"
+                value={resetPasswordForm.newPassword}
+                onChange={(e) => setResetPasswordForm({ ...resetPasswordForm, newPassword: e.target.value })}
+                placeholder="Min 8 characters"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="confirm-password">Confirm Password</Label>
+              <Input
+                id="confirm-password"
+                type="password"
+                value={resetPasswordForm.confirmPassword}
+                onChange={(e) => setResetPasswordForm({ ...resetPasswordForm, confirmPassword: e.target.value })}
+                placeholder="Re-enter password"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogType(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleResetPassword} disabled={actionLoading}>
+              {actionLoading ? "Resetting..." : "Reset Password"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Manage Roles Dialog */}
+      <Dialog open={dialogType === "roles"} onOpenChange={() => setDialogType(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Manage User Roles</DialogTitle>
@@ -302,7 +740,7 @@ export default function UsersManagement() {
                     <SelectItem value="student">Student</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button onClick={handleAssignRole} disabled={!newRole}>
+                <Button onClick={handleAssignRole} disabled={!newRole || actionLoading}>
                   <UserPlus className="h-4 w-4 mr-2" />
                   Assign
                 </Button>
@@ -322,12 +760,34 @@ export default function UsersManagement() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setDialogType(null)}>
               Close
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete User Confirmation */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete User?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete <strong>{userToDelete?.email}</strong> and all associated data.
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteUser}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {actionLoading ? "Deleting..." : "Delete User"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
