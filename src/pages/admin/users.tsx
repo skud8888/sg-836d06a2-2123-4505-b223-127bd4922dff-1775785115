@@ -79,6 +79,10 @@ export default function UserManagementPage() {
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
   const [selectedUserForRoles, setSelectedUserForRoles] = useState<Profile | null>(null);
 
+  // Password Reset State
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+  const [resetForm, setResetForm] = useState({ userId: "", newPassword: "" });
+
   useEffect(() => {
     checkAccessAndLoadData();
   }, []);
