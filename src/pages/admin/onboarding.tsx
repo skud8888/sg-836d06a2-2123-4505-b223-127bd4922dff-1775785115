@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
 
 interface OnboardingStatus {
-  completed: boolean;
+  is_completed: boolean;
   current_step: number | null;
   completed_at: string | null;
 }
@@ -98,7 +98,7 @@ export default function OnboardingPage() {
       await supabase
         .from("user_onboarding")
         .update({ 
-          completed: false,
+          is_completed: false,
           current_step: 0
         })
         .eq("user_id", user.id);
@@ -121,7 +121,7 @@ export default function OnboardingPage() {
       await supabase
         .from("user_onboarding")
         .update({ 
-          completed: false,
+          is_completed: false,
           current_step: 0,
           completed_at: null
         })
@@ -163,16 +163,16 @@ export default function OnboardingPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <CardTitle className="text-xl">
-                        {onboarding?.completed ? "Onboarding Completed!" : `Welcome, ${userRole.charAt(0).toUpperCase() + userRole.slice(1)}!`}
+                        {onboarding?.is_completed ? "Onboarding Completed!" : `Welcome, ${userRole.charAt(0).toUpperCase() + userRole.slice(1)}!`}
                       </CardTitle>
                       <CardDescription className="mt-2">
-                        {onboarding?.completed 
+                        {onboarding?.is_completed 
                           ? `You completed the onboarding tour on ${new Date(onboarding.completed_at || "").toLocaleDateString()}`
                           : "Take a guided tour to learn how to use the platform effectively"
                         }
                       </CardDescription>
                     </div>
-                    {onboarding?.completed && (
+                    {onboarding?.is_completed && (
                       <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
                         <Check className="h-3 w-3 mr-1" />
                         Completed
@@ -182,7 +182,7 @@ export default function OnboardingPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex gap-3">
-                    {!onboarding?.completed ? (
+                    {!onboarding?.is_completed ? (
                       <Button onClick={handleStartTour} className="gap-2 bg-indigo-600 hover:bg-indigo-700">
                         <Play className="h-4 w-4" />
                         Start Onboarding Tour

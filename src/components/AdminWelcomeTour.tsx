@@ -138,7 +138,7 @@ export function AdminWelcomeTour() {
         .eq("user_id", user.id)
         .single();
 
-      if (onboarding && !onboarding.completed) {
+      if (onboarding && !onboarding.is_completed) {
         setIsVisible(true);
       }
 
@@ -190,7 +190,10 @@ export function AdminWelcomeTour() {
 
       await supabase
         .from("user_onboarding")
-        .update({ completed: true })
+        .update({ 
+          is_completed: true,
+          completed_at: new Date().toISOString()
+        })
         .eq("user_id", user.id);
 
       setIsVisible(false);
