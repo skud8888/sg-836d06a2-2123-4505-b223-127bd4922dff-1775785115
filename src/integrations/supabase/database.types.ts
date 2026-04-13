@@ -2169,6 +2169,33 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limit_log: {
+        Row: {
+          count: number | null
+          created_at: string | null
+          endpoint: string
+          id: string
+          ip: string
+          window_start: string
+        }
+        Insert: {
+          count?: number | null
+          created_at?: string | null
+          endpoint: string
+          id?: string
+          ip: string
+          window_start?: string
+        }
+        Update: {
+          count?: number | null
+          created_at?: string | null
+          endpoint?: string
+          id?: string
+          ip?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       role_permissions: {
         Row: {
           action: string
