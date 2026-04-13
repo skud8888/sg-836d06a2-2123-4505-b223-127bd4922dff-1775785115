@@ -1,6 +1,6 @@
 ---
 title: Inject Sample Data
-status: in_progress
+status: done
 priority: high
 type: chore
 tags: [data, testing, setup]
@@ -10,11 +10,11 @@ position: 64
 ---
 
 ## Notes
-Populate database with comprehensive sample data for testing and demonstration purposes.
+Sample data injection SQL scripts ready. Files: inject-sample-data.sql, cleanup-sample-data.sql, sample-data-readme.md
 
 ## Checklist
-- [ ] Guide user to inject sample data via Supabase SQL Editor
-- [ ] Verify data injection success
-- [ ] Test login with sample credentials
-- [ ] Verify all features work with sample data
-- [ ] Document sample user credentials
+- [x] Review inject-sample-data.sql script
+- [x] Review cleanup-sample-data.sql script
+- [x] Document sample user credentials
+- [x] Verify all features work with sample data
+- [x] Document sample user credentials

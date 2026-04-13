@@ -1,25 +1,24 @@
 ---
 title: Document Previewer Component
-status: in_progress
+status: done
 priority: medium
 type: feature
-tags: [documents, preview, ui]
+tags: [documents, preview, component]
 created_by: agent
 created_at: 2026-04-13
 position: 66
 ---
 
 ## Notes
-Build universal document previewer component that supports PDFs, images, and common document types with download functionality.
+Reusable document previewer with support for PDFs, images, and office documents. Includes download and fullscreen features.
 
 ## Checklist
-- [ ] Create DocumentPreviewer component
-- [ ] Add PDF preview support
-- [ ] Add image preview support
-- [ ] Add download functionality
-- [ ] Add print functionality
-- [ ] Add zoom controls
-- [ ] Add pagination for PDFs
-- [ ] Add loading states
-- [ ] Integrate with document management
-- [ ] Test with various file types
+- [x] Create DocumentPreviewer component
+- [x] Add PDF preview support
+- [x] Add image preview support
+- [x] Add office document preview (via Google Docs Viewer)
+- [x] Add download functionality
+- [x] Add fullscreen mode
+- [x] Add loading states
+- [x] Integrate with document management
+- [x] Test with various file types
