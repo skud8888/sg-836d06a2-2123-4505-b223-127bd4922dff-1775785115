@@ -84,7 +84,7 @@ export default function SettingsPage() {
       setAvatarUrl(profile.avatar_url || "");
       
       // Load notification preferences from metadata
-      const metadata = profile.metadata as any || {};
+      const metadata = (profile as any).metadata || {};
       setEmailNotifications(metadata.emailNotifications ?? true);
       setBookingNotifications(metadata.bookingNotifications ?? true);
       setEnquiryNotifications(metadata.enquiryNotifications ?? true);
@@ -145,7 +145,7 @@ export default function SettingsPage() {
     const { error } = await supabase
       .from("profiles")
       .update({
-        metadata: metadata,
+        metadata: metadata as any,
         updated_at: new Date().toISOString()
       })
       .eq("id", user.id);
@@ -211,12 +211,12 @@ export default function SettingsPage() {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("metadata")
+      .select("*")
       .eq("id", user.id)
       .single();
 
     const metadata = {
-      ...(profile?.metadata as any || {}),
+      ...((profile as any)?.metadata || {}),
       timezone,
       dateFormat,
       language
@@ -225,7 +225,7 @@ export default function SettingsPage() {
     const { error } = await supabase
       .from("profiles")
       .update({
-        metadata: metadata,
+        metadata: metadata as any,
         updated_at: new Date().toISOString()
       })
       .eq("id", user.id);

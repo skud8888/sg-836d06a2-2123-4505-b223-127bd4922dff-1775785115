@@ -2127,6 +2127,7 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          metadata: Json | null
           onboarding_completed: boolean | null
           organization_name: string | null
           phone: string | null
@@ -2142,6 +2143,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
+          metadata?: Json | null
           onboarding_completed?: boolean | null
           organization_name?: string | null
           phone?: string | null
@@ -2157,6 +2159,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          metadata?: Json | null
           onboarding_completed?: boolean | null
           organization_name?: string | null
           phone?: string | null
