@@ -17,36 +17,21 @@ import type { Tables } from "@/integrations/supabase/types";
 type Notification = Tables<"notifications">;
 
 export function NotificationCenter() {
+  const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [isOpen, setIsOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadNotifications();
     subscribeToNotifications();
   }, []);
 
-  const loadNotifications = async () => {
+  const subscribeToNotifications = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { data, error } = await supabase
-      .from("notifications")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(20);
-
-    if (error) {
-      console.error("Error loading notifications:", error);
-      return;
-    }
-
-    setNotifications(data || []);
-    setUnreadCount(data?.filter(n => !n.is_read).length || 0);
-  };
-
-  const subscribeToNotifications = () => {
+    // CRITICAL FIX: Set up .on() callback BEFORE calling .subscribe()
     const channel = supabase
       .channel("notifications")
       .on(
@@ -55,35 +40,65 @@ export function NotificationCenter() {
           event: "INSERT",
           schema: "public",
           table: "notifications",
+          filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
           const newNotification = payload.new as Notification;
-          setNotifications(prev => [newNotification, ...prev]);
-          setUnreadCount(prev => prev + 1);
+          setNotifications((prev) => [newNotification, ...prev]);
+          setUnreadCount((prev) => prev + 1);
         }
       )
-      .subscribe();
+      .subscribe(); // Call .subscribe() LAST
 
     return () => {
       supabase.removeChannel(channel);
     };
   };
 
-  const markAsRead = async (notificationId: string) => {
-    const { error } = await supabase
-      .from("notifications")
-      .update({ is_read: true, read_at: new Date().toISOString() })
-      .eq("id", notificationId);
-
-    if (error) {
-      console.error("Error marking notification as read:", error);
+  const loadNotifications = async () => {
+    setLoading(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setLoading(false);
       return;
     }
 
-    setNotifications(prev =>
-      prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
-    );
-    setUnreadCount(prev => Math.max(0, prev - 1));
+    const { data, error } = await supabase
+      .from("notifications")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    if (!error && data) {
+      setNotifications(data);
+      setUnreadCount(data.filter(n => !n.is_read).length);
+    }
+    setLoading(false);
+  };
+
+  const markAsRead = async (notificationId: string) => {
+    const { error } = await supabase
+      .from("notifications")
+      .update({ is_read: true })
+      .eq("id", notificationId);
+
+    if (!error) {
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === notificationId ? { ...n, is_read: true } : n))
+      );
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+    }
+  };
+
+  const handleNotificationClick = (notification: Notification) => {
+    if (!notification.is_read) {
+      markAsRead(notification.id);
+    }
+    if (notification.link) {
+      window.location.href = notification.link;
+    }
+    setOpen(false);
   };
 
   const markAllAsRead = async () => {
@@ -118,7 +133,7 @@ export function NotificationCenter() {
   };
 
   return (
-    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="icon" className="relative">
           <Bell className="h-5 w-5" />
@@ -181,7 +196,7 @@ export function NotificationCenter() {
                             className="h-7 text-xs"
                             onClick={() => {
                               markAsRead(notification.id);
-                              setIsOpen(false);
+                              setOpen(false);
                             }}
                           >
                             <ExternalLink className="h-3 w-3 mr-1" />
