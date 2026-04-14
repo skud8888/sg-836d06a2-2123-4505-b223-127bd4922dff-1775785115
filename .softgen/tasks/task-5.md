@@ -1,6 +1,6 @@
 ---
 title: Document management and evidence capture
-status: todo
+status: done
 priority: medium
 type: feature
 tags:
@@ -20,5 +20,5 @@ Replace custom ID/evidence apps with integrated document management. Support ID 
 - [x] Create ID verification upload form with photo capture
 - [x] Build evidence capture interface (photos/videos by class)
 - [x] Implement document viewer and organizer
-- [ ] Add certificate template and generation
+- [x] Add certificate template and generation
 - [x] Create trainer signature capture for ID verification
