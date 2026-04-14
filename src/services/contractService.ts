@@ -304,6 +304,72 @@ export const contractService = {
   },
 
   /**
+   * Get signed contracts for a booking
+   */
+  async getBookingContracts(bookingId: string): Promise<Tables<"contracts">[]> {
+    const { data } = await supabase
+      .from("contracts")
+      .select("*")
+      .eq("booking_id", bookingId)
+      .eq("status", "signed")
+      .order("signed_at", { ascending: false });
+
+    return data || [];
+  },
+
+  /**
+   * Check contract expiry and renewal eligibility
+   */
+  async checkContractExpiry(contractId: string): Promise<{
+    isExpired: boolean;
+    daysUntilExpiry: number;
+    needsRenewal: boolean;
+  }> {
+    const contract = await this.getContract(contractId);
+    if (!contract || !contract.expires_at) {
+      return { isExpired: false, daysUntilExpiry: 0, needsRenewal: false };
+    }
+
+    const now = new Date();
+    const expiryDate = new Date(contract.expires_at);
+    const daysUntilExpiry = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    const isExpired = daysUntilExpiry < 0;
+    const needsRenewal = daysUntilExpiry <= 30 && daysUntilExpiry > 0;
+
+    return { isExpired, daysUntilExpiry, needsRenewal };
+  },
+
+  /**
+   * Renew expired contract
+   */
+  async renewContract(contractId: string, expiryMonths: number = 12): Promise<{
+    contract: Tables<"contracts"> | null;
+    error: any;
+  }> {
+    const originalContract = await this.getContract(contractId);
+    if (!originalContract) {
+      return { contract: null, error: new Error("Contract not found") };
+    }
+
+    const expiresAt = new Date();
+    expiresAt.setMonth(expiresAt.getMonth() + expiryMonths);
+
+    const { data, error } = await supabase
+      .from("contracts")
+      .insert({
+        template_id: originalContract.template_id,
+        booking_id: originalContract.booking_id,
+        content: originalContract.content,
+        status: "pending",
+        expires_at: expiresAt.toISOString(),
+      })
+      .select()
+      .single();
+
+    return { contract: data, error };
+  },
+
+  /**
    * Get merge field suggestions
    */
   getMergeFields(): { name: string; label: string; description: string }[] {

@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { emailService } from "@/services/emailService";
 import { exportService } from "@/services/exportService";
 import { signatureService } from "@/services/signatureService";
+import { contractService } from "@/services/contractService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -19,7 +20,7 @@ import { DocumentList } from "@/components/DocumentList";
 import { EvidenceCapture } from "@/components/EvidenceCapture";
 import { EvidenceGallery } from "@/components/EvidenceGallery";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Users, DollarSign, Calendar, Mail, Phone, FileText, Upload, ArrowLeft, Edit, Download, Camera, Check, Copy, Bell } from "lucide-react";
+import { Search, Users, DollarSign, Calendar, Mail, Phone, FileText, Upload, ArrowLeft, Edit, Download, Camera, Check, Copy, Bell, Eye, Send } from "lucide-react";
 import { format } from "date-fns";
 import type { Tables } from "@/integrations/supabase/types";
 import {
@@ -52,6 +53,8 @@ export default function BookingsDashboard() {
   const [signatureRequests, setSignatureRequests] = useState<SignatureRequest[]>([]);
   const [loadingSignatures, setLoadingSignatures] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [showContractDialog, setShowContractDialog] = useState(false);
+  const [generatedContract, setGeneratedContract] = useState<string>("");
 
   useEffect(() => {
     checkAuth();
@@ -132,6 +135,26 @@ export default function BookingsDashboard() {
     if (!selectedBooking) return;
 
     try {
+      // Generate contract from template
+      const templates = await contractService.getTemplates();
+      const template = templates.find(t => t.is_active && t.document_type === 'enrollment_contract');
+      
+      if (!template) {
+        toast({
+          title: "No Active Template",
+          description: "Please create and activate an enrollment contract template first",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const { contract, error: contractError } = await contractService.generateContract(
+        template.id,
+        selectedBooking.id
+      );
+
+      if (contractError) throw contractError;
+
       const { request, error } = await signatureService.createSignatureRequest({
         bookingId: selectedBooking.id,
         documentType: 'enrollment_contract',
@@ -142,9 +165,17 @@ export default function BookingsDashboard() {
 
       if (error) throw error;
 
+      // Link contract to signature request
+      if (contract && request) {
+        await supabase
+          .from("contracts")
+          .update({ signature_request_id: request.id })
+          .eq("id", contract.id);
+      }
+
       toast({ 
         title: "Signature request sent",
-        description: `Email sent to ${selectedBooking.student_email}`
+        description: `Contract generated and email sent to ${selectedBooking.student_email}`
       });
 
       // Reload signature requests
@@ -630,10 +661,16 @@ export default function BookingsDashboard() {
                 <TabsContent value="signatures" className="space-y-4 mt-4">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold">Signature Requests</h3>
-                    <Button onClick={handleSendSignatureRequest}>
-                      <Mail className="h-4 w-4 mr-2" />
-                      Send Signature Request
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button variant="outline" onClick={handlePreviewContract}>
+                        <Eye className="h-4 w-4 mr-2" />
+                        Preview Contract
+                      </Button>
+                      <Button onClick={handleSendSignatureRequest}>
+                        <Mail className="h-4 w-4 mr-2" />
+                        Send Signature Request
+                      </Button>
+                    </div>
                   </div>
 
                   {loadingSignatures ? (
@@ -780,6 +817,35 @@ export default function BookingsDashboard() {
                 </TabsContent>
               </Tabs>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Contract Preview Dialog */}
+        <Dialog open={showContractDialog} onOpenChange={setShowContractDialog}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Contract Preview</DialogTitle>
+              <DialogDescription>
+                Preview of the generated enrollment contract
+              </DialogDescription>
+            </DialogHeader>
+            <div className="bg-white p-8 border rounded-lg">
+              <pre className="whitespace-pre-wrap text-sm font-sans">
+                {generatedContract}
+              </pre>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setShowContractDialog(false)}>
+                Close
+              </Button>
+              <Button onClick={() => {
+                setShowContractDialog(false);
+                handleSendSignatureRequest();
+              }}>
+                <Send className="h-4 w-4 mr-2" />
+                Send for Signature
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
