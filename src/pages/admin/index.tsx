@@ -153,6 +153,14 @@ export default function AdminDashboard() {
       badge: "NEW"
     },
     {
+      title: "Document Reports",
+      description: "Upload & certificate logs",
+      icon: FileText,
+      href: "/admin/reports/documents",
+      color: "text-teal-600 dark:text-teal-400",
+      badge: "NEW"
+    },
+    {
       title: "Instructor Payouts",
       description: "Revenue sharing",
       icon: DollarSign,
