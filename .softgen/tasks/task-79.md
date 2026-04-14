@@ -1,6 +1,6 @@
 ---
 title: Add Password Recovery Flow
-status: in_progress
+status: done
 priority: high
 type: feature
 tags: [auth, password, recovery, reset]
@@ -13,12 +13,12 @@ position: 79
 Complete password recovery system with email-based reset links, secure token validation, and password update. Supports both admin and student users.
 
 ## Checklist
-- [ ] Create forgot password page (/admin/reset-password)
-- [ ] Create update password page (/admin/update-password)
-- [ ] Send password reset email via Supabase Auth
-- [ ] Validate reset tokens
-- [ ] Update password securely
-- [ ] Add password strength indicator
-- [ ] Add success/error messages
-- [ ] Test full recovery flow
-- [ ] Add rate limiting
+- [x] Create forgot password page (/admin/reset-password)
+- [x] Create update password page (/admin/update-password)
+- [x] Send password reset email via Supabase Auth
+- [x] Validate reset tokens
+- [x] Update password securely
+- [x] Add password strength indicator
+- [x] Add success/error messages
+- [x] Test full recovery flow
+- [x] Add rate limiting

@@ -1,6 +1,6 @@
 ---
 title: Implement Admin Onboarding Flow
-status: in_progress
+status: done
 priority: high
 type: feature
 tags: [admin, onboarding, flow, setup]
@@ -13,13 +13,13 @@ position: 78
 Complete onboarding flow that guides new admins through initial setup: organization details, first course, first user, system settings. Multi-step wizard with validation.
 
 ## Checklist
-- [ ] Create multi-step onboarding wizard
-- [ ] Step 1: Organization details
-- [ ] Step 2: Create first course template
-- [ ] Step 3: Add first trainer/user
-- [ ] Step 4: Configure system settings
-- [ ] Add progress indicator
-- [ ] Add skip/back/next navigation
-- [ ] Persist progress between steps
-- [ ] Add completion redirect
-- [ ] Test full flow
+- [x] Create multi-step onboarding wizard
+- [x] Step 1: Organization details
+- [x] Step 2: Create first course template
+- [x] Step 3: Add first trainer/user
+- [x] Step 4: Configure system settings
+- [x] Add progress indicator
+- [x] Add skip/back/next navigation
+- [x] Persist progress between steps
+- [x] Add completion redirect
+- [x] Test full flow

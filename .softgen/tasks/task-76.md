@@ -1,6 +1,6 @@
 ---
 title: Create Admin Onboarding Checklist Page
-status: in_progress
+status: done
 priority: urgent
 type: feature
 tags: [admin, onboarding, checklist, first-time-setup]
@@ -13,13 +13,13 @@ position: 76
 Complete onboarding experience for new admins with guided checklist, progress tracking, and setup wizard. Ensures admins complete critical setup steps.
 
 ## Checklist
-- [ ] Create onboarding checklist page at /admin/onboarding
-- [ ] Add progress tracker (visual percentage)
-- [ ] Create setup steps (organization, courses, users, settings)
-- [ ] Add skip/complete functionality
-- [ ] Persist onboarding state in database
-- [ ] Add "Take Tour" interactive walkthrough
-- [ ] Create completion celebration screen
-- [ ] Auto-redirect new admins to onboarding
-- [ ] Allow returning to onboarding later
-- [ ] Mobile responsive design
+- [x] Create onboarding checklist page at /admin/onboarding
+- [x] Add progress tracker (visual percentage)
+- [x] Create setup steps (organization, courses, users, settings)
+- [x] Add skip/complete functionality
+- [x] Persist onboarding state in database
+- [x] Add "Take Tour" interactive walkthrough
+- [x] Create completion celebration screen
+- [x] Auto-redirect new admins to onboarding
+- [x] Allow returning to onboarding later
+- [x] Mobile responsive design

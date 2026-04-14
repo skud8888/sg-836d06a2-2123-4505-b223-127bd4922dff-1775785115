@@ -225,11 +225,12 @@ export default function UpdatePassword() {
                         {getPasswordStrengthText()}
                       </span>
                     </div>
-                    <Progress 
-                      value={passwordStrength} 
-                      className="h-1.5"
-                      indicatorClassName={getPasswordStrengthColor()}
-                    />
+                    <div className="h-1.5 w-full bg-secondary overflow-hidden rounded-full">
+                      <div 
+                        className={`h-full transition-all ${getPasswordStrengthColor()}`} 
+                        style={{ width: `${passwordStrength}%` }}
+                      />
+                    </div>
                   </div>
                 )}
               </div>
