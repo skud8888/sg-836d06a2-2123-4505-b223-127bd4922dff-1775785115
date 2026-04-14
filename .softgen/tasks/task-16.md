@@ -3,9 +3,13 @@ title: E-Signature & Contract Management
 status: todo
 priority: medium
 type: feature
-tags: [esign, contracts, documents, legal]
+tags:
+- esign
+- contracts
+- documents
+- legal
 created_by: agent
-created_at: 2026-04-10T03:00:00Z
+created_at: 2026-04-10 03:00:00+00:00
 position: 16
 ---
 
@@ -26,8 +30,8 @@ Built-in e-signature workflow with contract templates, auto-fill from CRM data, 
 - Liability waivers
 
 ## Checklist
-- [ ] Create contracts table with templates
-- [ ] Build contract template editor (merge fields)
+- [x] Create contracts table with templates
+- [x] Build contract template editor (merge fields)
 - [ ] Implement e-signature workflow (draw/type/upload)
 - [ ] Add contract generation from booking data
 - [ ] Create signing page with legal verification

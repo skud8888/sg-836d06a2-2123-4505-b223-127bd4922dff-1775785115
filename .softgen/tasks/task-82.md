@@ -1,6 +1,6 @@
 ---
 title: E-signature workflow
-status: in_progress
+status: done
 priority: high
 type: feature
 tags:
@@ -16,9 +16,9 @@ position: 82
 Complete e-signature workflow for booking agreements, waivers, and course documents. Students sign digitally, admins track status, automated reminders for pending signatures.
 
 ## Checklist
-- [ ] Create signature request service with email/SMS notifications
-- [ ] Build student signature signing page with mobile-friendly capture
-- [ ] Add admin signature tracking dashboard
-- [ ] Implement automated signature reminders
-- [ ] Add signature verification and storage
-- [ ] Create signature audit trail
+- [x] Create signature request service with email/SMS notifications
+- [x] Build student signature signing page with mobile-friendly capture
+- [x] Add admin signature tracking dashboard
+- [x] Implement automated signature reminders
+- [x] Add signature verification and storage
+- [x] Create signature audit trail

@@ -1,6 +1,6 @@
 ---
 title: Notification user settings
-status: in_progress
+status: done
 priority: medium
 type: feature
 tags:
@@ -16,9 +16,9 @@ position: 83
 Allow users to manage their notification preferences - email/SMS opt-in/out, notification types, contact info.
 
 ## Checklist
-- [ ] Create user notification preferences page
-- [ ] Add email/SMS toggle controls
-- [ ] Implement notification type filters (reminders, updates, marketing)
-- [ ] Add contact info management
-- [ ] Save preferences to database
-- [ ] Respect preferences in notification service
+- [x] Create user notification preferences page
+- [x] Add email/SMS toggle controls
+- [x] Implement notification type filters (reminders, updates, marketing)
+- [x] Add contact info management
+- [x] Save preferences to database
+- [x] Respect preferences in notification service

@@ -1,6 +1,6 @@
 ---
 title: Template management UI
-status: in_progress
+status: done
 priority: medium
 type: feature
 tags:
@@ -16,9 +16,9 @@ position: 84
 Admin interface to create, edit, and preview email templates. Support variable placeholders, HTML editing, and template testing.
 
 ## Checklist
-- [ ] Create template management page at /admin/templates
-- [ ] Build template editor with HTML preview
-- [ ] Add variable placeholder documentation
-- [ ] Implement template CRUD operations
-- [ ] Add template testing with sample data
-- [ ] Create template version history
+- [x] Create template management page at /admin/templates
+- [x] Build template editor with HTML preview
+- [x] Add variable placeholder documentation
+- [x] Implement template CRUD operations
+- [x] Add template testing with sample data
+- [x] Create template version history
