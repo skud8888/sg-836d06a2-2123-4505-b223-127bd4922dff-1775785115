@@ -145,7 +145,7 @@ export class PowerProService {
             code: course.code,
             description: course.description || `Imported from PowerPro`,
             duration_hours: course.durationHours || 0,
-            price: 0 // Default price
+            price_full: 0 // Default price
           });
 
         if (error) {
