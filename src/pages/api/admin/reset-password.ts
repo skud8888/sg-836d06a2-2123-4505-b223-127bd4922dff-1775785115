@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { createClient } from "@supabase/supabase-js";
 
+// Create admin client with service role key (server-side only)
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -21,6 +22,7 @@ export default async function handler(
   }
 
   try {
+    // Verify authentication
     const authHeader = req.headers.authorization;
     if (!authHeader) {
       return res.status(401).json({ error: "Unauthorized" });
@@ -33,15 +35,15 @@ export default async function handler(
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    // Check Super Admin role
+    // Check if user has super_admin role
     const { data: userRoles } = await supabaseAdmin
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id);
 
-    const isSuperAdmin = userRoles?.some(r => r.role === "Super Admin");
+    const isSuperAdmin = userRoles?.some(r => r.role === "super_admin");
     if (!isSuperAdmin) {
-      return res.status(403).json({ error: "Forbidden" });
+      return res.status(403).json({ error: "Forbidden - Super Admin access required" });
     }
 
     const { userId, newPassword } = req.body;
@@ -50,7 +52,7 @@ export default async function handler(
       return res.status(400).json({ error: "User ID and new password are required" });
     }
 
-    // Update user password via admin API
+    // Update user password using admin API
     const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
       userId,
       { password: newPassword }

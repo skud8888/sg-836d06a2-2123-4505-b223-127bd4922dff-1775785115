@@ -527,6 +527,13 @@ export default function UserManagementPage() {
                                 <Shield className="h-4 w-4 mr-2" />
                                 Manage Roles
                               </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => {
+                                setResetForm({ userId: user.id, newPassword: "" });
+                                setIsResetDialogOpen(true);
+                              }}>
+                                <Key className="h-4 w-4 mr-2" />
+                                Reset Password
+                              </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem 
                                 className="text-red-600 focus:text-red-600 focus:bg-red-50"
@@ -656,6 +663,42 @@ export default function UserManagementPage() {
             <Button variant="outline" onClick={() => setIsCreateOpen(false)}>Cancel</Button>
             <Button onClick={handleCreateUser} className="bg-indigo-600 hover:bg-indigo-700">
               Create User
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Password Reset Dialog before closing tag */}
+      <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reset User Password</DialogTitle>
+            <DialogDescription>
+              Set a new password for this user. They will be able to login with this password immediately.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>New Password</Label>
+              <Input 
+                type="password" 
+                value={resetForm.newPassword}
+                onChange={(e) => setResetForm({...resetForm, newPassword: e.target.value})}
+                placeholder="Enter new password (min 8 characters)"
+              />
+              <p className="text-xs text-muted-foreground">
+                Minimum 8 characters. User can change this after logging in.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsResetDialogOpen(false)}>Cancel</Button>
+            <Button 
+              onClick={handleResetPassword} 
+              className="bg-indigo-600 hover:bg-indigo-700"
+              disabled={!resetForm.newPassword || resetForm.newPassword.length < 8}
+            >
+              Reset Password
             </Button>
           </DialogFooter>
         </DialogContent>
