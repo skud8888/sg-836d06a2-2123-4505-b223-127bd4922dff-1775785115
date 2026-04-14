@@ -1,21 +1,21 @@
 ---
 title: Student and payment management dashboards
-status: todo
+status: in_progress
 priority: medium
 type: feature
-tags: [dashboard, payments, students]
+tags: [admin, student-management, payments]
 created_by: agent
-created_at: 2026-04-10T02:12:00Z
+created_at: 2026-04-14T19:09:08.079Z
 position: 4
 ---
 
 ## Notes
-Build admin dashboards for managing students, bookings, and payments. Include payment reconciliation (Stripe + manual), outstanding balances tracking, attendance marking, and QuickBooks integration preparation.
+Build comprehensive student directory and payment reconciliation dashboards. Integrate attendance marking, payment tracking with Stripe sync, manual payment entry, outstanding balance alerts, and prepare QBO webhook integration endpoints.
 
 ## Checklist
-- [ ] Create student directory with search and filters
-- [ ] Build booking management table (status, payments, attendance)
-- [ ] Add payment reconciliation view (Stripe sync + manual entry)
-- [ ] Implement outstanding balance alerts
-- [ ] Create attendance marking interface for trainers
-- [ ] Prepare webhook endpoints for QBO integration
+- [x] Create student directory with search and filters
+- [x] Build booking management table (status, payments, attendance)
+- [x] Add payment reconciliation view (Stripe sync + manual entry)
+- [x] Implement outstanding balance alerts
+- [x] Create attendance marking interface for trainers
+- [x] Prepare webhook endpoints for QBO integration
