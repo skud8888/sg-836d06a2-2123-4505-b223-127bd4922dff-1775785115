@@ -274,8 +274,8 @@ export function IDVerificationUpload({
         <div className="border-t pt-4">
           <Label className="mb-2 block">Trainer Signature (Required)</Label>
           <SignatureCapture
-            onSignatureComplete={handleSignatureComplete}
-            label="Sign here to verify you checked this ID"
+            onComplete={handleSignatureComplete}
+            recipientName={studentName}
           />
         </div>
 
