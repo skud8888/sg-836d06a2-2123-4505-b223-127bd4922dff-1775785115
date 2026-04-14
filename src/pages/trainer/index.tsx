@@ -38,11 +38,10 @@ interface UpcomingClass {
 
 interface RecentPayout {
   id: string;
-  amount: number;
-  payout_date: string;
+  instructor_share: number;
+  paid_at: string;
+  created_at: string;
   status: string;
-  period_start: string;
-  period_end: string;
 }
 
 export default function TrainerPortal() {
@@ -144,12 +143,20 @@ export default function TrainerPortal() {
       const { data: payoutsData, error: payoutsError } = await supabase
         .from("instructor_payouts")
         .select("*")
-        .eq("trainer_id", trainerId)
-        .order("payout_date", { ascending: false })
+        .eq("instructor_id", trainerId)
+        .order("created_at", { ascending: false })
         .limit(5);
 
       if (payoutsError) throw payoutsError;
-      setRecentPayouts(payoutsData || []);
+      
+      const formattedPayouts = (payoutsData || []).map((p: any) => ({
+        id: p.id,
+        instructor_share: p.instructor_share || 0,
+        paid_at: p.paid_at || p.created_at,
+        created_at: p.created_at,
+        status: p.status || "pending"
+      }));
+      setRecentPayouts(formattedPayouts);
 
       // Calculate stats
       const { data: allClasses } = await supabase
@@ -473,10 +480,10 @@ export default function TrainerPortal() {
                         <div className="flex items-start justify-between">
                           <div className="space-y-1">
                             <CardTitle className="text-2xl font-bold">
-                              ${payout.amount.toFixed(2)}
+                              ${payout.instructor_share.toFixed(2)}
                             </CardTitle>
                             <CardDescription>
-                              {new Date(payout.payout_date).toLocaleDateString("en-AU", {
+                              {new Date(payout.paid_at).toLocaleDateString("en-AU", {
                                 year: "numeric",
                                 month: "long",
                                 day: "numeric"
@@ -488,7 +495,7 @@ export default function TrainerPortal() {
                       </CardHeader>
                       <CardContent>
                         <div className="text-sm text-muted-foreground">
-                          Period: {new Date(payout.period_start).toLocaleDateString()} - {new Date(payout.period_end).toLocaleDateString()}
+                          Recorded: {new Date(payout.created_at).toLocaleDateString()}
                         </div>
                       </CardContent>
                     </Card>
