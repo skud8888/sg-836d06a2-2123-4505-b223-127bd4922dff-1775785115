@@ -1,33 +1,43 @@
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/router";
+import { supabase } from "@/integrations/supabase/client";
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Mail, CheckCircle, AlertCircle, ArrowLeft } from "lucide-react";
+import { ArrowLeft, Mail, AlertCircle, CheckCircle2 } from "lucide-react";
 
-export default function ResetPasswordPage() {
+export default function ResetPassword() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
 
-  const handleResetPassword = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    setError("");
+    setSuccess(false);
+
     if (!email) {
       setError("Please enter your email address");
       return;
     }
 
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address");
+      return;
+    }
+
     setLoading(true);
-    setError("");
-    setSuccess(false);
 
     try {
+      // Send password reset email
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/admin/update-password`,
       });
@@ -35,11 +45,15 @@ export default function ResetPasswordPage() {
       if (resetError) throw resetError;
 
       setSuccess(true);
-      setEmail("");
+      
+      // Auto-redirect to login after 5 seconds
+      setTimeout(() => {
+        router.push("/admin/login");
+      }, 5000);
 
     } catch (err: any) {
       console.error("Password reset error:", err);
-      setError(err.message || "Failed to send reset email");
+      setError(err.message || "Failed to send password reset email. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -47,97 +61,81 @@ export default function ResetPasswordPage() {
 
   return (
     <>
-      <SEO
-        title="Reset Password - GTS Training Admin"
+      <SEO 
+        title="Reset Password - Training Centre Admin"
         description="Reset your admin account password"
       />
-
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-4">
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/5 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
-          <CardHeader className="space-y-1">
+          <CardHeader>
             <div className="flex items-center gap-2 mb-2">
-              <Link href="/admin/login">
-                <Button variant="ghost" size="sm">
-                  <ArrowLeft className="h-4 w-4 mr-1" />
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/admin/login">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
                   Back to Login
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </div>
-            <CardTitle className="text-2xl font-bold">Reset Password</CardTitle>
+            <CardTitle className="text-2xl">Reset Password</CardTitle>
             <CardDescription>
-              Enter your email address and we'll send you a password reset link
+              Enter your email address and we'll send you a link to reset your password
             </CardDescription>
           </CardHeader>
 
-          <CardContent>
-            {success ? (
-              <Alert className="border-green-500 bg-green-50 dark:bg-green-950">
-                <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
-                <AlertDescription className="text-green-600 dark:text-green-400">
-                  <strong>Password reset email sent!</strong>
-                  <p className="mt-2 text-sm">
-                    Check your inbox for a password reset link. The link will expire in 1 hour.
-                  </p>
-                  <p className="mt-2 text-sm">
-                    Don't see the email? Check your spam folder.
-                  </p>
-                </AlertDescription>
-              </Alert>
-            ) : (
-              <>
-                {error && (
-                  <Alert variant="destructive" className="mb-4">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                )}
+          <form onSubmit={handleSubmit}>
+            <CardContent className="space-y-4">
+              {error && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
 
-                <form onSubmit={handleResetPassword} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email Address</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="admin@example.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      autoComplete="email"
-                    />
-                  </div>
+              {success && (
+                <Alert className="bg-green-50 text-green-900 border-green-200">
+                  <CheckCircle2 className="h-4 w-4" />
+                  <AlertDescription>
+                    Password reset email sent! Check your inbox and follow the instructions.
+                    Redirecting to login page in 5 seconds...
+                  </AlertDescription>
+                </Alert>
+              )}
 
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Sending reset link...
-                      </>
-                    ) : (
-                      <>
-                        <Mail className="h-4 w-4 mr-2" />
-                        Send Reset Link
-                      </>
-                    )}
-                  </Button>
-                </form>
-
-                <div className="mt-6 text-center space-y-2">
-                  <p className="text-sm text-muted-foreground">
-                    Remember your password?{" "}
-                    <Link href="/admin/login" className="text-primary hover:underline font-medium">
-                      Sign in
-                    </Link>
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Don't have an account?{" "}
-                    <Link href="/admin/signup" className="text-primary hover:underline font-medium">
-                      Create admin account
-                    </Link>
-                  </p>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email Address</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="admin@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-9"
+                    disabled={loading || success}
+                    required
+                  />
                 </div>
-              </>
-            )}
-          </CardContent>
+              </div>
+            </CardContent>
+
+            <CardFooter className="flex flex-col gap-4">
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={loading || success}
+              >
+                {loading ? "Sending..." : "Send Reset Link"}
+              </Button>
+
+              <div className="text-center text-sm text-muted-foreground">
+                Remember your password?{" "}
+                <Link href="/admin/login" className="text-primary hover:underline">
+                  Sign in
+                </Link>
+              </div>
+            </CardFooter>
+          </form>
         </Card>
       </div>
     </>

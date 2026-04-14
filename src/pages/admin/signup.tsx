@@ -107,7 +107,7 @@ export default function AdminSignupPage() {
 
       setSuccess(true);
 
-      // Wait 2 seconds to show success message, then redirect to onboarding
+      // Auto-redirect to onboarding after 2 seconds
       setTimeout(() => {
         router.push("/admin/onboarding");
       }, 2000);

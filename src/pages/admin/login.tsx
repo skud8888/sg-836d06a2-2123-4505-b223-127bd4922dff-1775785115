@@ -6,7 +6,7 @@ import { rbacService } from "@/services/rbacService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Lock, Loader2 } from "lucide-react";
 import Link from "next/link";
 
@@ -115,28 +115,26 @@ export default function AdminLoginPage() {
                 {error}
               </div>
             )}
-
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Signing in...
-                </>
-              ) : (
-                "Sign In"
-              )}
-            </Button>
           </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-sm text-muted-foreground">
-              Don&apos;t have an account?{" "}
-              <Link href="/admin/signup" className="text-primary hover:underline font-medium">
-                Create admin account
-              </Link>
-            </p>
-          </div>
         </CardContent>
+        <CardFooter className="flex flex-col gap-4">
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? "Signing in..." : "Sign In"}
+          </Button>
+
+          <div className="text-center text-sm text-muted-foreground">
+            <Link href="/admin/reset-password" className="text-primary hover:underline">
+              Forgot password?
+            </Link>
+          </div>
+
+          <div className="text-center text-sm text-muted-foreground">
+            Don't have an account?{" "}
+            <Link href="/admin/signup" className="text-primary hover:underline">
+              Sign up
+            </Link>
+          </div>
+        </CardFooter>
       </Card>
     </div>
   );
