@@ -1,6 +1,6 @@
 ---
 title: Build Public Class Browsing
-status: in_progress
+status: done
 priority: high
 type: feature
 tags: [public, classes, browsing, booking]
@@ -10,17 +10,17 @@ position: 75
 ---
 
 ## Notes
-Create public-facing page for browsing upcoming classes with filters, search, and direct booking links. No login required.
+Complete public class browsing system with search, filters, calendar view, and direct booking links. No authentication required.
 
 ## Checklist
-- [ ] Create /pages/classes/index.tsx (public class listing)
-- [ ] Create /pages/classes/[classId].tsx (class detail page)
-- [ ] Add search functionality
-- [ ] Add filters (date, location, course, trainer)
-- [ ] Display class details (time, location, capacity, price)
-- [ ] Show availability status
-- [ ] Add "Book Now" button linking to booking page
-- [ ] Add calendar view option
-- [ ] SEO optimization for public pages
-- [ ] Mobile responsive design
-- [ ] Test public access (no auth required)
+- [x] Create /pages/classes/index.tsx (public class listing)
+- [x] Create /pages/classes/[classId].tsx (class detail page)
+- [x] Add search functionality
+- [x] Add filters (date, location, course, trainer)
+- [x] Display class details (time, location, capacity, price)
+- [x] Show availability status
+- [x] Add "Book Now" button linking to booking page
+- [x] Add calendar view option
+- [x] SEO optimization for public pages
+- [x] Mobile responsive design
+- [x] Test public access (no auth required)
