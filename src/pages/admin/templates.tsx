@@ -365,7 +365,7 @@ Course: {{course_name}} ({{course_code}})
 Start Date: {{class_start_date}}
 Location: {{location}}
 
-Total Fee: ${{total_amount}}
+Total Fee: $${"{{total_amount}}"}
 
 By signing this agreement, the student agrees to...`}
                 rows={15}

@@ -23,7 +23,7 @@ export default function SignaturesPage() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [requests, setRequests] = useState<SignatureRequest[]>([]);
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [bookings, setBookings] = useState<Partial<Booking>[]>([]);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<SignatureRequest | null>(null);
 
