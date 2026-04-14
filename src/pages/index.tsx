@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   Calendar, 
   Users, 
@@ -32,10 +34,53 @@ import {
   Mail,
   Activity,
   Code,
-  Sparkles
+  Sparkles,
+  LayoutDashboard,
+  GraduationCap
 } from "lucide-react";
 
 export default function HomePage() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    checkAuth();
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+      if (session) {
+        checkUserRole(session.user.id);
+      } else {
+        setUserRole(null);
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  const checkAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setIsAuthenticated(!!session);
+    if (session) {
+      await checkUserRole(session.user.id);
+    }
+  };
+
+  const checkUserRole = async (userId: string) => {
+    const { data: roleData } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .in("role", ["super_admin", "admin", "trainer"]);
+
+    if (roleData && roleData.length > 0) {
+      setUserRole(roleData[0].role);
+    } else {
+      setUserRole("student");
+    }
+  };
+
   const features = [
     {
       icon: Calendar,
@@ -147,6 +192,9 @@ export default function HomePage() {
     }
   ];
 
+  const isAdmin = userRole === "super_admin" || userRole === "admin";
+  const isStudent = userRole === "student";
+
   return (
     <>
       <SEO
@@ -172,19 +220,49 @@ export default function HomePage() {
                 All-in-one platform for bookings, student management, compliance, payments, and AI-powered insights. 
                 Built for modern training centers who demand excellence.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-                <Link href="/courses">
-                  <Button size="lg" className="group transition-all hover:scale-105 text-lg px-8 py-6">
-                    Browse Courses
-                    <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-                  </Button>
-                </Link>
-                <Link href="/contact">
-                  <Button size="lg" variant="outline" className="transition-all hover:scale-105 text-lg px-8 py-6">
-                    Schedule a Demo
-                  </Button>
-                </Link>
-              </div>
+              
+              {/* Portal Buttons for Authenticated Users */}
+              {isAuthenticated ? (
+                <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+                  {isAdmin && (
+                    <Link href="/admin">
+                      <Button size="lg" className="group transition-all hover:scale-105 text-lg px-8 py-6">
+                        <LayoutDashboard className="mr-2 h-5 w-5" />
+                        Admin Dashboard
+                        <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                      </Button>
+                    </Link>
+                  )}
+                  {isStudent && (
+                    <Link href="/student/portal">
+                      <Button size="lg" className="group transition-all hover:scale-105 text-lg px-8 py-6">
+                        <GraduationCap className="mr-2 h-5 w-5" />
+                        Student Portal
+                        <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                      </Button>
+                    </Link>
+                  )}
+                  <Link href="/courses">
+                    <Button size="lg" variant="outline" className="transition-all hover:scale-105 text-lg px-8 py-6">
+                      Browse Courses
+                    </Button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+                  <Link href="/courses">
+                    <Button size="lg" className="group transition-all hover:scale-105 text-lg px-8 py-6">
+                      Browse Courses
+                      <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                    </Button>
+                  </Link>
+                  <Link href="/contact">
+                    <Button size="lg" variant="outline" className="transition-all hover:scale-105 text-lg px-8 py-6">
+                      Schedule a Demo
+                    </Button>
+                  </Link>
+                </div>
+              )}
               
               {/* Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 mt-16">
