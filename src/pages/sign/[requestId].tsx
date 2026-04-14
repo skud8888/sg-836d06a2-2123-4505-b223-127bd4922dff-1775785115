@@ -1,181 +1,336 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import { Navigation } from "@/components/Navigation";
 import { SEO } from "@/components/SEO";
 import { SignatureCapture } from "@/components/SignatureCapture";
-import { signatureService } from "@/services/signatureService";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, AlertCircle, Clock } from "lucide-react";
+import { signatureService } from "@/services/signatureService";
+import { contractService } from "@/services/contractService";
+import { FileSignature, CheckCircle, XCircle, Clock } from "lucide-react";
 import { format } from "date-fns";
 import type { Tables } from "@/integrations/supabase/types";
 
 type SignatureRequest = Tables<"signature_requests">;
 
-export default function SignDocumentPage() {
+export default function SignPage() {
   const router = useRouter();
   const { requestId } = router.query;
   const { toast } = useToast();
-  const [request, setRequest] = useState<SignatureRequest | null>(null);
+
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [request, setRequest] = useState<SignatureRequest | null>(null);
+  const [contractContent, setContractContent] = useState("");
+  const [step, setStep] = useState<"review" | "sign" | "complete">("review");
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [identityConfirmed, setIdentityConfirmed] = useState(false);
 
   useEffect(() => {
-    if (requestId) {
-      fetchRequest();
+    if (requestId && typeof requestId === "string") {
+      loadRequest(requestId);
     }
   }, [requestId]);
 
-  const fetchRequest = async () => {
+  async function loadRequest(id: string) {
     setLoading(true);
-    const data = await signatureService.getSignatureRequest(requestId as string);
-    setRequest(data);
-    setLoading(false);
-  };
+    try {
+      const data = await signatureService.getSignatureRequest(id);
+      if (!data) {
+        toast({
+          title: "Not Found",
+          description: "Signature request not found",
+          variant: "destructive",
+        });
+        return;
+      }
 
-  const handleSignatureComplete = async (signatureData: string) => {
-    setSubmitting(true);
+      setRequest(data);
 
-    const { documentId, error } = await signatureService.completeSignature(
-      requestId as string,
-      signatureData
-    );
+      // Check if already signed
+      if (data.status === "signed") {
+        setStep("complete");
+        return;
+      }
 
-    if (error) {
+      // Check if expired
+      if (new Date(data.expires_at!) < new Date()) {
+        toast({
+          title: "Expired",
+          description: "This signature request has expired",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Load contract content
+      if (data.contract_template_id) {
+        const { content } = await contractService.generateContract(
+          data.contract_template_id,
+          data.booking_id
+        );
+        if (content) {
+          setContractContent(content);
+        }
+      } else if (data.metadata && (data.metadata as any).generated_content) {
+        setContractContent((data.metadata as any).generated_content);
+      }
+
+      // Mark as viewed
+      await signatureService.markAsViewed(id);
+    } catch (error: any) {
       toast({
-        title: "Signature failed",
+        title: "Error",
         description: error.message,
         variant: "destructive",
       });
-      setSubmitting(false);
-    } else {
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleSignatureComplete(signatureData: string) {
+    if (!request || !termsAccepted || !identityConfirmed) {
       toast({
-        title: "Signature completed",
-        description: "Thank you! Your signature has been recorded.",
+        title: "Verification Required",
+        description: "Please accept all confirmations before signing",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const { documentId, error } = await signatureService.completeSignature(
+        request.id,
+        signatureData
+      );
+
+      if (error) throw error;
+
+      toast({
+        title: "Signature Complete",
+        description: "Your signature has been recorded successfully",
       });
 
-      // Refresh to show completion state
-      await fetchRequest();
+      setStep("complete");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
       setSubmitting(false);
     }
-  };
+  }
 
   if (loading) {
     return (
-      <>
-        <Navigation />
-        <div className="min-h-screen bg-background flex items-center justify-center">
-          <p>Loading...</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900 mx-auto mb-4" />
+          <p className="text-slate-600">Loading signature request...</p>
         </div>
-      </>
+      </div>
     );
   }
 
   if (!request) {
     return (
-      <>
-        <Navigation />
-        <div className="min-h-screen bg-background flex items-center justify-center">
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>Signature request not found</AlertDescription>
-          </Alert>
-        </div>
-      </>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-red-600">
+              <XCircle className="h-5 w-5" />
+              Request Not Found
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-slate-600 mb-4">
+              The signature request you're looking for could not be found or has been removed.
+            </p>
+            <Button onClick={() => router.push("/")} className="w-full">
+              Return Home
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   const isExpired = new Date(request.expires_at!) < new Date();
-  const isSigned = request.status === "signed";
+
+  if (isExpired && request.status !== "signed") {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-amber-600">
+              <Clock className="h-5 w-5" />
+              Request Expired
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-slate-600 mb-4">
+              This signature request expired on {format(new Date(request.expires_at!), "PPP")}.
+              Please contact the sender to request a new signature link.
+            </p>
+            <Button onClick={() => router.push("/")} className="w-full">
+              Return Home
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <>
-      <SEO
-        title="Sign Document - GTS Training"
-        description="Review and sign your enrollment document"
+      <SEO 
+        title={`Sign Document - ${request.document_type.replace(/_/g, " ")}`}
+        description="Review and sign your document"
       />
-      <Navigation />
-      <main className="min-h-screen bg-background py-12">
-        <div className="container mx-auto px-4 max-w-3xl">
-          <h1 className="text-4xl font-bold mb-8">Document Signature</h1>
-
-          {isSigned ? (
-            <Card className="border-2 border-green-500">
-              <CardHeader className="text-center">
-                <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
-                  <CheckCircle className="h-10 w-10 text-green-600" />
-                </div>
-                <CardTitle className="text-2xl">Document Signed</CardTitle>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+          {step === "complete" ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-green-600">
+                  <CheckCircle className="h-6 w-6" />
+                  Signature Complete
+                </CardTitle>
                 <CardDescription>
-                  This document was signed on{" "}
-                  {format(new Date(request.signed_at!), "PPP 'at' p")}
+                  Your document has been signed successfully
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="p-4 bg-muted rounded-lg space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Signer</span>
-                    <span className="font-medium">{request.recipient_name}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Document Type</span>
-                    <span className="font-medium">
-                      {request.document_type.replace(/_/g, " ").toUpperCase()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">IP Address</span>
-                    <span className="font-medium">{request.signer_ip}</span>
+              <CardContent className="space-y-4">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+                  <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-green-900 mb-2">
+                    Thank You, {request.recipient_name}!
+                  </h3>
+                  <p className="text-green-700 mb-4">
+                    Your signature has been recorded and verified.
+                  </p>
+                  <div className="text-sm text-green-600 space-y-1">
+                    <p>Document: {request.document_type.replace(/_/g, " ")}</p>
+                    <p>Signed: {format(new Date(request.signed_at!), "PPP 'at' p")}</p>
+                    <p>You will receive a copy of the signed document via email.</p>
                   </div>
                 </div>
+                <Button onClick={() => router.push("/")} className="w-full">
+                  Return Home
+                </Button>
               </CardContent>
             </Card>
-          ) : isExpired ? (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                This signature request has expired. Please contact us for a new request.
-              </AlertDescription>
-            </Alert>
           ) : (
-            <div className="space-y-6">
-              <Card>
+            <>
+              {/* Document Header */}
+              <Card className="mb-6">
                 <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle>
-                      {request.document_type.replace(/_/g, " ").toUpperCase()}
-                    </CardTitle>
-                    <Badge variant="outline" className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      Expires {format(new Date(request.expires_at!), "MMM d")}
-                    </Badge>
-                  </div>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileSignature className="h-5 w-5" />
+                    {request.document_type.replace(/_/g, " ").toUpperCase()}
+                  </CardTitle>
                   <CardDescription>
-                    Please review the document and sign below
+                    Please review the document carefully before signing
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="p-6 bg-muted rounded-lg mb-6">
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Document Preview Area - In production, display the actual contract PDF here
-                    </p>
-                    <div className="h-96 border-2 border-dashed border-muted-foreground/30 rounded flex items-center justify-center">
-                      <p className="text-muted-foreground">PDF Preview</p>
+                  <div className="flex items-center justify-between text-sm">
+                    <div>
+                      <p className="text-slate-600">Recipient:</p>
+                      <p className="font-medium">{request.recipient_name}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-slate-600">Expires:</p>
+                      <p className="font-medium">{format(new Date(request.expires_at!), "PPP")}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <SignatureCapture
-                recipientName={request.recipient_name}
-                onComplete={handleSignatureComplete}
-              />
-            </div>
+              {step === "review" && (
+                <>
+                  {/* Document Content */}
+                  <Card className="mb-6">
+                    <CardHeader>
+                      <CardTitle>Document Content</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="bg-white p-8 border rounded-lg max-h-96 overflow-y-auto">
+                        <pre className="whitespace-pre-wrap text-sm">
+                          {contractContent || "Loading document content..."}
+                        </pre>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Legal Confirmations */}
+                  <Card className="mb-6">
+                    <CardHeader>
+                      <CardTitle>Legal Confirmations</CardTitle>
+                      <CardDescription>
+                        Please confirm the following before proceeding
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex items-start space-x-3">
+                        <Checkbox
+                          id="terms"
+                          checked={termsAccepted}
+                          onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
+                        />
+                        <Label htmlFor="terms" className="text-sm leading-relaxed cursor-pointer">
+                          I have read and understood the complete document above, and I agree to its terms and conditions.
+                        </Label>
+                      </div>
+                      <div className="flex items-start space-x-3">
+                        <Checkbox
+                          id="identity"
+                          checked={identityConfirmed}
+                          onCheckedChange={(checked) => setIdentityConfirmed(checked as boolean)}
+                        />
+                        <Label htmlFor="identity" className="text-sm leading-relaxed cursor-pointer">
+                          I confirm that I am {request.recipient_name} and I am legally authorized to sign this document on my own behalf.
+                        </Label>
+                      </div>
+                      <Alert>
+                        <AlertDescription className="text-xs">
+                          By proceeding to sign, your signature, IP address, and timestamp will be recorded and legally binding. This creates an audit trail for verification purposes.
+                        </AlertDescription>
+                      </Alert>
+                    </CardContent>
+                  </Card>
+
+                  <Button
+                    onClick={() => setStep("sign")}
+                    disabled={!termsAccepted || !identityConfirmed}
+                    className="w-full"
+                    size="lg"
+                  >
+                    Proceed to Sign Document
+                  </Button>
+                </>
+              )}
+
+              {step === "sign" && (
+                <>
+                  <SignatureCapture
+                    recipientName={request.recipient_name}
+                    onComplete={handleSignatureComplete}
+                    onCancel={() => setStep("review")}
+                  />
+                </>
+              )}
+            </>
           )}
         </div>
-      </main>
+      </div>
     </>
   );
 }

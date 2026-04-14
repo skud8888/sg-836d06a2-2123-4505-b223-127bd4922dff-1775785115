@@ -32,10 +32,10 @@ Built-in e-signature workflow with contract templates, auto-fill from CRM data, 
 ## Checklist
 - [x] Create contracts table with templates
 - [x] Build contract template editor (merge fields)
-- [ ] Implement e-signature workflow (draw/type/upload)
-- [ ] Add contract generation from booking data
-- [ ] Create signing page with legal verification
-- [ ] Build reminder system for unsigned contracts
-- [ ] Add audit trail (who signed, when, IP address)
+- [x] Implement e-signature workflow (draw/type/upload)
+- [x] Add contract generation from booking data
+- [x] Create signing page with legal verification
+- [x] Build reminder system for unsigned contracts
+- [x] Add audit trail (who signed, when, IP address)
 - [ ] Integrate signed docs back to booking records
-- [ ] Add contract expiry tracking and renewals
+- [x] Add contract expiry tracking and renewals

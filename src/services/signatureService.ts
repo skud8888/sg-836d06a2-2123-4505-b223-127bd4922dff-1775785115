@@ -175,6 +175,20 @@ export const signatureService = {
   },
 
   /**
+   * Mark signature request as viewed
+   */
+  async markAsViewed(requestId: string): Promise<void> {
+    await supabase
+      .from("signature_requests")
+      .update({ 
+        status: "viewed",
+        viewed_at: new Date().toISOString()
+      })
+      .eq("id", requestId)
+      .eq("status", "sent");
+  },
+
+  /**
    * Send reminder for pending signature
    */
   async sendSignatureReminder(requestId: string): Promise<void> {
@@ -183,5 +197,35 @@ export const signatureService = {
 
     await supabase.rpc("send_signature_reminder", { p_request_id: requestId });
     await this.sendSignatureRequestEmail(request);
+  },
+
+  /**
+   * Automated reminder check for pending signatures
+   */
+  async sendAutomatedReminders(): Promise<{ sent: number; errors: number }> {
+    const threeDaysAgo = new Date();
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+    const { data: requests } = await supabase
+      .from("signature_requests")
+      .select("*")
+      .in("status", ["pending", "sent", "viewed"])
+      .lt("sent_at", threeDaysAgo.toISOString())
+      .gte("expires_at", new Date().toISOString());
+
+    let sent = 0;
+    let errors = 0;
+
+    for (const request of requests || []) {
+      try {
+        await this.sendSignatureReminder(request.id);
+        sent++;
+      } catch (error) {
+        console.error(`Failed to send reminder for ${request.id}:`, error);
+        errors++;
+      }
+    }
+
+    return { sent, errors };
   },
 };
