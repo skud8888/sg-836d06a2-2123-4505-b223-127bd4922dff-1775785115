@@ -205,7 +205,7 @@ export function Navigation() {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-4">
             {navLinks.map((link) => {
-              const Icon = "icon" in link ? link.icon : null;
+              const Icon = "icon" in link ? (link.icon as React.ElementType) : null;
               return (
                 <Link 
                   key={link.href} 
@@ -277,7 +277,7 @@ export function Navigation() {
         {mobileMenuOpen && (
           <div className="md:hidden py-4 space-y-4 border-t mt-4">
             {navLinks.map((link) => {
-              const Icon = "icon" in link ? link.icon : null;
+              const Icon = "icon" in link ? (link.icon as React.ElementType) : null;
               return (
                 <Link 
                   key={link.href} 
