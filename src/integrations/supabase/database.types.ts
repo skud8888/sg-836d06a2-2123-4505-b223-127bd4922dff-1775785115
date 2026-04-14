@@ -1730,6 +1730,67 @@ export type Database = {
           },
         ]
       }
+      material_access: {
+        Row: {
+          completed_at: string | null
+          enrollment_id: string | null
+          first_accessed_at: string | null
+          id: string
+          last_accessed_at: string | null
+          material_id: string
+          metadata: Json | null
+          progress_percentage: number | null
+          student_id: string
+          time_spent_minutes: number | null
+        }
+        Insert: {
+          completed_at?: string | null
+          enrollment_id?: string | null
+          first_accessed_at?: string | null
+          id?: string
+          last_accessed_at?: string | null
+          material_id: string
+          metadata?: Json | null
+          progress_percentage?: number | null
+          student_id: string
+          time_spent_minutes?: number | null
+        }
+        Update: {
+          completed_at?: string | null
+          enrollment_id?: string | null
+          first_accessed_at?: string | null
+          id?: string
+          last_accessed_at?: string | null
+          material_id?: string
+          metadata?: Json | null
+          progress_percentage?: number | null
+          student_id?: string
+          time_spent_minutes?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_access_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "material_access_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "pre_course_materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "material_access_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_log: {
         Row: {
           channel: string
@@ -2118,6 +2179,75 @@ export type Database = {
           },
         ]
       }
+      pre_course_materials: {
+        Row: {
+          course_template_id: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          duration_minutes: number | null
+          external_url: string | null
+          file_url: string | null
+          id: string
+          is_published: boolean | null
+          is_required: boolean | null
+          material_type: string
+          metadata: Json | null
+          order_index: number | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          course_template_id: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          external_url?: string | null
+          file_url?: string | null
+          id?: string
+          is_published?: boolean | null
+          is_required?: boolean | null
+          material_type: string
+          metadata?: Json | null
+          order_index?: number | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          course_template_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          external_url?: string | null
+          file_url?: string | null
+          id?: string
+          is_published?: boolean | null
+          is_required?: boolean | null
+          material_type?: string
+          metadata?: Json | null
+          order_index?: number | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pre_course_materials_course_template_id_fkey"
+            columns: ["course_template_id"]
+            isOneToOne: false
+            referencedRelation: "course_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pre_course_materials_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           address: string | null
@@ -2358,6 +2488,92 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "payment_tracking"
             referencedColumns: ["booking_id"]
+          },
+        ]
+      }
+      sms_notifications: {
+        Row: {
+          cost_usd: number | null
+          created_at: string | null
+          delivered_at: string | null
+          error_message: string | null
+          failed_at: string | null
+          id: string
+          message_body: string
+          metadata: Json | null
+          notification_type: string
+          recipient_phone: string
+          recipient_user_id: string | null
+          related_booking_id: string | null
+          related_class_id: string | null
+          sent_at: string | null
+          status: string
+          twilio_sid: string | null
+        }
+        Insert: {
+          cost_usd?: number | null
+          created_at?: string | null
+          delivered_at?: string | null
+          error_message?: string | null
+          failed_at?: string | null
+          id?: string
+          message_body: string
+          metadata?: Json | null
+          notification_type: string
+          recipient_phone: string
+          recipient_user_id?: string | null
+          related_booking_id?: string | null
+          related_class_id?: string | null
+          sent_at?: string | null
+          status?: string
+          twilio_sid?: string | null
+        }
+        Update: {
+          cost_usd?: number | null
+          created_at?: string | null
+          delivered_at?: string | null
+          error_message?: string | null
+          failed_at?: string | null
+          id?: string
+          message_body?: string
+          metadata?: Json | null
+          notification_type?: string
+          recipient_phone?: string
+          recipient_user_id?: string | null
+          related_booking_id?: string | null
+          related_class_id?: string | null
+          sent_at?: string | null
+          status?: string
+          twilio_sid?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_notifications_recipient_user_id_fkey"
+            columns: ["recipient_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sms_notifications_related_booking_id_fkey"
+            columns: ["related_booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sms_notifications_related_booking_id_fkey"
+            columns: ["related_booking_id"]
+            isOneToOne: false
+            referencedRelation: "payment_tracking"
+            referencedColumns: ["booking_id"]
+          },
+          {
+            foreignKeyName: "sms_notifications_related_class_id_fkey"
+            columns: ["related_class_id"]
+            isOneToOne: false
+            referencedRelation: "scheduled_classes"
+            referencedColumns: ["id"]
           },
         ]
       }
