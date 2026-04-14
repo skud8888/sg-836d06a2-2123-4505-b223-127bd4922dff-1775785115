@@ -171,6 +171,13 @@ export default function UserManagementPage() {
         return;
       }
 
+      console.log("Sending create user request...");
+      console.log("Request data:", {
+        email: createForm.email,
+        fullName: createForm.fullName,
+        role: createForm.role
+      });
+
       // Call server-side API route
       const response = await fetch("/api/admin/create-user", {
         method: "POST",
@@ -186,7 +193,19 @@ export default function UserManagementPage() {
         })
       });
 
+      console.log("Response status:", response.status);
+      console.log("Response headers:", response.headers);
+
+      // Check if response is JSON
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await response.text();
+        console.error("Non-JSON response:", text);
+        throw new Error("Server returned an error. Please check the console logs.");
+      }
+
       const result = await response.json();
+      console.log("Response data:", result);
 
       if (!response.ok) {
         throw new Error(result.error || "Failed to create user");
@@ -199,6 +218,7 @@ export default function UserManagementPage() {
       setCreateForm({ email: "", password: "", fullName: "", role: "student" });
       fetchUsers();
     } catch (error: any) {
+      console.error("Create user error:", error);
       toast({
         title: "Error creating user",
         description: error.message,
