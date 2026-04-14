@@ -1967,6 +1967,50 @@ export type Database = {
           },
         ]
       }
+      onboarding_progress: {
+        Row: {
+          completed: boolean | null
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          skipped: boolean | null
+          step_id: string
+          step_name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          skipped?: boolean | null
+          step_id: string
+          step_name: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          skipped?: boolean | null
+          step_id?: string
+          step_name?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_plan_installments: {
         Row: {
           amount: number
@@ -2784,6 +2828,44 @@ export type Database = {
           },
           {
             foreignKeyName: "thread_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_activity_logs: {
+        Row: {
+          action_details: Json | null
+          action_type: string
+          created_at: string | null
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action_details?: Json | null
+          action_type: string
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action_details?: Json | null
+          action_type?: string
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_activity_logs_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
