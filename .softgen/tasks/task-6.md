@@ -1,6 +1,6 @@
 ---
 title: Automated reminders and notifications
-status: todo
+status: done
 priority: low
 type: feature
 tags:
@@ -20,5 +20,5 @@ Automate 24-hour reminder SMS and emails for upcoming courses. Set up notificati
 - [x] Set up automated email sending (Supabase Edge Functions or Resend)
 - [x] Integrate Twilio for SMS reminders
 - [x] Create notification scheduling system
-- [ ] Build notification history and logs
-- [ ] Add manual notification triggers for admin
+- [x] Build notification history and logs
+- [x] Add manual notification triggers for admin
