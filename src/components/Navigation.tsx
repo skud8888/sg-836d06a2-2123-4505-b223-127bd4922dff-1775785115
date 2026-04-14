@@ -1,10 +1,16 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { ThemeSwitch } from "@/components/ThemeSwitch";
-import { NotificationCenter } from "@/components/NotificationCenter";
+import { useRouter } from "next/router";
 import { supabase } from "@/integrations/supabase/client";
-import { Menu, X, BookOpen, ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { 
+  Menu, X, LogOut, User, Settings, Home, BookOpen, 
+  Calendar, Users, BarChart3, Bell, FileText, Shield,
+  ChevronLeft
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { ThemeSwitch } from "./ThemeSwitch";
+import { NotificationCenter } from "@/components/NotificationCenter";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +21,7 @@ import {
 export function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     checkAuth();
@@ -46,6 +53,58 @@ export function Navigation() {
     { href: "/courses", label: "Browse Courses" }
   ];
 
+  const getBackButtonConfig = () => {
+    const path = router.pathname;
+    
+    // Map of paths to their back destinations
+    const backRoutes: Record<string, { label: string; path: string }> = {
+      "/admin/calendar": { label: "Dashboard", path: "/admin" },
+      "/admin/courses": { label: "Dashboard", path: "/admin" },
+      "/admin/bookings": { label: "Dashboard", path: "/admin" },
+      "/admin/trainers": { label: "Dashboard", path: "/admin" },
+      "/admin/enquiries": { label: "Dashboard", path: "/admin" },
+      "/admin/analytics": { label: "Dashboard", path: "/admin" },
+      "/admin/ai-insights": { label: "Dashboard", path: "/admin" },
+      "/admin/users": { label: "Dashboard", path: "/admin" },
+      "/admin/audit-logs": { label: "Dashboard", path: "/admin" },
+      "/admin/students": { label: "Dashboard", path: "/admin" },
+      "/admin/payments": { label: "Dashboard", path: "/admin" },
+      "/admin/profile": { label: "Dashboard", path: "/admin" },
+      "/admin/system-health": { label: "Dashboard", path: "/admin" },
+      "/admin/feedback": { label: "Dashboard", path: "/admin" },
+      "/admin/backups": { label: "Dashboard", path: "/admin" },
+      "/admin/settings": { label: "Dashboard", path: "/admin" },
+      "/admin/team": { label: "Dashboard", path: "/admin" },
+      "/admin/waitlist": { label: "Dashboard", path: "/admin" },
+      "/admin/certificates": { label: "Dashboard", path: "/admin" },
+      "/admin/instructor-payouts": { label: "Dashboard", path: "/admin" },
+      "/student/portal": { label: "Home", path: "/" },
+      "/student/feedback": { label: "Portal", path: "/student/portal" },
+      "/student/certificates": { label: "Portal", path: "/student/portal" },
+      "/student/pre-course": { label: "Portal", path: "/student/portal" },
+      "/trainer": { label: "Home", path: "/" },
+      "/field": { label: "Home", path: "/" },
+    };
+
+    // Handle dynamic routes
+    if (path.startsWith("/admin/course-builder/")) {
+      return { label: "Courses", path: "/admin/courses" };
+    }
+    if (path.startsWith("/booking/")) {
+      return { label: "Classes", path: "/classes" };
+    }
+    if (path.startsWith("/enroll/")) {
+      return { label: "Courses", path: "/courses" };
+    }
+    if (path.startsWith("/courses/") && path.includes("/forum")) {
+      return { label: "My Enrollments", path: "/student/portal" };
+    }
+
+    return backRoutes[path] || null;
+  };
+
+  const backConfig = getBackButtonConfig();
+
   return (
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4">
@@ -58,6 +117,17 @@ export function Navigation() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-6">
+            {backConfig && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-2"
+                onClick={() => router.push(backConfig.path)}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                {backConfig.label}
+              </Button>
+            )}
             {navLinks.map((link) => (
               <Link 
                 key={link.href} 
