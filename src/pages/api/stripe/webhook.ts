@@ -4,6 +4,7 @@ import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 import { emailService } from "@/services/emailService";
 import { signatureService } from "@/services/signatureService";
+import { generateInvoiceHTML, prepareInvoiceData } from "@/lib/invoiceGenerator";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-01-27.acacia",
@@ -69,13 +70,14 @@ export default async function handler(
 
       // Calculate payment amount
       const amountPaid = session.amount_total ? session.amount_total / 100 : 0;
+      const newPaidTotal = booking.paid_amount + amountPaid;
 
       // Update booking payment status
       const { error: updateError } = await supabaseAdmin
         .from("bookings")
         .update({
-          payment_status: "paid",
-          paid_amount: amountPaid,
+          payment_status: newPaidTotal >= booking.total_amount ? "paid" : "partial",
+          paid_amount: newPaidTotal,
           status: "confirmed"
         })
         .eq("id", bookingId);
@@ -83,6 +85,38 @@ export default async function handler(
       if (updateError) {
         console.error("Error updating booking:", updateError);
         return res.status(500).json({ error: "Failed to update booking" });
+      }
+
+      // Update payment record
+      await supabaseAdmin
+        .from("stripe_payments")
+        .update({
+          stripe_payment_intent_id: session.payment_intent as string,
+          status: "completed",
+          metadata: {
+            session_url: session.url,
+            amount_total: session.amount_total,
+            payment_status: session.payment_status
+          }
+        })
+        .eq("stripe_checkout_session_id", session.id);
+
+      // GENERATE AND SEND INVOICE
+      try {
+        const invoiceNumber = `INV-${booking.id.substring(0, 8).toUpperCase()}-${Date.now().toString().slice(-6)}`;
+        const invoiceData = prepareInvoiceData(booking as any, invoiceNumber);
+        const invoiceHTML = generateInvoiceHTML(invoiceData);
+
+        // Send invoice via email
+        await emailService.sendEmail(booking.student_email, {
+          subject: `Invoice ${invoiceNumber} - ${booking.scheduled_classes?.course_templates?.name}`,
+          html: invoiceHTML
+        });
+
+        console.log("✓ Invoice generated and sent:", invoiceNumber);
+      } catch (invoiceErr) {
+        console.error("Error generating/sending invoice:", invoiceErr);
+        // Don't fail the webhook - invoice can be regenerated manually
       }
 
       // Send payment receipt email
@@ -113,6 +147,8 @@ export default async function handler(
 
       console.log("✓ Payment processed successfully for booking:", bookingId);
       console.log("✓ Amount paid:", amountPaid);
+      console.log("✓ New total paid:", newPaidTotal);
+      console.log("✓ Payment status:", newPaidTotal >= booking.total_amount ? "paid" : "partial");
       console.log("✓ Signature request sent to:", booking.student_email);
 
       return res.status(200).json({ received: true });
