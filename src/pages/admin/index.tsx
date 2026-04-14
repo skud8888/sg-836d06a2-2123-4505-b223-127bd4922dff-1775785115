@@ -10,6 +10,7 @@ import { rbacService } from "@/services/rbacService";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -72,17 +73,6 @@ export default function AdminDashboard() {
     await supabase.auth.signOut();
     router.push("/admin/login");
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <div className="container mx-auto px-4 py-8">
-          <p>Loading...</p>
-        </div>
-      </div>
-    );
-  }
 
   const dashboardCards = [
     {
@@ -229,6 +219,67 @@ export default function AdminDashboard() {
       show: userRole === "super_admin" || userRole === "admin"
     }
   ];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <Navigation />
+        <div className="container mx-auto px-4 py-8 pt-24">
+          {/* Header Skeleton */}
+          <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
+            <div className="space-y-2">
+              <Skeleton className="h-9 w-64" />
+              <Skeleton className="h-5 w-48" />
+            </div>
+            <Skeleton className="h-10 w-32" />
+          </div>
+
+          {/* Tip Skeleton */}
+          <div className="mb-6">
+            <Skeleton className="h-5 w-96" />
+          </div>
+
+          {/* Dashboard Cards Skeleton */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[...Array(8)].map((_, i) => (
+                <Card key={i} className="animate-pulse">
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <Skeleton className="h-12 w-12 rounded-lg" />
+                    </div>
+                    <Skeleton className="h-6 w-32 mt-4" />
+                    <Skeleton className="h-4 w-full" />
+                  </CardHeader>
+                </Card>
+              ))}
+            </div>
+
+            {/* Activity Feed Skeleton */}
+            <div className="lg:col-span-1">
+              <Card>
+                <CardHeader>
+                  <Skeleton className="h-6 w-32" />
+                  <Skeleton className="h-4 w-48" />
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="flex items-start gap-3">
+                      <Skeleton className="h-8 w-8 rounded-full" />
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-3 w-24" />
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
