@@ -73,6 +73,7 @@ export default function AdminSignupPage() {
       const isFirstAdmin = !existingAdmins || existingAdmins.length === 0;
 
       // Create user account in Supabase Auth
+      // The trigger will automatically create the profile
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -90,18 +91,8 @@ export default function AdminSignupPage() {
         throw new Error("Failed to create user account");
       }
 
-      // Create profile record
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .insert({
-          id: authData.user.id,
-          email: formData.email,
-          full_name: formData.fullName,
-          organization_name: formData.organizationName,
-          onboarding_completed: false
-        });
-
-      if (profileError) throw profileError;
+      // Wait a moment for the trigger to complete
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       // Assign role (super_admin for first user, admin for others)
       const role = isFirstAdmin ? "super_admin" : "admin";
