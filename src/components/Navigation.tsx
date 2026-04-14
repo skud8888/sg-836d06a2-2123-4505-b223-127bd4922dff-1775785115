@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { 
   Menu, X, LogOut, User, Settings, Home, BookOpen, 
   Calendar, Users, BarChart3, Bell, FileText, Shield,
-  ChevronLeft
+  ChevronLeft, ChevronDown
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeSwitch } from "./ThemeSwitch";
