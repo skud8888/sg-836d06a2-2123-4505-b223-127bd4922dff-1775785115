@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import twilio from "twilio";
 
 /**
  * SMS Send API - Twilio Integration
@@ -50,8 +51,7 @@ export default async function handler(
       });
     }
 
-    // Import Twilio (only if configured)
-    const twilio = require("twilio");
+    // Initialize Twilio client
     const client = twilio(accountSid, authToken);
 
     // Send SMS via Twilio

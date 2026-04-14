@@ -21,7 +21,9 @@ import {
   FileText,
   MessageSquare,
   Download,
-  Eye
+  Eye,
+  MapPin,
+  PlusCircle
 } from "lucide-react";
 import Link from "next/link";
 
@@ -283,6 +285,14 @@ export default function StudentPortalPage() {
                         </Button>
                         <Button className="flex-1" variant="outline" asChild>
                           <Link href="/student/certificates">My Certificates</Link>
+                        </Button>
+                      </div>
+                      <div className="mt-2">
+                        <Button className="w-full" variant="secondary" asChild>
+                          <Link href="/student/pre-course">
+                            <BookOpen className="h-4 w-4 mr-2" />
+                            Pre-Course Study Materials
+                          </Link>
                         </Button>
                       </div>
                     </CardContent>
