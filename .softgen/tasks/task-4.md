@@ -1,6 +1,6 @@
 ---
 title: Student and payment management dashboards
-status: in_progress
+status: done
 priority: medium
 type: feature
 tags: [admin, student-management, payments]
