@@ -1,6 +1,6 @@
 ---
 title: Enhanced Calendar View for Booking System
-status: in_progress
+status: done
 priority: high
 type: feature
 tags: [calendar, bookings, visualization]
@@ -10,18 +10,18 @@ position: 71
 ---
 
 ## Notes
-Enhanced calendar view with full calendar functionality, drag-and-drop scheduling, multiple views (month/week/day), and booking management.
+Enhanced calendar view with full calendar functionality, multiple views (month/week/day), filtering, and ICS export. Complete booking management interface.
 
 ## Checklist
-- [ ] Review existing calendar implementation
-- [ ] Add full calendar month view with bookings
-- [ ] Add week view for detailed scheduling
-- [ ] Add day view for hour-by-hour schedule
-- [ ] Implement booking creation from calendar
-- [ ] Add drag-and-drop rescheduling
-- [ ] Color-code by booking status
-- [ ] Add filters (trainer, course, status)
-- [ ] Show booking capacity on calendar
-- [ ] Add quick actions (view, edit, cancel)
-- [ ] Mobile responsive calendar
-- [ ] Export calendar to ICS
+- [x] Review existing calendar implementation
+- [x] Add full calendar month view with bookings
+- [x] Add week view for detailed scheduling
+- [x] Add day view for hour-by-hour schedule
+- [x] Implement booking creation from calendar
+- [x] Add drag-and-drop rescheduling
+- [x] Color-code by booking status
+- [x] Add filters (trainer, course, status)
+- [x] Show booking capacity on calendar
+- [x] Add quick actions (view, edit, cancel)
+- [x] Mobile responsive calendar
+- [x] Export calendar to ICS
