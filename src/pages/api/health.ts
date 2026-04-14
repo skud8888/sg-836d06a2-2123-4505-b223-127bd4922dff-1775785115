@@ -1,194 +1,115 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { supabase } from "@/integrations/supabase/client";
+import { createClient } from "@supabase/supabase-js";
 
-interface HealthStatus {
-  status: "healthy" | "degraded" | "unhealthy";
+type HealthCheck = {
+  status: string;
   timestamp: string;
-  services: {
-    database: ServiceHealth;
-    auth: ServiceHealth;
-    storage: ServiceHealth;
-    api: ServiceHealth;
+  checks: {
+    api: boolean;
+    supabase_url: boolean;
+    supabase_anon_key: boolean;
+    supabase_service_key: boolean;
+    supabase_connection: boolean;
+    auth_working: boolean;
   };
-  system: {
-    uptime: number;
-    memory: {
-      used: number;
-      total: number;
-      percentage: number;
-    };
-  };
-}
-
-interface ServiceHealth {
-  status: "operational" | "degraded" | "down";
-  responseTime: number;
-  message?: string;
-}
+  errors: string[];
+};
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<HealthStatus | { error: string }>
+  res: NextApiResponse<HealthCheck>
 ) {
-  if (req.method !== "GET") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
+  res.setHeader('Content-Type', 'application/json');
 
-  const healthStatus: HealthStatus = {
-    status: "healthy",
-    timestamp: new Date().toISOString(),
-    services: {
-      database: await checkDatabase(),
-      auth: await checkAuth(),
-      storage: await checkStorage(),
-      api: await checkAPI()
-    },
-    system: {
-      uptime: process.uptime(),
-      memory: getMemoryUsage()
-    }
+  const errors: string[] = [];
+  const checks = {
+    api: true,
+    supabase_url: false,
+    supabase_anon_key: false,
+    supabase_service_key: false,
+    supabase_connection: false,
+    auth_working: false
   };
 
-  // Determine overall status
-  const serviceStatuses = Object.values(healthStatus.services).map(s => s.status);
-  if (serviceStatuses.some(s => s === "down")) {
-    healthStatus.status = "unhealthy";
-  } else if (serviceStatuses.some(s => s === "degraded")) {
-    healthStatus.status = "degraded";
-  }
-
-  const statusCode = healthStatus.status === "healthy" ? 200 : 503;
-  res.status(statusCode).json(healthStatus);
-}
-
-async function checkDatabase(): Promise<ServiceHealth> {
-  const startTime = Date.now();
-  
   try {
-    // Simple query to check database connectivity
-    const { error } = await (supabase as any)
-      .from("profiles")
-      .select("id")
-      .limit(1);
-
-    const responseTime = Date.now() - startTime;
-
-    if (error) {
-      return {
-        status: "down",
-        responseTime,
-        message: error.message
-      };
+    // Check environment variables
+    if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
+      checks.supabase_url = true;
+    } else {
+      errors.push("NEXT_PUBLIC_SUPABASE_URL is missing");
     }
 
-    return {
-      status: responseTime > 1000 ? "degraded" : "operational",
-      responseTime
-    };
-  } catch (error: any) {
-    return {
-      status: "down",
-      responseTime: Date.now() - startTime,
-      message: error.message
-    };
-  }
-}
-
-async function checkAuth(): Promise<ServiceHealth> {
-  const startTime = Date.now();
-  
-  try {
-    // Check if we can get session (doesn't require authenticated user)
-    const { error } = await supabase.auth.getSession();
-    const responseTime = Date.now() - startTime;
-
-    if (error) {
-      return {
-        status: "down",
-        responseTime,
-        message: error.message
-      };
+    if (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      checks.supabase_anon_key = true;
+    } else {
+      errors.push("NEXT_PUBLIC_SUPABASE_ANON_KEY is missing");
     }
 
-    return {
-      status: responseTime > 1000 ? "degraded" : "operational",
-      responseTime
-    };
-  } catch (error: any) {
-    return {
-      status: "down",
-      responseTime: Date.now() - startTime,
-      message: error.message
-    };
-  }
-}
-
-async function checkStorage(): Promise<ServiceHealth> {
-  const startTime = Date.now();
-  
-  try {
-    // Try to list buckets (public operation)
-    const { error } = await supabase.storage.listBuckets();
-    const responseTime = Date.now() - startTime;
-
-    if (error) {
-      return {
-        status: "down",
-        responseTime,
-        message: error.message
-      };
+    if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      checks.supabase_service_key = true;
+    } else {
+      errors.push("SUPABASE_SERVICE_ROLE_KEY is missing");
     }
 
-    return {
-      status: responseTime > 1000 ? "degraded" : "operational",
-      responseTime
-    };
-  } catch (error: any) {
-    return {
-      status: "down",
-      responseTime: Date.now() - startTime,
-      message: error.message
-    };
-  }
-}
+    // Test Supabase connection if keys are present
+    if (checks.supabase_url && checks.supabase_service_key) {
+      try {
+        const supabaseAdmin = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!
+        );
 
-async function checkAPI(): Promise<ServiceHealth> {
-  const startTime = Date.now();
-  
-  try {
-    // Check if API route is responsive
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/hello`);
-    const responseTime = Date.now() - startTime;
+        const { data, error } = await supabaseAdmin
+          .from("profiles")
+          .select("id")
+          .limit(1);
 
-    if (!response.ok) {
-      return {
-        status: "degraded",
-        responseTime,
-        message: `HTTP ${response.status}`
-      };
+        if (!error) {
+          checks.supabase_connection = true;
+        } else {
+          errors.push(`Supabase connection failed: ${error.message}`);
+        }
+      } catch (err: any) {
+        errors.push(`Supabase test failed: ${err.message}`);
+      }
     }
 
-    return {
-      status: responseTime > 1000 ? "degraded" : "operational",
-      responseTime
-    };
-  } catch (error: any) {
-    return {
-      status: "down",
-      responseTime: Date.now() - startTime,
-      message: error.message
-    };
-  }
-}
+    // Test auth if we have auth header
+    if (req.headers.authorization && checks.supabase_url && checks.supabase_service_key) {
+      try {
+        const supabaseAdmin = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!
+        );
 
-function getMemoryUsage() {
-  const usage = process.memoryUsage();
-  const total = usage.heapTotal;
-  const used = usage.heapUsed;
-  
-  return {
-    used: Math.round(used / 1024 / 1024), // MB
-    total: Math.round(total / 1024 / 1024), // MB
-    percentage: Math.round((used / total) * 100)
-  };
+        const token = req.headers.authorization.replace("Bearer ", "");
+        const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+
+        if (!error && user) {
+          checks.auth_working = true;
+        } else {
+          errors.push(`Auth check failed: ${error?.message || "No user"}`);
+        }
+      } catch (err: any) {
+        errors.push(`Auth test failed: ${err.message}`);
+      }
+    }
+
+    const status = errors.length === 0 ? "healthy" : "degraded";
+
+    return res.status(200).json({
+      status,
+      timestamp: new Date().toISOString(),
+      checks,
+      errors
+    });
+
+  } catch (error: any) {
+    return res.status(500).json({
+      status: "error",
+      timestamp: new Date().toISOString(),
+      checks,
+      errors: [...errors, error.message]
+    });
+  }
 }
