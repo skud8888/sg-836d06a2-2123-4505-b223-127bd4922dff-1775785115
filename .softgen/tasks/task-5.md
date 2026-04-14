@@ -17,8 +17,8 @@ Replace custom ID/evidence apps with integrated document management. Support ID 
 
 ## Checklist
 - [x] Set up Supabase Storage buckets (ids, evidence, certificates, class-docs)
-- [ ] Create ID verification upload form with photo capture
-- [ ] Build evidence capture interface (photos/videos by class)
-- [ ] Implement document viewer and organizer
+- [x] Create ID verification upload form with photo capture
+- [x] Build evidence capture interface (photos/videos by class)
+- [x] Implement document viewer and organizer
 - [ ] Add certificate template and generation
-- [ ] Create trainer signature capture for ID verification
+- [x] Create trainer signature capture for ID verification
