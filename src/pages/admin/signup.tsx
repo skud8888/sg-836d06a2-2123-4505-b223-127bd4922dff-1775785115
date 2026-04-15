@@ -123,7 +123,7 @@ export default function AdminSignupPage() {
   return (
     <>
       <SEO
-        title="Admin Signup - GTS Training"
+        title="Admin Signup - The Training Hub"
         description="Create your admin account to start managing your training center"
       />
 
@@ -135,7 +135,7 @@ export default function AdminSignupPage() {
               <div className="h-12 w-12 rounded-lg bg-primary flex items-center justify-center">
                 <BookOpen className="h-7 w-7 text-primary-foreground" />
               </div>
-              <span className="text-2xl font-bold">GTS Training</span>
+              <span className="text-2xl font-bold">The Training Hub</span>
             </Link>
             <p className="text-muted-foreground mt-2">Admin Account Creation</p>
           </div>

@@ -66,7 +66,7 @@ export function InstallPWA() {
           </p>
           <Button onClick={handleInstallClick} size="sm" className="w-full">
             <Download className="h-4 w-4 mr-2" />
-            Install GTS Training
+            Install The Training Hub
           </Button>
         </CardContent>
       </Card>

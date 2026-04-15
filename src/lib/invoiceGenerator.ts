@@ -152,9 +152,9 @@ export function generateInvoiceHTML(data: InvoiceData): string {
 <body>
   <div class="header">
     <div class="company-info">
-      <h1>GTS Training</h1>
+      <h1>The Training Hub</h1>
       <p>ABN: XX XXX XXX XXX</p>
-      <p>info@gtstraining.com.au</p>
+      <p>info@thetraininghub.com.au</p>
       <p>1300 XXX XXX</p>
     </div>
     <div class="invoice-info">
@@ -226,7 +226,7 @@ export function generateInvoiceHTML(data: InvoiceData): string {
   <div class="payment-info">
     <h4>Payment Information</h4>
     <p><strong>Bank Details:</strong></p>
-    <p>Account Name: GTS Training<br>
+    <p>Account Name: The Training Hub<br>
     BSB: XXX-XXX<br>
     Account Number: XXXXXXXXXX</p>
     <p style="margin-top: 15px;">
@@ -238,7 +238,7 @@ export function generateInvoiceHTML(data: InvoiceData): string {
   </div>
 
   <div class="footer">
-    <p>Thank you for choosing GTS Training</p>
+    <p>Thank you for choosing The Training Hub</p>
     <p>This is a computer-generated invoice and does not require a signature</p>
   </div>
 </body>

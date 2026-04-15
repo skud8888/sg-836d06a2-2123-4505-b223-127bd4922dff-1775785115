@@ -76,7 +76,7 @@ export default function CoursesPage() {
   return (
     <>
       <SEO
-        title="Training Courses - GTS Training"
+        title="Training Courses - The Training Hub"
         description="Browse our comprehensive training courses"
       />
 

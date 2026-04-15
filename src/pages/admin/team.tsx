@@ -206,10 +206,10 @@ export default function TeamManagementPage() {
       const inviteLink = `${window.location.origin}/admin/signup?token=${token}`;
       
       await emailService.sendEmail(inviteForm.email, {
-        subject: "You've been invited to join GTS Training",
+        subject: "You've been invited to join The Training Hub",
         html: `
           <h2>Team Invitation</h2>
-          <p>You've been invited to join GTS Training as a <strong>${inviteForm.role}</strong>.</p>
+          <p>You've been invited to join The Training Hub as a <strong>${inviteForm.role}</strong>.</p>
           <p>Click the link below to accept your invitation and create your account:</p>
           <p><a href="${inviteLink}" style="display: inline-block; padding: 12px 24px; background-color: #0070f3; color: white; text-decoration: none; border-radius: 5px;">Accept Invitation</a></p>
           <p>This invitation will expire in 7 days.</p>
@@ -254,10 +254,10 @@ export default function TeamManagementPage() {
       
       // Resend email
       await emailService.sendEmail(email, {
-        subject: "Reminder: You've been invited to join GTS Training",
+        subject: "Reminder: You've been invited to join The Training Hub",
         html: `
           <h2>Team Invitation Reminder</h2>
-          <p>This is a reminder that you've been invited to join GTS Training as a <strong>${invitation.role}</strong>.</p>
+          <p>This is a reminder that you've been invited to join The Training Hub as a <strong>${invitation.role}</strong>.</p>
           <p>Click the link below to accept your invitation and create your account:</p>
           <p><a href="${inviteLink}" style="display: inline-block; padding: 12px 24px; background-color: #0070f3; color: white; text-decoration: none; border-radius: 5px;">Accept Invitation</a></p>
           <p>This invitation will expire on ${new Date(invitation.expires_at).toLocaleDateString()}.</p>
@@ -318,7 +318,7 @@ export default function TeamManagementPage() {
   return (
     <>
       <SEO
-        title="Team Management - GTS Training Admin"
+        title="Team Management - The Training Hub Admin"
         description="Manage your team members and invitations"
       />
 
