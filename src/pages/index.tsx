@@ -198,12 +198,12 @@ export default function HomePage() {
   return (
     <>
       <SEO
-        title="GTS Training Centre - Professional Training Management System"
+        title="The Training Hub - Professional Training Management System"
         description="Modern training center management platform with CRM, document management, AI insights, and online bookings. Built for excellence."
       />
       <Navigation />
       
-      <main className="min-h-screen bg-background">
+      <main className="min-h-screen bg-background overflow-visible">
         {/* Hero Section */}
         <section className="relative overflow-hidden bg-gradient-to-b from-primary/5 via-background to-background py-20 md:py-32">
           <div className="absolute inset-0 bg-grid-white/10 bg-[size:20px_20px] [mask-image:radial-gradient(white,transparent_85%)]" />
@@ -213,7 +213,7 @@ export default function HomePage() {
                 <Star className="h-3 w-3 mr-1 fill-current" />
                 Trusted by 500+ Training Centers Worldwide
               </Badge>
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 bg-gradient-to-r from-primary via-primary to-primary/60 bg-clip-text text-transparent leading-tight">
+              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 bg-gradient-to-r from-primary via-primary to-primary/60 bg-clip-text text-transparent leading-tight overflow-visible">
                 Transform Your Training Center Management
               </h1>
               <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">
@@ -949,7 +949,7 @@ export default function HomePage() {
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   <li className="flex items-center gap-2">
                     <Mail className="h-4 w-4" />
-                    info@gtstraining.com.au
+                    info@thetraininghub.com.au
                   </li>
                   <li className="flex items-center gap-2">
                     <Globe className="h-4 w-4" />
@@ -960,7 +960,7 @@ export default function HomePage() {
             </div>
 
             <div className="border-t pt-8 text-center text-sm text-muted-foreground">
-              <p>© 2026 GTS Training Centre. All rights reserved.</p>
+              <p>© 2026 The Training Hub. All rights reserved.</p>
             </div>
           </div>
         </footer>
