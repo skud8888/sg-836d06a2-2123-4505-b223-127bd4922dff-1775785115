@@ -139,8 +139,8 @@ export default function ContactPage() {
   return (
     <>
       <SEO
-        title="Contact Us - GTS Training Centre"
-        description="Get in touch with GTS Training Centre. Request a demo, ask questions, or speak with our team about how we can help transform your training operations."
+        title="Contact Us - The Training Hub"
+        description="Get in touch with The Training Hub. Request a demo, ask questions, or speak with our team about how we can help transform your training operations."
       />
       <Navigation />
       

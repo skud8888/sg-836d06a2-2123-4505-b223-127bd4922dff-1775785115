@@ -182,7 +182,7 @@ export default function PricingPage() {
   return (
     <>
       <SEO
-        title="Pricing - GTS Training Centre"
+        title="Pricing - The Training Hub"
         description="Simple, transparent pricing for training centers of all sizes. Start free or choose a plan that fits your needs. No hidden fees."
       />
       <Navigation />

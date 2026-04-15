@@ -87,8 +87,8 @@ export const emailService = {
             <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
             
             <p style="color: #9ca3af; font-size: 12px; text-align: center;">
-              GTS Training - Professional Training Solutions<br>
-              © ${new Date().getFullYear()} GTS Training. All rights reserved.
+              The Training Hub - Professional Training Solutions<br>
+              © ${new Date().getFullYear()} The Training Hub. All rights reserved.
             </p>
           </div>
         </div>
@@ -162,8 +162,8 @@ export const emailService = {
             <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
             
             <p style="color: #9ca3af; font-size: 12px; text-align: center;">
-              GTS Training - Professional Training Solutions<br>
-              © ${new Date().getFullYear()} GTS Training. All rights reserved.
+              The Training Hub - Professional Training Solutions<br>
+              © ${new Date().getFullYear()} The Training Hub. All rights reserved.
             </p>
           </div>
         </div>
@@ -204,8 +204,8 @@ export const emailService = {
             <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
             
             <p style="color: #9ca3af; font-size: 12px; text-align: center;">
-              GTS Training - Professional Training Solutions<br>
-              © ${new Date().getFullYear()} GTS Training. All rights reserved.
+              The Training Hub - Professional Training Solutions<br>
+              © ${new Date().getFullYear()} The Training Hub. All rights reserved.
             </p>
           </div>
         </div>

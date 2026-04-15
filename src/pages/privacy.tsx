@@ -20,8 +20,8 @@ export default function PrivacyPolicyPage() {
   return (
     <>
       <SEO
-        title="Privacy Policy - GTS Training Centre"
-        description="Learn how GTS Training Centre collects, uses, and protects your personal information. GDPR compliant privacy policy."
+        title="Privacy Policy - The Training Hub"
+        description="Learn how The Training Hub collects, uses, and protects your personal information. GDPR compliant privacy policy."
       />
       <Navigation />
       
@@ -68,7 +68,7 @@ export default function PrivacyPolicyPage() {
               {/* Introduction */}
               <section>
                 <p className="text-lg leading-relaxed">
-                  GTS Training Centre ("we", "our", or "us") operates the training management platform. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform.
+                  The Training Hub ("we", "our", or "us") operates the training management platform. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform.
                 </p>
               </section>
 
@@ -239,8 +239,8 @@ export default function PrivacyPolicyPage() {
                 <div className="space-y-4 text-muted-foreground">
                   <p>If you have questions about this Privacy Policy or our data practices, please contact us:</p>
                   <div className="bg-muted p-6 rounded-lg mt-4">
-                    <p><strong>GTS Training Centre</strong></p>
-                    <p>Email: <a href="mailto:privacy@gtstraining.com.au" className="text-primary hover:underline">privacy@gtstraining.com.au</a></p>
+                    <p><strong>The Training Hub</strong></p>
+                    <p>Email: <a href="mailto:privacy@thetraininghub.com.au" className="text-primary hover:underline">privacy@thetraininghub.com.au</a></p>
                     <p>Phone: 1300 XXX XXX</p>
                     <p>Address: Queensland, Australia</p>
                   </div>

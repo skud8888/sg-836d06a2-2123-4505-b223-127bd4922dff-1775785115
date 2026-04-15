@@ -156,7 +156,7 @@ export default function FeaturesPage() {
   return (
     <>
       <SEO
-        title="Features - GTS Training Centre"
+        title="Features - The Training Hub"
         description="Explore all the powerful features of our training management platform"
       />
       <Navigation />

@@ -143,7 +143,7 @@ export default function CourseFeedback() {
   if (loading) {
     return (
       <>
-        <SEO title="Course Feedback | GTS Training" />
+        <SEO title="Course Feedback | The Training Hub" />
         <Navigation />
         <main className="min-h-screen bg-background py-12">
           <div className="max-w-2xl mx-auto px-4 text-center">
@@ -157,7 +157,7 @@ export default function CourseFeedback() {
   if (!booking) {
     return (
       <>
-        <SEO title="Course Feedback | GTS Training" />
+        <SEO title="Course Feedback | The Training Hub" />
         <Navigation />
         <main className="min-h-screen bg-background py-12">
           <div className="max-w-2xl mx-auto px-4">
@@ -175,7 +175,7 @@ export default function CourseFeedback() {
   if (submitted) {
     return (
       <>
-        <SEO title="Feedback Submitted | GTS Training" />
+        <SEO title="Feedback Submitted | The Training Hub" />
         <Navigation />
         <main className="min-h-screen bg-background py-12">
           <div className="max-w-2xl mx-auto px-4">
@@ -199,7 +199,7 @@ export default function CourseFeedback() {
 
   return (
     <>
-      <SEO title="Course Feedback | GTS Training" />
+      <SEO title="Course Feedback | The Training Hub" />
       <Navigation />
       <main className="min-h-screen bg-background py-12">
         <div className="max-w-2xl mx-auto px-4 space-y-6">
