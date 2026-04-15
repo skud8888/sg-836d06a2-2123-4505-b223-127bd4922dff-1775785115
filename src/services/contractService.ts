@@ -306,9 +306,9 @@ export const contractService = {
   /**
    * Get signed contracts for a booking
    */
-  async getBookingContracts(bookingId: string): Promise<any[]> {
-    const { data } = await (supabase as any)
-      .from("contracts")
+  async getBookingContracts(bookingId: string): Promise<Tables<"signature_requests">[]> {
+    const { data } = await supabase
+      .from("signature_requests")
       .select("*")
       .eq("booking_id", bookingId)
       .eq("status", "signed")
@@ -325,7 +325,12 @@ export const contractService = {
     daysUntilExpiry: number;
     needsRenewal: boolean;
   }> {
-    const contract = await (this as any).getContract(contractId);
+    const { data: contract } = await supabase
+      .from("signature_requests")
+      .select("*")
+      .eq("id", contractId)
+      .single();
+
     if (!contract || !contract.expires_at) {
       return { isExpired: false, daysUntilExpiry: 0, needsRenewal: false };
     }
@@ -343,10 +348,15 @@ export const contractService = {
    * Renew expired contract
    */
   async renewContract(contractId: string, expiryMonths: number = 12): Promise<{
-    contract: any | null;
+    contract: Tables<"signature_requests"> | null;
     error: any;
   }> {
-    const originalContract = await (this as any).getContract(contractId);
+    const { data: originalContract } = await supabase
+      .from("signature_requests")
+      .select("*")
+      .eq("id", contractId)
+      .single();
+
     if (!originalContract) {
       return { contract: null, error: new Error("Contract not found") };
     }
@@ -354,12 +364,15 @@ export const contractService = {
     const expiresAt = new Date();
     expiresAt.setMonth(expiresAt.getMonth() + expiryMonths);
 
-    const { data, error } = await (supabase as any)
-      .from("contracts")
+    const { data, error } = await supabase
+      .from("signature_requests")
       .insert({
-        template_id: originalContract.template_id,
+        contract_template_id: originalContract.contract_template_id,
         booking_id: originalContract.booking_id,
-        content: originalContract.content,
+        document_type: originalContract.document_type,
+        recipient_name: originalContract.recipient_name,
+        recipient_email: originalContract.recipient_email,
+        metadata: originalContract.metadata,
         status: "pending",
         expires_at: expiresAt.toISOString(),
       })

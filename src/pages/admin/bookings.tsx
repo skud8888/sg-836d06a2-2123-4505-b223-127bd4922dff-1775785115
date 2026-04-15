@@ -84,8 +84,6 @@ export default function BookingsDashboard() {
       `)
       .order("created_at", { ascending: false });
 
-    console.log("Fetched bookings:", { data, error });
-
     if (data) {
       setBookings(data as any);
     }
@@ -95,7 +93,6 @@ export default function BookingsDashboard() {
   const applyFilters = () => {
     let filtered = [...bookings];
 
-    // Search filter
     if (searchTerm) {
       const search = searchTerm.toLowerCase();
       filtered = filtered.filter(
@@ -107,12 +104,10 @@ export default function BookingsDashboard() {
       );
     }
 
-    // Status filter
     if (statusFilter !== "all") {
       filtered = filtered.filter((b) => b.status === statusFilter);
     }
 
-    // Payment filter
     if (paymentFilter !== "all") {
       filtered = filtered.filter((b) => b.payment_status === paymentFilter);
     }
@@ -124,54 +119,16 @@ export default function BookingsDashboard() {
     setSelectedBooking(booking);
     setDialogOpen(true);
     
-    // Load signature requests for this booking
     setLoadingSignatures(true);
     const requests = await signatureService.getBookingSignatureRequests(booking.id);
     setSignatureRequests(requests);
     setLoadingSignatures(false);
   };
 
-  const handlePreviewContract = async () => {
+  async function handleSendSignatureRequest() {
     if (!selectedBooking) return;
 
     try {
-      const templates = await contractService.getTemplates();
-      const template = templates.find(t => t.is_active && t.document_type === 'enrollment_contract');
-      
-      if (!template) {
-        toast({
-          title: "No Active Template",
-          description: "Please create and activate an enrollment contract template first",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      const { content, error: contractError } = await contractService.generateContract(
-        template.id,
-        selectedBooking.id
-      );
-
-      if (contractError) throw contractError;
-      
-      if (content) {
-        setGeneratedContract(content);
-        setShowContractDialog(true);
-      }
-    } catch (error: any) {
-      toast({
-        title: "Error generating preview",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleSendSignatureRequest = async () => {
-    if (!selectedBooking) return;
-
-    try {
-      // Generate contract from template
       const templates = await contractService.getTemplates();
       const template = templates.find(t => t.is_active && t.document_type === 'enrollment_contract');
       
@@ -201,12 +158,18 @@ export default function BookingsDashboard() {
 
       if (error) throw error;
 
+      if (request && content) {
+        await supabase
+          .from("signature_requests")
+          .update({ metadata: { generated_content: content } })
+          .eq("id", request.id);
+      }
+
       toast({ 
         title: "Signature request sent",
         description: `Contract generated and email sent to ${selectedBooking.student_email}`
       });
 
-      // Reload signature requests
       const requests = await signatureService.getBookingSignatureRequests(selectedBooking.id);
       setSignatureRequests(requests);
     } catch (error: any) {
@@ -216,7 +179,41 @@ export default function BookingsDashboard() {
         variant: "destructive"
       });
     }
-  };
+  }
+
+  async function handlePreviewContract() {
+    if (!selectedBooking) return;
+
+    try {
+      const templates = await contractService.getTemplates();
+      const template = templates.find(t => t.is_active && t.document_type === 'enrollment_contract');
+      
+      if (!template) {
+        toast({
+          title: "No Active Template",
+          description: "Please create and activate an enrollment contract template first",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const { content } = await contractService.generateContract(
+        template.id,
+        selectedBooking.id
+      );
+
+      if (content) {
+        setGeneratedContract(content);
+        setShowContractDialog(true);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error generating contract",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  }
 
   const handleSendReminder = async (requestId: string) => {
     try {
@@ -246,7 +243,6 @@ export default function BookingsDashboard() {
         variant: "destructive"
       });
     } else {
-      // Send feedback request if completed
       if (status === "completed") {
         await notificationService.sendFeedbackRequest(selectedBooking.id);
       }
@@ -263,7 +259,6 @@ export default function BookingsDashboard() {
     const updates: any = { payment_status: paymentStatus };
     let paymentAmount = 0;
     
-    // If changing to paid, set the paid amount to total amount
     if (paymentStatus === "paid" && selectedBooking.payment_status !== "paid") {
       updates.paid_amount = selectedBooking.total_amount;
       paymentAmount = selectedBooking.total_amount - selectedBooking.paid_amount;
@@ -281,7 +276,6 @@ export default function BookingsDashboard() {
         variant: "destructive"
       });
     } else {
-      // Send payment receipt if marked as paid
       if (paymentStatus === "paid" && paymentAmount > 0) {
         const updatedBooking = { ...selectedBooking, ...updates };
         await emailService.sendPaymentReceipt(updatedBooking as any, paymentAmount);
@@ -355,7 +349,6 @@ export default function BookingsDashboard() {
           </Button>
         </div>
 
-        {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <Card>
             <CardHeader className="pb-2">
@@ -399,7 +392,6 @@ export default function BookingsDashboard() {
           </Card>
         </div>
 
-        {/* Filters */}
         <Card>
           <CardContent className="pt-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -439,7 +431,6 @@ export default function BookingsDashboard() {
           </CardContent>
         </Card>
 
-        {/* Bookings Table */}
         <Card>
           <CardHeader>
             <CardTitle>All Bookings ({filteredBookings.length})</CardTitle>
@@ -527,7 +518,6 @@ export default function BookingsDashboard() {
           </CardContent>
         </Card>
 
-        {/* Booking Details Dialog */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
@@ -554,7 +544,6 @@ export default function BookingsDashboard() {
 
                 <TabsContent value="details" className="space-y-6 mt-4">
                   <div className="grid gap-6">
-                    {/* Student Information */}
                     <Card>
                       <CardHeader>
                         <CardTitle className="text-lg">Student Information</CardTitle>
@@ -587,7 +576,6 @@ export default function BookingsDashboard() {
                       </CardContent>
                     </Card>
 
-                    {/* Course Information */}
                     <Card>
                       <CardHeader>
                         <CardTitle className="text-lg">Course Information</CardTitle>
@@ -614,7 +602,6 @@ export default function BookingsDashboard() {
                       </CardContent>
                     </Card>
 
-                    {/* Status & Payment */}
                     <Card>
                       <CardHeader>
                         <CardTitle className="text-lg">Status & Payment</CardTitle>
@@ -848,7 +835,6 @@ export default function BookingsDashboard() {
           </DialogContent>
         </Dialog>
 
-        {/* Contract Preview Dialog */}
         <Dialog open={showContractDialog} onOpenChange={setShowContractDialog}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
