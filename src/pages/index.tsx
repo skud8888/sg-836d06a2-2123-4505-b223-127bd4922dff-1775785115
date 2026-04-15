@@ -213,7 +213,7 @@ export default function HomePage() {
                 <Star className="h-3 w-3 mr-1 fill-current" />
                 Trusted by 500+ Training Centers Worldwide
               </Badge>
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 bg-gradient-to-r from-primary via-primary to-primary/60 bg-clip-text text-transparent leading-tight overflow-visible">
+              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 bg-gradient-to-r from-primary via-primary to-primary/60 bg-clip-text text-transparent leading-tight overflow-visible pb-2 lg:pb-4">
                 Transform Your Training Center Management
               </h1>
               <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">

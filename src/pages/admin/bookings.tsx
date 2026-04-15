@@ -131,6 +131,42 @@ export default function BookingsDashboard() {
     setLoadingSignatures(false);
   };
 
+  const handlePreviewContract = async () => {
+    if (!selectedBooking) return;
+
+    try {
+      const templates = await contractService.getTemplates();
+      const template = templates.find(t => t.is_active && t.document_type === 'enrollment_contract');
+      
+      if (!template) {
+        toast({
+          title: "No Active Template",
+          description: "Please create and activate an enrollment contract template first",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const { content, error: contractError } = await contractService.generateContract(
+        template.id,
+        selectedBooking.id
+      );
+
+      if (contractError) throw contractError;
+      
+      if (content) {
+        setGeneratedContract(content);
+        setShowContractDialog(true);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error generating preview",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleSendSignatureRequest = async () => {
     if (!selectedBooking) return;
 
@@ -148,7 +184,7 @@ export default function BookingsDashboard() {
         return;
       }
 
-      const { contract, error: contractError } = await contractService.generateContract(
+      const { content, error: contractError } = await contractService.generateContract(
         template.id,
         selectedBooking.id
       );
@@ -164,14 +200,6 @@ export default function BookingsDashboard() {
       });
 
       if (error) throw error;
-
-      // Link contract to signature request
-      if (contract && request) {
-        await supabase
-          .from("contracts")
-          .update({ signature_request_id: request.id })
-          .eq("id", contract.id);
-      }
 
       toast({ 
         title: "Signature request sent",

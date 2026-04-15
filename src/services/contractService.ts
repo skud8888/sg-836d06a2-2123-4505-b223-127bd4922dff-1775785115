@@ -306,8 +306,8 @@ export const contractService = {
   /**
    * Get signed contracts for a booking
    */
-  async getBookingContracts(bookingId: string): Promise<Tables<"contracts">[]> {
-    const { data } = await supabase
+  async getBookingContracts(bookingId: string): Promise<any[]> {
+    const { data } = await (supabase as any)
       .from("contracts")
       .select("*")
       .eq("booking_id", bookingId)
@@ -325,7 +325,7 @@ export const contractService = {
     daysUntilExpiry: number;
     needsRenewal: boolean;
   }> {
-    const contract = await this.getContract(contractId);
+    const contract = await (this as any).getContract(contractId);
     if (!contract || !contract.expires_at) {
       return { isExpired: false, daysUntilExpiry: 0, needsRenewal: false };
     }
@@ -343,10 +343,10 @@ export const contractService = {
    * Renew expired contract
    */
   async renewContract(contractId: string, expiryMonths: number = 12): Promise<{
-    contract: Tables<"contracts"> | null;
+    contract: any | null;
     error: any;
   }> {
-    const originalContract = await this.getContract(contractId);
+    const originalContract = await (this as any).getContract(contractId);
     if (!originalContract) {
       return { contract: null, error: new Error("Contract not found") };
     }
@@ -354,7 +354,7 @@ export const contractService = {
     const expiresAt = new Date();
     expiresAt.setMonth(expiresAt.getMonth() + expiryMonths);
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("contracts")
       .insert({
         template_id: originalContract.template_id,
