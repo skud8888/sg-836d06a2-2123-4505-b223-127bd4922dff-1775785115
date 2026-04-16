@@ -1,4 +1,3 @@
-<![CDATA[
 import { supabase } from "@/integrations/supabase/client";
 
 export const gamificationService = {
@@ -211,4 +210,3 @@ export const gamificationService = {
     await supabase.from("leaderboard_cache").insert(leaderboardData);
   }
 };
-</file_content>

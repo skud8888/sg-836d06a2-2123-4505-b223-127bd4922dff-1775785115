@@ -1,4 +1,3 @@
-<![CDATA[
 import { supabase } from "@/integrations/supabase/client";
 
 export const recommendationService = {
@@ -94,4 +93,3 @@ export const recommendationService = {
       .slice(0, 4);
   }
 };
-</file_content>
