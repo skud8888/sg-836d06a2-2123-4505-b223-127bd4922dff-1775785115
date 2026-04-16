@@ -354,20 +354,7 @@ export default function TemplatesPage() {
                 id="content"
                 value={formData.templateContent}
                 onChange={(e) => setFormData({ ...formData, templateContent: e.target.value })}
-                placeholder={`ENROLLMENT AGREEMENT
-
-This agreement is made between:
-Training Centre (Provider)
-and
-{{student_name}} (Student)
-
-Course: {{course_name}} ({{course_code}})
-Start Date: {{class_start_date}}
-Location: {{location}}
-
-Total Fee: $${"{{total_amount}}"}
-
-By signing this agreement, the student agrees to...`}
+                placeholder={"ENROLLMENT AGREEMENT\n\nThis agreement is made between:\nTraining Centre (Provider)\nand\n{{student_name}} (Student)\n\nCourse: {{course_name}} ({{course_code}})\nStart Date: {{class_start_date}}\nLocation: {{location}}\n\nTotal Fee: ${{total_amount}}\n\nBy signing this agreement, the student agrees to..."}
                 rows={15}
                 className="font-mono text-sm"
               />
