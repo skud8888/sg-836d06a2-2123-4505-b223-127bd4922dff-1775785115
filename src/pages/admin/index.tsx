@@ -130,7 +130,16 @@ export default function AdminDashboard() {
   };
 
   // Organized dashboard sections
-  const dashboardSections = {
+  const dashboardSections: Record<string, {
+    title: string;
+    description: string;
+    icon: any;
+    href: string;
+    color: string;
+    tourId?: string;
+    badge?: string;
+    show?: boolean;
+  }[]> = {
     quickActions: [
       {
         title: "Bookings",
