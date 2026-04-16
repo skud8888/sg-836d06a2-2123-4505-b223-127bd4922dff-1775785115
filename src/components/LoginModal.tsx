@@ -217,7 +217,16 @@ export function LoginModal({ open, onOpenChange, defaultTab = "admin" }: LoginMo
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="student-password">Password</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="student-password">Password</Label>
+                  <Link 
+                    href="/student/reset-password" 
+                    className="text-xs text-primary hover:underline"
+                    onClick={() => onOpenChange(false)}
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
                 <Input
                   id="student-password"
                   type="password"
