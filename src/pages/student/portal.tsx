@@ -37,6 +37,7 @@ interface Enrollment {
   amount_paid: number;
   amount_due: number;
   created_at: string;
+  course_template_id: string;
   course: {
     name: string;
     duration_hours: number;
@@ -45,6 +46,7 @@ interface Enrollment {
 
 interface Progress {
   id: string;
+  enrollment_id: string;
   completion_percentage: number;
   status: string;
   started_at: string;

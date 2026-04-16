@@ -136,7 +136,7 @@ export function AdminWelcomeTour() {
         .from("user_onboarding")
         .select("*")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (onboarding && !onboarding.is_completed) {
         setIsVisible(true);

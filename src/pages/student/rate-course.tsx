@@ -68,7 +68,7 @@ export default function RateCoursePage() {
           course_templates (name),
           scheduled_classes (id, start_datetime, end_datetime, location)
         `)
-        .eq("id", enrollmentId)
+        .eq("id", enrollmentId as string)
         .eq("student_id", user.id)
         .single();
 

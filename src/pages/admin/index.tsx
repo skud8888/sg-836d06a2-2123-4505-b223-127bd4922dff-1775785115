@@ -84,8 +84,8 @@ export default function AdminDashboard() {
       const { data: classes } = await supabase
         .from("scheduled_classes")
         .select("id")
-        .gte("start_date", new Date().toISOString())
-        .lte("start_date", nextWeek.toISOString())
+        .gte("start_datetime", new Date().toISOString())
+        .lte("start_datetime", nextWeek.toISOString())
         .eq("status", "scheduled");
 
       // Get active students (enrolled in current courses)
@@ -109,7 +109,7 @@ export default function AdminDashboard() {
         .from("payments")
         .select("amount")
         .eq("status", "completed")
-        .gte("payment_date", firstDayOfMonth.toISOString());
+        .gte("created_at", firstDayOfMonth.toISOString());
 
       const revenue = payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
 
