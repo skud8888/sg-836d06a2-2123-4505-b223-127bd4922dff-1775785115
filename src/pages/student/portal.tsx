@@ -263,7 +263,10 @@ export default function StudentPortalPage() {
       if (percentage === 100) {
         const progress = progressData.find(p => p.id === progressId);
         if (progress && !progress.certificate_issued) {
-          await generateCertificate(progressId, progress.course_template_id);
+          const enrollment = enrollments.find(e => e.id === progress.enrollment_id);
+          if (enrollment && enrollment.course_template_id) {
+            await generateCertificate(progressId, enrollment.course_template_id);
+          }
         }
       }
 
@@ -504,7 +507,13 @@ export default function StudentPortalPage() {
                               </span>
                             </div>
                           </div>
-                          <div className="mt-4 flex gap-2">
+                          <div className="mt-4 flex flex-wrap gap-2">
+                            <Button size="sm" variant="outline" asChild>
+                              <Link href={`/courses/${enrollment.course_template_id}/forum`}>
+                                <MessageSquare className="h-4 w-4 mr-2" />
+                                Course Q&A
+                              </Link>
+                            </Button>
                             {enrollment.amount_due > 0 && (
                               <Button size="sm">
                                 Make Payment
