@@ -205,81 +205,75 @@ export default function HomePage() {
       
       <main className="min-h-screen bg-background overflow-visible">
         {/* Hero Section */}
-        <section className="relative overflow-hidden bg-gradient-to-b from-primary/5 via-background to-background py-20 md:py-32">
-          <div className="absolute inset-0 bg-grid-white/10 bg-[size:20px_20px] [mask-image:radial-gradient(white,transparent_85%)]" />
-          <div className="container mx-auto px-4 relative z-10">
-            <div className="max-w-4xl mx-auto text-center animate-fade-in">
-              <Badge className="mb-4 text-sm" variant="secondary">
-                <Star className="h-3 w-3 mr-1 fill-current" />
-                Trusted by 500+ Training Centers Worldwide
-              </Badge>
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 bg-gradient-to-r from-primary via-primary to-primary/60 bg-clip-text text-transparent leading-tight overflow-visible pb-2 lg:pb-4">
-                Transform Your Training Center Management
-              </h1>
-              <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">
-                All-in-one platform for bookings, student management, compliance, payments, and AI-powered insights. 
-                Built for modern training centers who demand excellence.
-              </p>
-              
-              {/* Portal Buttons for Authenticated Users */}
-              {isAuthenticated ? (
-                <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-                  {isAdmin && (
-                    <Link href="/admin">
-                      <Button size="lg" className="group transition-all hover:scale-105 text-lg px-8 py-6">
-                        <LayoutDashboard className="mr-2 h-5 w-5" />
-                        Admin Dashboard
-                        <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-                      </Button>
-                    </Link>
-                  )}
-                  {isStudent && (
-                    <Link href="/student/portal">
-                      <Button size="lg" className="group transition-all hover:scale-105 text-lg px-8 py-6">
-                        <GraduationCap className="mr-2 h-5 w-5" />
-                        Student Portal
-                        <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-                      </Button>
-                    </Link>
-                  )}
-                  <Link href="/courses">
-                    <Button size="lg" variant="outline" className="transition-all hover:scale-105 text-lg px-8 py-6">
-                      Browse Courses
-                    </Button>
-                  </Link>
-                </div>
-              ) : (
-                <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-                  <Link href="/courses">
-                    <Button size="lg" className="group transition-all hover:scale-105 text-lg px-8 py-6">
-                      Browse Courses
-                      <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-                    </Button>
-                  </Link>
-                  <Link href="/contact">
-                    <Button size="lg" variant="outline" className="transition-all hover:scale-105 text-lg px-8 py-6">
-                      Schedule a Demo
-                    </Button>
-                  </Link>
-                </div>
-              )}
-              
-              {/* Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 mt-16">
-                {[
-                  { label: "Active Students", value: "1,000+", icon: Users, color: "text-blue-600 dark:text-blue-400" },
-                  { label: "Courses Delivered", value: "500+", icon: BookOpen, color: "text-green-600 dark:text-green-400" },
-                  { label: "Satisfaction Rate", value: "98%", icon: Star, color: "text-yellow-600 dark:text-yellow-400" },
-                  { label: "Years Experience", value: "15+", icon: Award, color: "text-purple-600 dark:text-purple-400" }
-                ].map((stat, i) => (
-                  <div key={i} className="animate-slide-up bg-card/50 backdrop-blur-sm rounded-lg p-6 border border-border/50 hover:border-primary/50 transition-all hover:scale-105" style={{ animationDelay: `${i * 100}ms` }}>
-                    <stat.icon className={`h-8 w-8 mx-auto mb-3 ${stat.color}`} />
-                    <div className="text-3xl md:text-4xl font-bold mb-1">{stat.value}</div>
-                    <div className="text-sm text-muted-foreground">{stat.label}</div>
-                  </div>
-                ))}
-              </div>
+        <section className="relative py-20 px-4 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-accent/5 to-background -z-10" />
+          
+          <div className="max-w-6xl mx-auto text-center space-y-8">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
+              <Sparkles className="h-4 w-4" />
+              Professional Training & Certification Platform
             </div>
+
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight">
+              Your Gateway to
+              <span className="block bg-gradient-to-r from-primary via-primary/80 to-accent bg-clip-text text-transparent">
+                Professional Excellence
+              </span>
+            </h1>
+
+            <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+              Industry-leading training programs with expert instructors, hands-on learning, and recognized certifications.
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+              {user ? (
+                user.user_metadata?.role === "student" ? (
+                  <Button 
+                    size="lg" 
+                    onClick={() => router.push("/student/portal")}
+                    className="text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all"
+                  >
+                    Go to Student Portal
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                ) : (
+                  <Button 
+                    size="lg" 
+                    onClick={() => router.push("/admin")}
+                    className="text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all"
+                  >
+                    Go to Dashboard
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                )
+              ) : (
+                <>
+                  <Button 
+                    size="lg" 
+                    onClick={() => router.push("/courses")}
+                    className="text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all"
+                  >
+                    Browse Courses
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                  <Button 
+                    size="lg" 
+                    variant="outline"
+                    onClick={() => router.push("/student/portal")}
+                    className="text-lg px-8 py-6 border-2 hover:bg-primary/5"
+                  >
+                    <GraduationCap className="mr-2 h-5 w-5" />
+                    Student Portal
+                  </Button>
+                </>
+              )}
+            </div>
+
+            {!user && (
+              <p className="text-sm text-muted-foreground pt-2">
+                Already enrolled? Access your courses, certificates, and progress in the Student Portal
+              </p>
+            )}
           </div>
         </section>
 
@@ -879,6 +873,119 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+
+        {/* Features Section */}
+        <Features />
+
+        {/* Student Portal CTA Section - For Guests */}
+        {!user && (
+          <section className="py-20 px-4 bg-gradient-to-br from-primary/5 via-accent/5 to-background">
+            <div className="max-w-6xl mx-auto">
+              <div className="grid md:grid-cols-2 gap-12 items-center">
+                <div className="space-y-6">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
+                    <GraduationCap className="h-4 w-4" />
+                    For Students
+                  </div>
+                  
+                  <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">
+                    Everything You Need in One Place
+                  </h2>
+                  
+                  <p className="text-lg text-muted-foreground leading-relaxed">
+                    Access your personalized learning dashboard with course materials, schedules, certificates, and progress tracking - all in the Student Portal.
+                  </p>
+
+                  <div className="space-y-4 pt-4">
+                    <div className="flex items-start gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <BookOpen className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold mb-1">Course Materials</h3>
+                        <p className="text-sm text-muted-foreground">Access all your learning resources, documents, and study materials</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <Calendar className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold mb-1">Class Schedule</h3>
+                        <p className="text-sm text-muted-foreground">View upcoming classes, attendance records, and session details</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <Award className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold mb-1">Certificates</h3>
+                        <p className="text-sm text-muted-foreground">Download and share your earned certificates and credentials</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <BarChart3 className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold mb-1">Progress Tracking</h3>
+                        <p className="text-sm text-muted-foreground">Monitor your learning journey and achievement milestones</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-4 pt-6">
+                    <Button 
+                      size="lg"
+                      onClick={() => router.push("/student/portal")}
+                      className="text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all"
+                    >
+                      <GraduationCap className="mr-2 h-5 w-5" />
+                      Access Student Portal
+                    </Button>
+                    <Button 
+                      size="lg"
+                      variant="outline"
+                      onClick={() => router.push("/courses")}
+                      className="text-lg px-8 py-6 border-2"
+                    >
+                      Explore Courses
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <div className="aspect-square rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 p-8 backdrop-blur-sm border border-primary/10">
+                    <div className="h-full w-full rounded-xl bg-background/50 backdrop-blur-sm border border-primary/20 flex flex-col items-center justify-center gap-6 p-8">
+                      <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
+                        <GraduationCap className="h-10 w-10 text-primary" />
+                      </div>
+                      <div className="text-center space-y-2">
+                        <h3 className="text-2xl font-bold">Student Portal</h3>
+                        <p className="text-muted-foreground">Your personalized learning hub</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 w-full">
+                        <div className="text-center p-4 rounded-lg bg-primary/5">
+                          <div className="text-3xl font-bold text-primary">24/7</div>
+                          <div className="text-sm text-muted-foreground">Access</div>
+                        </div>
+                        <div className="text-center p-4 rounded-lg bg-primary/5">
+                          <div className="text-3xl font-bold text-primary">100%</div>
+                          <div className="text-sm text-muted-foreground">Online</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* CTA Section */}
         <section className="py-20 md:py-28 bg-primary text-primary-foreground relative overflow-hidden">

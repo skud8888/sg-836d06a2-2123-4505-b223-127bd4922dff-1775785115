@@ -103,92 +103,33 @@ export function Navigation() {
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-6">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
-                >
-                  <link.icon className="h-4 w-4" />
-                  {link.label}
-                </Link>
-              ))}
-
-              {isAuthenticated && (
-                <>
-                  <GlobalSearch />
-                  <NotificationCenter />
-                  <ThemeSwitch />
-                  
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="gap-2">
-                        <User className="h-4 w-4" />
-                        {userName}
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
-                      <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      
-                      {isAdmin && (
-                        <DropdownMenuItem asChild>
-                          <Link href="/admin" className="cursor-pointer">
-                            <LayoutDashboard className="h-4 w-4 mr-2" />
-                            Admin Dashboard
-                          </Link>
-                        </DropdownMenuItem>
-                      )}
-                      
-                      <DropdownMenuItem asChild>
-                        <Link href="/student/portal" className="cursor-pointer">
-                          <GraduationCap className="h-4 w-4 mr-2" />
-                          Student Portal
-                        </Link>
-                      </DropdownMenuItem>
-
-                      {isAdmin && (
-                        <DropdownMenuItem asChild>
-                          <Link href="/admin/profile" className="cursor-pointer">
-                            <User className="h-4 w-4 mr-2" />
-                            Profile
-                          </Link>
-                        </DropdownMenuItem>
-                      )}
-
-                      {isAdmin && (
-                        <DropdownMenuItem asChild>
-                          <Link href="/admin/settings" className="cursor-pointer">
-                            <Settings className="h-4 w-4 mr-2" />
-                            Settings
-                          </Link>
-                        </DropdownMenuItem>
-                      )}
-
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={handleSignOut} className="text-red-600 cursor-pointer">
-                        <LogOut className="h-4 w-4 mr-2" />
-                        Sign Out
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </>
-              )}
-
-              {!isAuthenticated && (
-                <>
-                  <ThemeSwitch />
-                  <Button onClick={() => setLoginModalOpen(true)} variant="ghost">
-                    <LogIn className="h-4 w-4 mr-2" />
-                    Sign In
-                  </Button>
-                  <Link href="/courses">
-                    <Button>Browse Courses</Button>
-                  </Link>
-                </>
-              )}
-            </div>
+            <nav className="hidden md:flex items-center gap-6">
+              <Link 
+                href="/courses" 
+                className="text-sm font-medium hover:text-primary transition-colors"
+              >
+                Courses
+              </Link>
+              <Link 
+                href="/about" 
+                className="text-sm font-medium hover:text-primary transition-colors"
+              >
+                About
+              </Link>
+              <Link 
+                href="/student/portal" 
+                className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-1"
+              >
+                <GraduationCap className="h-4 w-4" />
+                Student Portal
+              </Link>
+              <Link 
+                href="/contact" 
+                className="text-sm font-medium hover:text-primary transition-colors"
+              >
+                Contact
+              </Link>
+            </nav>
 
             {/* Mobile Menu Button */}
             <button
@@ -204,17 +145,35 @@ export function Navigation() {
           {mobileMenuOpen && (
             <div className="md:hidden py-4 border-t border-border">
               <div className="flex flex-col space-y-4">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2 px-2"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <link.icon className="h-4 w-4" />
-                    {link.label}
-                  </Link>
-                ))}
+                <Link 
+                  href="/courses"
+                  className="block px-4 py-3 hover:bg-accent rounded-lg transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Courses
+                </Link>
+                <Link 
+                  href="/about"
+                  className="block px-4 py-3 hover:bg-accent rounded-lg transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  About
+                </Link>
+                <Link 
+                  href="/student/portal"
+                  className="block px-4 py-3 hover:bg-accent rounded-lg transition-colors flex items-center gap-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <GraduationCap className="h-4 w-4" />
+                  Student Portal
+                </Link>
+                <Link 
+                  href="/contact"
+                  className="block px-4 py-3 hover:bg-accent rounded-lg transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Contact
+                </Link>
 
                 {isAuthenticated ? (
                   <>
