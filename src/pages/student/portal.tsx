@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { gamificationService } from "@/services/gamificationService";
+import { recommendationService } from "@/services/recommendationService";
 import { 
   Loader2, 
   BookOpen, 
@@ -98,26 +100,44 @@ export default function StudentPortalPage() {
   const [courseModules, setCourseModules] = useState<CourseModule[]>([]);
   const [courseLessons, setCourseLessons] = useState<CourseLesson[]>([]);
   const [loadingProgress, setLoadingProgress] = useState(false);
+  const [gamificationStats, setGamificationStats] = useState<any>(null);
+  const [recommendations, setRecommendations] = useState<any[]>([]);
 
   useEffect(() => {
     checkAuth();
   }, []);
 
   const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      router.push("/admin/login");
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      router.push("/");
       return;
     }
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", session.user.id)
-      .single();
+    setUser(user);
+    await loadStudentData(user.id);
+    await loadGamificationStats(user.id);
+    await loadRecommendations(user.id);
+  };
 
-    setUser(profile);
-    loadStudentData(session.user.id);
+  const loadGamificationStats = async (userId: string) => {
+    try {
+      const stats = await gamificationService.getStudentStats(userId);
+      setGamificationStats(stats);
+    } catch (err) {
+      console.error("Error loading gamification stats:", err);
+    }
+  };
+
+  const loadRecommendations = async (userId: string) => {
+    try {
+      await recommendationService.generateRecommendations(userId);
+      const recs = await recommendationService.getRecommendations(userId);
+      setRecommendations(recs);
+    } catch (err) {
+      console.error("Error loading recommendations:", err);
+    }
   };
 
   const loadStudentData = async (userId: string) => {
@@ -234,6 +254,17 @@ export default function StudentPortalPage() {
 
       if (error) throw error;
 
+      // Award points for completing lesson
+      if (user) {
+        await gamificationService.awardPoints(
+          user.id,
+          10,
+          "lesson_complete",
+          "Completed a lesson"
+        );
+        await loadGamificationStats(user.id);
+      }
+
       // Reload completions
       const { data: completions } = await supabase
         .from("lesson_completions")
@@ -259,20 +290,34 @@ export default function StudentPortalPage() {
 
       if (progressError) throw progressError;
 
-      // If 100% complete, generate certificate automatically
+      // If 100% complete, generate certificate automatically and award bonus points
       if (percentage === 100) {
         const progress = progressData.find(p => p.id === progressId);
         if (progress && !progress.certificate_issued) {
           const enrollment = enrollments.find(e => e.id === progress.enrollment_id);
           if (enrollment && enrollment.course_template_id) {
             await generateCertificate(progressId, enrollment.course_template_id);
+            
+            // Award bonus points for course completion
+            if (user) {
+              await gamificationService.awardPoints(
+                user.id,
+                100,
+                "course_complete",
+                "Completed a full course"
+              );
+              await gamificationService.checkAchievements(user.id);
+              await loadGamificationStats(user.id);
+            }
           }
         }
       }
 
       toast({
         title: "Progress saved",
-        description: percentage === 100 ? "Congratulations! Course completed! Certificate generated." : "Lesson marked as complete"
+        description: percentage === 100 
+          ? "Congratulations! Course completed! Certificate generated. +100 points!" 
+          : "Lesson marked as complete. +10 points!"
       });
 
       // Reload progress data
@@ -376,20 +421,59 @@ export default function StudentPortalPage() {
       <div className="min-h-screen bg-background pt-16">
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h1 className="text-3xl font-bold mb-2">Student Portal</h1>
-                <p className="text-muted-foreground">
-                  Welcome back, {user?.full_name || user?.email}
-                </p>
-              </div>
-              <Button variant="outline" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
+          <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <h1 className="text-4xl font-bold">Welcome back!</h1>
+              <p className="text-muted-foreground">Continue your learning journey</p>
             </div>
+            <Button onClick={handleLogout} variant="outline">
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out
+            </Button>
           </div>
+
+          {/* Gamification Stats Banner */}
+          {gamificationStats && (
+            <Card className="mb-6 bg-gradient-to-r from-primary/10 via-accent/10 to-background">
+              <CardContent className="pt-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <Link href="/student/gamification" className="group cursor-pointer">
+                    <div className="text-center p-3 rounded-lg hover:bg-background transition-colors">
+                      <div className="flex items-center justify-center gap-2 mb-1">
+                        <Star className="h-5 w-5 text-yellow-600" />
+                        <p className="font-bold text-2xl">{gamificationStats.total_points}</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground group-hover:text-primary transition-colors">Points</p>
+                    </div>
+                  </Link>
+                  <Link href="/student/gamification" className="group cursor-pointer">
+                    <div className="text-center p-3 rounded-lg hover:bg-background transition-colors">
+                      <div className="flex items-center justify-center gap-2 mb-1">
+                        <Award className="h-5 w-5 text-purple-600" />
+                        <p className="font-bold text-2xl">Lv{gamificationStats.current_level}</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground group-hover:text-primary transition-colors">Level</p>
+                    </div>
+                  </Link>
+                  <Link href="/student/gamification" className="group cursor-pointer">
+                    <div className="text-center p-3 rounded-lg hover:bg-background transition-colors">
+                      <div className="flex items-center justify-center gap-2 mb-1">
+                        <Clock className="h-5 w-5 text-orange-600" />
+                        <p className="font-bold text-2xl">{gamificationStats.streak_days}🔥</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground group-hover:text-primary transition-colors">Day Streak</p>
+                    </div>
+                  </Link>
+                  <Link href="/student/gamification" className="group cursor-pointer">
+                    <div className="text-center p-3 rounded-lg hover:bg-background transition-colors bg-background border-2 border-primary/20">
+                      <p className="font-semibold text-primary mb-1">View All Achievements</p>
+                      <p className="text-xs text-muted-foreground">→</p>
+                    </div>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Quick Actions */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -438,15 +522,16 @@ export default function StudentPortalPage() {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : (
-            <Tabs defaultValue="enrollments" className="space-y-6">
-              <TabsList>
-                <TabsTrigger value="enrollments">My Enrollments</TabsTrigger>
-                <TabsTrigger value="progress">Course Progress</TabsTrigger>
+            <Tabs defaultValue="courses" className="space-y-4">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="courses">My Courses</TabsTrigger>
+                <TabsTrigger value="progress">Progress</TabsTrigger>
                 <TabsTrigger value="certificates">Certificates</TabsTrigger>
+                <TabsTrigger value="recommended">Recommended</TabsTrigger>
               </TabsList>
 
               {/* Enrollments Tab */}
-              <TabsContent value="enrollments" className="space-y-4">
+              <TabsContent value="courses" className="space-y-4">
                 {enrollments.length === 0 ? (
                   <Card>
                     <CardContent className="pt-12 pb-12 text-center">
@@ -753,6 +838,68 @@ export default function StudentPortalPage() {
                           </CardContent>
                         </Card>
                       ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              {/* Recommended Courses Tab */}
+              <TabsContent value="recommended" className="space-y-4">
+                {recommendations.length === 0 ? (
+                  <Card>
+                    <CardContent className="pt-12 pb-12 text-center">
+                      <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">No Recommendations Yet</h3>
+                      <p className="text-muted-foreground mb-4">
+                        Enroll in more courses to get personalized recommendations
+                      </p>
+                      <Button asChild>
+                        <Link href="/courses">Browse All Courses</Link>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">Recommended For You</h3>
+                      <p className="text-sm text-muted-foreground">Based on your learning history and similar students</p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {recommendations.map((rec) => (
+                        <Card key={rec.id} className="hover:shadow-lg transition-shadow">
+                          <CardHeader>
+                            <div className="flex items-start justify-between mb-2">
+                              <CardTitle className="text-lg">{rec.course_templates.name}</CardTitle>
+                              {rec.course_templates.is_featured && (
+                                <Badge className="ml-2 bg-amber-600">Featured</Badge>
+                              )}
+                            </div>
+                            <CardDescription className="line-clamp-2">
+                              {rec.course_templates.description}
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <Clock className="h-4 w-4" />
+                                <span>{rec.course_templates.duration_hours} hours</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <DollarSign className="h-4 w-4" />
+                                <span>${rec.course_templates.price_full}</span>
+                              </div>
+                              <div className="p-2 bg-primary/10 rounded text-xs">
+                                <p className="font-medium text-primary">{rec.reason}</p>
+                              </div>
+                              <Button className="w-full" asChild>
+                                <Link href={`/enroll/${rec.course_template_id}`}>
+                                  Enroll Now
+                                </Link>
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
                   </div>
                 )}
               </TabsContent>

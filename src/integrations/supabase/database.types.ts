@@ -838,6 +838,48 @@ export type Database = {
           },
         ]
       }
+      course_recommendations: {
+        Row: {
+          course_template_id: string
+          created_at: string | null
+          id: string
+          reason: string | null
+          recommendation_score: number | null
+          student_id: string
+        }
+        Insert: {
+          course_template_id: string
+          created_at?: string | null
+          id?: string
+          reason?: string | null
+          recommendation_score?: number | null
+          student_id: string
+        }
+        Update: {
+          course_template_id?: string
+          created_at?: string | null
+          id?: string
+          reason?: string | null
+          recommendation_score?: number | null
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_recommendations_course_template_id_fkey"
+            columns: ["course_template_id"]
+            isOneToOne: false
+            referencedRelation: "course_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_recommendations_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       course_templates: {
         Row: {
           code: string
@@ -1698,6 +1740,44 @@ export type Database = {
         }
         Relationships: []
       }
+      leaderboard_cache: {
+        Row: {
+          badges_count: number | null
+          full_name: string | null
+          id: string
+          rank: number | null
+          student_id: string
+          total_points: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          badges_count?: number | null
+          full_name?: string | null
+          id?: string
+          rank?: number | null
+          student_id: string
+          total_points?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          badges_count?: number | null
+          full_name?: string | null
+          id?: string
+          rank?: number | null
+          student_id?: string
+          total_points?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leaderboard_cache_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       learning_objectives: {
         Row: {
           created_at: string | null
@@ -2268,6 +2348,41 @@ export type Database = {
           },
         ]
       }
+      point_transactions: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          description: string | null
+          id: string
+          points: number
+          student_id: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          points: number
+          student_id: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          points?: number
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "point_transactions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pre_course_materials: {
         Row: {
           course_template_id: string
@@ -2732,6 +2847,88 @@ export type Database = {
           },
         ]
       }
+      student_badges: {
+        Row: {
+          badge_description: string | null
+          badge_name: string
+          badge_type: string
+          earned_at: string | null
+          id: string
+          points_awarded: number | null
+          student_id: string
+        }
+        Insert: {
+          badge_description?: string | null
+          badge_name: string
+          badge_type: string
+          earned_at?: string | null
+          id?: string
+          points_awarded?: number | null
+          student_id: string
+        }
+        Update: {
+          badge_description?: string | null
+          badge_name?: string
+          badge_type?: string
+          earned_at?: string | null
+          id?: string
+          points_awarded?: number | null
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_badges_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_points: {
+        Row: {
+          created_at: string | null
+          current_level: number | null
+          id: string
+          last_activity_date: string | null
+          points_to_next_level: number | null
+          streak_days: number | null
+          student_id: string
+          total_points: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_level?: number | null
+          id?: string
+          last_activity_date?: string | null
+          points_to_next_level?: number | null
+          streak_days?: number | null
+          student_id: string
+          total_points?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_level?: number | null
+          id?: string
+          last_activity_date?: string | null
+          points_to_next_level?: number | null
+          streak_days?: number | null
+          student_id?: string
+          total_points?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_points_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_progress: {
         Row: {
           certificate_issued: boolean | null
@@ -3172,6 +3369,15 @@ export type Database = {
       }
     }
     Functions: {
+      award_points: {
+        Args: {
+          p_action_type: string
+          p_description?: string
+          p_points: number
+          p_student_id: string
+        }
+        Returns: undefined
+      }
       calculate_churn_risk: { Args: { p_booking_id: string }; Returns: Json }
       check_user_role: { Args: { check_role: string }; Returns: boolean }
       complete_signature: {
@@ -3205,6 +3411,10 @@ export type Database = {
       detect_upsell_opportunities: {
         Args: { p_booking_id: string }
         Returns: Json
+      }
+      generate_course_recommendations: {
+        Args: { p_student_id: string }
+        Returns: undefined
       }
       generate_student_token: { Args: never; Returns: string }
       get_next_invoice_number: { Args: never; Returns: string }
@@ -3256,6 +3466,7 @@ export type Database = {
           title: string
         }[]
       }
+      update_daily_streak: { Args: { p_student_id: string }; Returns: number }
     }
     Enums: {
       [_ in never]: never
