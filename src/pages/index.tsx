@@ -1,9 +1,11 @@
 import { Navigation } from "@/components/Navigation";
 import { SEO } from "@/components/SEO";
+import { Features } from "@/components/Features";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { 
@@ -42,6 +44,7 @@ import {
 export default function HomePage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     checkAuth();
@@ -226,8 +229,8 @@ export default function HomePage() {
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-              {user ? (
-                user.user_metadata?.role === "student" ? (
+              {isAuthenticated ? (
+                userRole === "student" ? (
                   <Button 
                     size="lg" 
                     onClick={() => router.push("/student/portal")}
@@ -269,7 +272,7 @@ export default function HomePage() {
               )}
             </div>
 
-            {!user && (
+            {!isAuthenticated && (
               <p className="text-sm text-muted-foreground pt-2">
                 Already enrolled? Access your courses, certificates, and progress in the Student Portal
               </p>
@@ -848,7 +851,7 @@ export default function HomePage() {
                     <ul className="space-y-3 mb-6">
                       {plan.features.map((feature, idx) => (
                         <li key={idx} className="flex items-start gap-2">
-                          <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+                          <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0" />
                           <span className="text-sm">{feature}</span>
                         </li>
                       ))}
@@ -878,7 +881,7 @@ export default function HomePage() {
         <Features />
 
         {/* Student Portal CTA Section - For Guests */}
-        {!user && (
+        {!isAuthenticated && (
           <section className="py-20 px-4 bg-gradient-to-br from-primary/5 via-accent/5 to-background">
             <div className="max-w-6xl mx-auto">
               <div className="grid md:grid-cols-2 gap-12 items-center">
