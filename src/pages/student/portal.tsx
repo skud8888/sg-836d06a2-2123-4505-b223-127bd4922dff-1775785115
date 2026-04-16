@@ -247,14 +247,29 @@ export default function StudentPortalPage() {
       const completedLessons = (completions || []).filter(c => c.completed).length;
       const percentage = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
 
-      await supabase
+      // Update progress
+      const { error: progressError } = await supabase
         .from("student_progress")
-        .update({ completion_percentage: percentage })
+        .update({ 
+          completion_percentage: percentage,
+          status: percentage === 100 ? "completed" : "in_progress",
+          completed_at: percentage === 100 ? new Date().toISOString() : null
+        })
         .eq("id", progressId);
+
+      if (progressError) throw progressError;
+
+      // If 100% complete, generate certificate automatically
+      if (percentage === 100) {
+        const progress = progressData.find(p => p.id === progressId);
+        if (progress && !progress.certificate_issued) {
+          await generateCertificate(progressId, progress.course_template_id);
+        }
+      }
 
       toast({
         title: "Progress saved",
-        description: "Lesson marked as complete"
+        description: percentage === 100 ? "Congratulations! Course completed! Certificate generated." : "Lesson marked as complete"
       });
 
       // Reload progress data
@@ -271,6 +286,55 @@ export default function StudentPortalPage() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.push("/");
+  };
+
+  const generateCertificate = async (progressId: string, courseId: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Check if certificate already exists
+      const { data: existing } = await supabase
+        .from("certificates")
+        .select("id")
+        .eq("student_id", user.id)
+        .eq("course_template_id", courseId)
+        .single();
+
+      if (existing) return; // Already has certificate
+
+      // Generate certificate
+      const certificateNumber = `CERT-${new Date().getFullYear()}-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+      const verificationCode = Math.random().toString(36).substring(2, 15).toUpperCase();
+
+      const { error } = await supabase
+        .from("certificates")
+        .insert({
+          student_id: user.id,
+          course_template_id: courseId,
+          certificate_number: certificateNumber,
+          verification_code: verificationCode,
+          issue_date: new Date().toISOString().split("T")[0],
+          completion_date: new Date().toISOString().split("T")[0],
+          status: "active"
+        });
+
+      if (error) throw error;
+
+      // Update progress to mark certificate as issued
+      await supabase
+        .from("student_progress")
+        .update({ certificate_issued: true })
+        .eq("id", progressId);
+
+      toast({
+        title: "Certificate Generated!",
+        description: "Your completion certificate is now available in the Certificates tab",
+        duration: 5000
+      });
+    } catch (err: any) {
+      console.error("Error generating certificate:", err);
+    }
   };
 
   const getStatusBadge = (status: string) => {

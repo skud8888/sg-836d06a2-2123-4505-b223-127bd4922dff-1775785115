@@ -3119,6 +3119,10 @@ export type Database = {
         Args: { p_action: string; p_resource: string; p_user_id: string }
         Returns: boolean
       }
+      increment_thread_views: {
+        Args: { thread_id: string }
+        Returns: undefined
+      }
       is_admin: { Args: never; Returns: boolean }
       log_audit_event: {
         Args: {
