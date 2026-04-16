@@ -1,10 +1,24 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+interface SchedulerResult {
+  success: boolean;
+  sent: number;
+  failed: number;
+  types: {
+    booking_reminders: number;
+    signature_reminders: number;
+    payment_reminders: number;
+    course_updates: number;
+  };
+  errors?: string[];
+  duration?: number;
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -12,182 +26,322 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
+    const startTime = Date.now();
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get classes starting in 24 hours
-    const tomorrow = new Date();
-    tomorrow.setHours(tomorrow.getHours() + 24);
-    const tomorrowEnd = new Date(tomorrow);
-    tomorrowEnd.setHours(tomorrowEnd.getHours() + 1);
+    console.log("🔔 Starting notification scheduler...");
 
-    const { data: upcomingClasses, error: classError } = await supabaseClient
-      .from("scheduled_classes")
-      .select(`
-        id,
-        start_datetime,
-        location,
-        course_templates!scheduled_classes_course_template_id_fkey(name)
-      `)
-      .gte("start_datetime", tomorrow.toISOString())
-      .lte("start_datetime", tomorrowEnd.toISOString())
-      .eq("status", "scheduled");
+    let sent = 0;
+    let failed = 0;
+    const errors: string[] = [];
+    const types = {
+      booking_reminders: 0,
+      signature_reminders: 0,
+      payment_reminders: 0,
+      course_updates: 0,
+    };
 
-    if (classError) throw classError;
+    // 1. BOOKING REMINDERS - Send 24h before class
+    try {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(0, 0, 0, 0);
+      const dayAfterTomorrow = new Date(tomorrow);
+      dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 1);
 
-    let remindersSent = 0;
+      const { data: upcomingClasses } = await supabase
+        .from("scheduled_classes")
+        .select(`
+          *,
+          course:course_templates(*),
+          bookings(*)
+        `)
+        .gte("start_date", tomorrow.toISOString())
+        .lt("start_date", dayAfterTomorrow.toISOString())
+        .eq("status", "scheduled");
 
-    // For each upcoming class, send reminders to all students
-    for (const classData of upcomingClasses || []) {
-      const { data: bookings, error: bookingError } = await supabaseClient
-        .from("bookings")
-        .select("*")
-        .eq("scheduled_class_id", classData.id)
-        .in("status", ["confirmed", "pending"])
-        .is("reminder_sent_at", null);
+      for (const classItem of upcomingClasses || []) {
+        for (const booking of classItem.bookings || []) {
+          if (booking.status === "confirmed") {
+            // Check if reminder already sent
+            const { data: existing } = await supabase
+              .from("notifications")
+              .select("id")
+              .eq("user_id", booking.student_id)
+              .eq("type", "booking_reminder")
+              .eq("metadata->>booking_id", booking.id)
+              .single();
 
-      if (bookingError) continue;
+            if (!existing) {
+              const { error: notifError } = await supabase
+                .from("notifications")
+                .insert({
+                  user_id: booking.student_id,
+                  type: "booking_reminder",
+                  title: "Class Reminder - Tomorrow",
+                  message: `Your ${classItem.course.name} class is tomorrow at ${new Date(classItem.start_date).toLocaleTimeString()}. Location: ${classItem.location}`,
+                  metadata: {
+                    booking_id: booking.id,
+                    class_id: classItem.id,
+                    course_name: classItem.course.name,
+                  },
+                });
 
-      for (const booking of bookings || []) {
-        // Check notification preferences
-        const { data: profile } = await supabaseClient
-          .from("profiles")
-          .select("id")
-          .eq("email", booking.student_email)
-          .single();
-
-        let sendEmail = true;
-        let sendSMS = true;
-
-        if (profile?.id) {
-          const { data: prefs } = await supabaseClient
-            .from("notification_preferences")
-            .select("email_course_reminder, sms_course_reminder")
-            .eq("user_id", profile.id)
-            .single();
-
-          if (prefs) {
-            sendEmail = prefs.email_course_reminder;
-            sendSMS = prefs.sms_course_reminder;
+              if (notifError) {
+                errors.push(`Booking reminder failed for ${booking.id}: ${notifError.message}`);
+                failed++;
+              } else {
+                types.booking_reminders++;
+                sent++;
+              }
+            }
           }
         }
-
-        const classDate = new Date(classData.start_datetime).toLocaleDateString("en-AU", {
-          weekday: "long",
-          year: "numeric",
-          month: "long",
-          day: "numeric"
-        });
-        const classTime = new Date(classData.start_datetime).toLocaleTimeString("en-AU", {
-          hour: "2-digit",
-          minute: "2-digit"
-        });
-
-        // Send email reminder
-        if (sendEmail) {
-          const emailBody = `
-Hi ${booking.student_name},
-
-This is a friendly reminder that your ${classData.course_templates.name} course starts tomorrow.
-
-📅 Date: ${classDate}
-⏰ Time: ${classTime}
-📍 Location: ${classData.location}
-
-What to bring:
-• Photo ID (driver's license or passport)
-• USI number (if you have one)
-• Completed enrolment forms
-• Appropriate clothing and footwear
-
-See you tomorrow!
-
-GTS Training
-          `.trim();
-
-          await supabaseClient.from("email_queue").insert({
-            recipient_email: booking.student_email,
-            subject: `Reminder: ${classData.course_templates.name} - Tomorrow`,
-            html_content: emailBody,
-            template_type: "class_reminder_24h",
-            metadata: { booking_id: booking.id, class_id: classData.id }
-          });
-        }
-
-        // Send SMS reminder
-        if (sendSMS && booking.student_phone) {
-          await supabaseClient.from("sms_notifications").insert({
-            recipient_phone: booking.student_phone,
-            recipient_user_id: profile?.id || null,
-            message_body: `Reminder: ${classData.course_templates.name} tomorrow at ${classTime}. Location: ${classData.location}. See you there!`,
-            notification_type: "class_reminder",
-            related_booking_id: booking.id,
-            related_class_id: classData.id,
-            status: "pending"
-          });
-        }
-
-        // Mark reminder as sent
-        await supabaseClient
-          .from("bookings")
-          .update({ reminder_sent_at: new Date().toISOString() })
-          .eq("id", booking.id);
-
-        remindersSent++;
       }
+    } catch (err) {
+      console.error("❌ Booking reminders error:", err);
+      errors.push(`Booking reminders: ${err.message}`);
     }
 
-    // Process pending email queue
-    const { data: pendingEmails } = await supabaseClient
-      .from("email_queue")
-      .select("*")
-      .eq("status", "pending")
-      .order("created_at", { ascending: true })
-      .limit(50);
+    // 2. SIGNATURE REMINDERS - Pending signatures older than 3 days
+    try {
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
 
-    let emailsSent = 0;
-    for (const email of pendingEmails || []) {
-      // Here you would integrate with your email provider (Resend, SendGrid, etc.)
-      // For now, we'll just mark them as sent
-      await supabaseClient
-        .from("email_queue")
-        .update({ status: "sent", sent_at: new Date().toISOString() })
-        .eq("id", email.id);
-      
-      emailsSent++;
+      const { data: pendingSignatures } = await supabase
+        .from("signature_requests")
+        .select("*")
+        .in("status", ["pending", "sent", "viewed"])
+        .lt("sent_at", threeDaysAgo.toISOString())
+        .gte("expires_at", new Date().toISOString());
+
+      for (const request of pendingSignatures || []) {
+        // Check if reminder sent in last 24h
+        const oneDayAgo = new Date();
+        oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+
+        const { data: recentReminder } = await supabase
+          .from("notifications")
+          .select("id")
+          .eq("type", "signature_reminder")
+          .eq("metadata->>signature_request_id", request.id)
+          .gte("created_at", oneDayAgo.toISOString())
+          .single();
+
+        if (!recentReminder) {
+          // Get booking details
+          const { data: booking } = await supabase
+            .from("bookings")
+            .select("*, student:profiles(*)")
+            .eq("id", request.booking_id)
+            .single();
+
+          if (booking && booking.student) {
+            const { error: notifError } = await supabase
+              .from("notifications")
+              .insert({
+                user_id: booking.student_id,
+                type: "signature_reminder",
+                title: "Signature Required",
+                message: `Please sign your enrollment contract. It expires on ${new Date(request.expires_at).toLocaleDateString()}.`,
+                metadata: {
+                  signature_request_id: request.id,
+                  booking_id: booking.id,
+                },
+              });
+
+            if (notifError) {
+              errors.push(`Signature reminder failed for ${request.id}: ${notifError.message}`);
+              failed++;
+            } else {
+              types.signature_reminders++;
+              sent++;
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error("❌ Signature reminders error:", err);
+      errors.push(`Signature reminders: ${err.message}`);
     }
 
-    // Process pending SMS queue
-    const { data: pendingSMS } = await supabaseClient
-      .from("sms_notifications")
-      .select("*")
-      .eq("status", "pending")
-      .order("created_at", { ascending: true })
-      .limit(50);
+    // 3. PAYMENT REMINDERS - Overdue installments
+    try {
+      const { data: overdueInstallments } = await supabase
+        .from("payment_plan_installments")
+        .select(`
+          *,
+          payment_plan:payment_plans(
+            *,
+            booking:bookings(
+              *,
+              student:profiles(*)
+            )
+          )
+        `)
+        .eq("status", "pending")
+        .lt("due_date", new Date().toISOString());
 
-    let smsSent = 0;
-    for (const sms of pendingSMS || []) {
-      // SMS would be sent via API route which handles Twilio
-      // Mark as pending for the API to process
-      smsSent++;
+      for (const installment of overdueInstallments || []) {
+        const plan = installment.payment_plan;
+        const booking = plan?.booking;
+        const student = booking?.student;
+
+        if (student) {
+          // Check if reminder sent in last 7 days
+          const sevenDaysAgo = new Date();
+          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+          const { data: recentReminder } = await supabase
+            .from("notifications")
+            .select("id")
+            .eq("user_id", student.id)
+            .eq("type", "payment_reminder")
+            .eq("metadata->>installment_id", installment.id)
+            .gte("created_at", sevenDaysAgo.toISOString())
+            .single();
+
+          if (!recentReminder) {
+            const daysOverdue = Math.floor(
+              (new Date().getTime() - new Date(installment.due_date).getTime()) / (1000 * 60 * 60 * 24)
+            );
+
+            const { error: notifError } = await supabase
+              .from("notifications")
+              .insert({
+                user_id: student.id,
+                type: "payment_reminder",
+                title: "Payment Overdue",
+                message: `Your payment of $${installment.amount} is ${daysOverdue} days overdue. Please pay as soon as possible to avoid late fees.`,
+                metadata: {
+                  installment_id: installment.id,
+                  payment_plan_id: plan.id,
+                  booking_id: booking.id,
+                  amount: installment.amount,
+                  days_overdue: daysOverdue,
+                },
+              });
+
+            if (notifError) {
+              errors.push(`Payment reminder failed for ${installment.id}: ${notifError.message}`);
+              failed++;
+            } else {
+              types.payment_reminders++;
+              sent++;
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error("❌ Payment reminders error:", err);
+      errors.push(`Payment reminders: ${err.message}`);
     }
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        remindersSent,
-        emailsSent,
-        smsSent,
-        timestamp: new Date().toISOString()
-      }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    // 4. COURSE UPDATES - New materials/announcements
+    try {
+      const oneDayAgo = new Date();
+      oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+
+      const { data: recentMaterials } = await supabase
+        .from("course_materials")
+        .select(`
+          *,
+          course:course_templates(*)
+        `)
+        .gte("created_at", oneDayAgo.toISOString());
+
+      for (const material of recentMaterials || []) {
+        // Get enrolled students
+        const { data: enrollments } = await supabase
+          .from("enrollments")
+          .select("student_id")
+          .eq("course_id", material.course_id)
+          .eq("status", "active");
+
+        for (const enrollment of enrollments || []) {
+          // Check if already notified
+          const { data: existing } = await supabase
+            .from("notifications")
+            .select("id")
+            .eq("user_id", enrollment.student_id)
+            .eq("type", "course_update")
+            .eq("metadata->>material_id", material.id)
+            .single();
+
+          if (!existing) {
+            const { error: notifError } = await supabase
+              .from("notifications")
+              .insert({
+                user_id: enrollment.student_id,
+                type: "course_update",
+                title: "New Course Material",
+                message: `New material available: ${material.title} for ${material.course.name}`,
+                metadata: {
+                  material_id: material.id,
+                  course_id: material.course_id,
+                  course_name: material.course.name,
+                },
+              });
+
+            if (notifError) {
+              errors.push(`Course update failed for ${material.id}: ${notifError.message}`);
+              failed++;
+            } else {
+              types.course_updates++;
+              sent++;
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error("❌ Course updates error:", err);
+      errors.push(`Course updates: ${err.message}`);
+    }
+
+    const duration = Math.floor((Date.now() - startTime) / 1000);
+
+    console.log(`✅ Notification scheduler completed!`);
+    console.log(`📊 Sent: ${sent}, Failed: ${failed}`);
+    console.log(`📧 Types: ${JSON.stringify(types)}`);
+    console.log(`⏱️ Duration: ${duration}s`);
+
+    const result: SchedulerResult = {
+      success: true,
+      sent,
+      failed,
+      types,
+      duration,
+    };
+
+    if (errors.length > 0) {
+      result.errors = errors;
+    }
+
+    return new Response(JSON.stringify(result), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200,
+    });
   } catch (error) {
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
-    );
+    console.error("❌ Scheduler failed:", error);
+
+    const result: SchedulerResult = {
+      success: false,
+      sent: 0,
+      failed: 0,
+      types: {
+        booking_reminders: 0,
+        signature_reminders: 0,
+        payment_reminders: 0,
+        course_updates: 0,
+      },
+      errors: [error.message || "Unknown error"],
+    };
+
+    return new Response(JSON.stringify(result), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500,
+    });
   }
 });
