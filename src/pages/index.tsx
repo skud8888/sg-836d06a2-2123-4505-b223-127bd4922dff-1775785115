@@ -1,6 +1,7 @@
 import { Navigation } from "@/components/Navigation";
 import { SEO } from "@/components/SEO";
 import { Features } from "@/components/Features";
+import { FeaturedCoursesSection } from "@/components/FeaturedCourses";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -279,6 +280,9 @@ export default function HomePage() {
             )}
           </div>
         </section>
+
+        {/* Featured Courses Section */}
+        <FeaturedCoursesSection />
 
         {/* Comprehensive Features Section */}
         <section className="py-20 md:py-28 bg-muted/30">
@@ -876,9 +880,6 @@ export default function HomePage() {
             </div>
           </div>
         </section>
-
-        {/* Features Section */}
-        <Features />
 
         {/* Student Portal CTA Section - For Guests */}
         {!isAuthenticated && (

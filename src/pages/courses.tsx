@@ -33,7 +33,8 @@ import {
   MapPin,
   Award,
   FileText,
-  GraduationCap
+  GraduationCap,
+  Heart
 } from "lucide-react";
 
 interface Course {
@@ -45,6 +46,7 @@ interface Course {
   price_deposit: number;
   max_students: number;
   created_at: string;
+  is_featured?: boolean;
 }
 
 export default function CoursesPage() {
@@ -58,6 +60,7 @@ export default function CoursesPage() {
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [wishlistIds, setWishlistIds] = useState<string[]>([]);
 
   useEffect(() => {
     loadCourses();
@@ -67,6 +70,74 @@ export default function CoursesPage() {
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     setIsAuthenticated(!!session);
+    
+    if (session) {
+      loadWishlist(session.user.id);
+    }
+  };
+
+  const loadWishlist = async (userId: string) => {
+    try {
+      const { data } = await supabase
+        .from("course_wishlist")
+        .select("course_template_id")
+        .eq("student_id", userId);
+
+      setWishlistIds(data?.map(w => w.course_template_id) || []);
+    } catch (err) {
+      console.error("Error loading wishlist:", err);
+    }
+  };
+
+  const toggleWishlist = async (courseId: string) => {
+    if (!isAuthenticated) {
+      setLoginModalOpen(true);
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const isInWishlist = wishlistIds.includes(courseId);
+
+      if (isInWishlist) {
+        const { error } = await supabase
+          .from("course_wishlist")
+          .delete()
+          .eq("student_id", user.id)
+          .eq("course_template_id", courseId);
+
+        if (error) throw error;
+
+        setWishlistIds(prev => prev.filter(id => id !== courseId));
+        toast({
+          title: "Removed from wishlist",
+          description: "Course removed from your wishlist"
+        });
+      } else {
+        const { error } = await supabase
+          .from("course_wishlist")
+          .insert({
+            student_id: user.id,
+            course_template_id: courseId
+          });
+
+        if (error) throw error;
+
+        setWishlistIds(prev => [...prev, courseId]);
+        toast({
+          title: "Added to wishlist",
+          description: "Course saved to your wishlist"
+        });
+      }
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message,
+        variant: "destructive"
+      });
+    }
   };
 
   const loadCourses = async () => {
@@ -75,6 +146,7 @@ export default function CoursesPage() {
       const { data, error } = await supabase
         .from("course_templates")
         .select("*")
+        .order("is_featured", { ascending: false })
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -209,9 +281,30 @@ export default function CoursesPage() {
                   >
                     <CardHeader>
                       <div className="flex items-start justify-between mb-2">
-                        <CardTitle className="text-xl group-hover:text-primary transition-colors">
-                          {course.name}
-                        </CardTitle>
+                        <div className="flex-1">
+                          <CardTitle className="text-xl group-hover:text-primary transition-colors">
+                            {course.name}
+                          </CardTitle>
+                          {course.is_featured && (
+                            <Badge className="mt-2 bg-amber-600">Featured</Badge>
+                          )}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleWishlist(course.id);
+                          }}
+                        >
+                          <Heart
+                            className={`h-5 w-5 ${
+                              wishlistIds.includes(course.id)
+                                ? "fill-red-600 text-red-600"
+                                : "text-muted-foreground"
+                            }`}
+                          />
+                        </Button>
                       </div>
                       <CardDescription className="line-clamp-3">
                         {course.description}

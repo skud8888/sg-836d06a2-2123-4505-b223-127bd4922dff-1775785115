@@ -844,7 +844,9 @@ export type Database = {
           created_at: string | null
           description: string | null
           duration_hours: number
+          featured_order: number | null
           id: string
+          is_featured: boolean | null
           max_students: number | null
           name: string
           price_deposit: number
@@ -858,7 +860,9 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           duration_hours: number
+          featured_order?: number | null
           id?: string
+          is_featured?: boolean | null
           max_students?: number | null
           name: string
           price_deposit?: number
@@ -872,7 +876,9 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           duration_hours?: number
+          featured_order?: number | null
           id?: string
+          is_featured?: boolean | null
           max_students?: number | null
           name?: string
           price_deposit?: number
@@ -926,6 +932,45 @@ export type Database = {
             columns: ["course_template_id"]
             isOneToOne: false
             referencedRelation: "course_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      course_wishlist: {
+        Row: {
+          added_at: string | null
+          course_template_id: string
+          id: string
+          notes: string | null
+          student_id: string
+        }
+        Insert: {
+          added_at?: string | null
+          course_template_id: string
+          id?: string
+          notes?: string | null
+          student_id: string
+        }
+        Update: {
+          added_at?: string | null
+          course_template_id?: string
+          id?: string
+          notes?: string | null
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_wishlist_course_template_id_fkey"
+            columns: ["course_template_id"]
+            isOneToOne: false
+            referencedRelation: "course_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_wishlist_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -2744,6 +2789,54 @@ export type Database = {
           },
           {
             foreignKeyName: "student_progress_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_messages: {
+        Row: {
+          admin_id: string | null
+          created_at: string | null
+          id: string
+          is_from_student: boolean | null
+          message: string
+          read_at: string | null
+          session_id: string
+          student_id: string
+        }
+        Insert: {
+          admin_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_from_student?: boolean | null
+          message: string
+          read_at?: string | null
+          session_id: string
+          student_id: string
+        }
+        Update: {
+          admin_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_from_student?: boolean | null
+          message?: string
+          read_at?: string | null
+          session_id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_messages_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "profiles"
