@@ -37,15 +37,13 @@ interface Profile {
   full_name: string;
   phone: string;
   address: string;
-  date_of_birth: string;
-  emergency_contact_name: string;
-  emergency_contact_phone: string;
   created_at: string;
+  metadata?: any;
 }
 
 interface Enrollment {
   id: string;
-  status: string;
+  status?: string;
   enrolled_at: string;
   course_templates: {
     id: string;
@@ -53,20 +51,14 @@ interface Enrollment {
     description: string;
     duration_hours: number;
   };
-  scheduled_classes: Array<{
-    id: string;
-    start_date: string;
-    end_date: string;
-    location: string;
-    status: string;
-  }>;
+  scheduled_classes: any;
 }
 
 interface Certificate {
   id: string;
-  course_id: string;
+  course_id?: string;
   issue_date: string;
-  certificate_url: string;
+  certificate_url?: string;
   course_templates: {
     name: string;
   };
@@ -114,14 +106,14 @@ export default function StudentProfilePage() {
 
       if (error) throw error;
 
-      setProfile(data);
+      setProfile(data as any);
       setFormData({
         full_name: data.full_name || "",
         phone: data.phone || "",
         address: data.address || "",
-        date_of_birth: data.date_of_birth || "",
-        emergency_contact_name: data.emergency_contact_name || "",
-        emergency_contact_phone: data.emergency_contact_phone || ""
+        date_of_birth: (data.metadata as any)?.date_of_birth || "",
+        emergency_contact_name: (data.metadata as any)?.emergency_contact_name || "",
+        emergency_contact_phone: (data.metadata as any)?.emergency_contact_phone || ""
       });
     } catch (err: any) {
       console.error("Error loading profile:", err);
@@ -151,7 +143,7 @@ export default function StudentProfilePage() {
         .order("enrolled_at", { ascending: false });
 
       if (error) throw error;
-      setEnrollments(data || []);
+      setEnrollments((data as any) || []);
     } catch (err: any) {
       console.error("Error loading enrollments:", err);
     }
@@ -172,7 +164,7 @@ export default function StudentProfilePage() {
         .order("issue_date", { ascending: false });
 
       if (error) throw error;
-      setCertificates(data || []);
+      setCertificates((data as any) || []);
     } catch (err: any) {
       console.error("Error loading certificates:", err);
     }
@@ -183,14 +175,26 @@ export default function StudentProfilePage() {
 
     setSaving(true);
     try {
+      const metadata = {
+        ...(profile.metadata || {}),
+        date_of_birth: formData.date_of_birth,
+        emergency_contact_name: formData.emergency_contact_name,
+        emergency_contact_phone: formData.emergency_contact_phone
+      };
+
       const { error } = await supabase
         .from("profiles")
-        .update(formData)
+        .update({
+          full_name: formData.full_name,
+          phone: formData.phone,
+          address: formData.address,
+          metadata
+        })
         .eq("id", profile.id);
 
       if (error) throw error;
 
-      setProfile({ ...profile, ...formData });
+      setProfile({ ...profile, full_name: formData.full_name, phone: formData.phone, address: formData.address, metadata });
       setEditing(false);
       toast({
         title: "Profile updated",
@@ -213,9 +217,9 @@ export default function StudentProfilePage() {
         full_name: profile.full_name || "",
         phone: profile.phone || "",
         address: profile.address || "",
-        date_of_birth: profile.date_of_birth || "",
-        emergency_contact_name: profile.emergency_contact_name || "",
-        emergency_contact_phone: profile.emergency_contact_phone || ""
+        date_of_birth: profile.metadata?.date_of_birth || "",
+        emergency_contact_name: profile.metadata?.emergency_contact_name || "",
+        emergency_contact_phone: profile.metadata?.emergency_contact_phone || ""
       });
     }
     setEditing(false);
