@@ -161,7 +161,7 @@ export default function ClassAttendancePage() {
 
   return (
     <>
-      <SEO title={`Attendance - ${className} - GTS Training`} />
+      <SEO title={`Attendance - ${className} - The Training Hub`} />
       <OfflineIndicator />
       
       <div className="min-h-screen bg-background">

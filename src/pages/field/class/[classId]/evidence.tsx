@@ -63,7 +63,7 @@ export default function ClassEvidencePage() {
 
   return (
     <>
-      <SEO title={`Evidence - ${className} - GTS Training`} />
+      <SEO title={`Evidence - ${className} - The Training Hub`} />
       <OfflineIndicator />
       
       <div className="min-h-screen bg-background">

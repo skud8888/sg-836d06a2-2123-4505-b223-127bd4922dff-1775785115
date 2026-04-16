@@ -190,8 +190,8 @@ export default function PrivacyPolicyPage() {
                     <li><strong>Objection</strong> - Object to processing of your data</li>
                     <li><strong>Withdraw consent</strong> - Withdraw consent for data processing</li>
                   </ul>
-                  <p className="mt-4">
-                    To exercise these rights, please contact us at <a href="mailto:privacy@gtstraining.com.au" className="text-primary hover:underline">privacy@gtstraining.com.au</a>
+                  <p>
+                    To exercise these rights, please contact us at <a href="mailto:privacy@thetraininghub.com.au" className="text-primary hover:underline">privacy@thetraininghub.com.au</a>
                   </p>
                 </div>
               </section>

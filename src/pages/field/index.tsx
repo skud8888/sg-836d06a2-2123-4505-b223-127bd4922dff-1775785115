@@ -140,7 +140,7 @@ export default function FieldWorkerView() {
 
   return (
     <>
-      <SEO title="Field Worker - GTS Training" />
+      <SEO title="Field Worker - The Training Hub" />
       <OfflineIndicator />
       
       <div className="min-h-screen bg-background">

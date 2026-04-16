@@ -23,8 +23,8 @@ export default function TermsOfServicePage() {
   return (
     <>
       <SEO
-        title="Terms of Service - GTS Training Centre"
-        description="Read the Terms of Service for GTS Training Centre platform. Understand your rights and responsibilities when using our services."
+        title="Terms of Service - The Training Hub"
+        description="Read the Terms of Service for The Training Hub platform. Understand your rights and responsibilities when using our services."
       />
       <Navigation />
       
@@ -71,7 +71,7 @@ export default function TermsOfServicePage() {
               {/* Introduction */}
               <section>
                 <p className="text-lg leading-relaxed">
-                  These Terms of Service ("Terms") govern your access to and use of the GTS Training Centre platform ("Service"). By accessing or using the Service, you agree to be bound by these Terms.
+                  These Terms of Service ("Terms") govern your access to and use of The Training Hub platform ("Service"). By accessing or using the Service, you agree to be bound by these Terms.
                 </p>
               </section>
 
@@ -92,19 +92,7 @@ export default function TermsOfServicePage() {
               <section id="services">
                 <h2 className="text-3xl font-bold mb-4">Description of Services</h2>
                 <div className="space-y-4 text-muted-foreground">
-                  <p>GTS Training Centre provides a comprehensive training management platform that includes:</p>
-                  <ul className="list-disc list-inside ml-4 space-y-1">
-                    <li>Course booking and enrollment management</li>
-                    <li>Student portal and progress tracking</li>
-                    <li>Payment processing and invoicing</li>
-                    <li>Document management and e-signatures</li>
-                    <li>Calendar scheduling and notifications</li>
-                    <li>Analytics and reporting tools</li>
-                    <li>AI-powered insights and predictions</li>
-                  </ul>
-                  <p className="mt-4">
-                    We reserve the right to modify, suspend, or discontinue any part of the Service at any time with or without notice.
-                  </p>
+                  <p>The Training Hub provides a comprehensive training management platform that includes:</p>
                 </div>
               </section>
 
@@ -200,10 +188,7 @@ export default function TermsOfServicePage() {
                 <h2 className="text-3xl font-bold mb-4">Intellectual Property</h2>
                 <div className="space-y-4 text-muted-foreground">
                   <p>
-                    The Service and its original content, features, and functionality are owned by GTS Training Centre and are protected by international copyright, trademark, patent, trade secret, and other intellectual property laws.
-                  </p>
-                  <p>
-                    You may not copy, modify, distribute, sell, or lease any part of our Service without our express written permission.
+                    The Service and its original content, features, and functionality are owned by The Training Hub and are protected by international copyright, trademark, patent, trade secret, and other intellectual property laws.
                   </p>
                 </div>
               </section>
@@ -267,8 +252,8 @@ export default function TermsOfServicePage() {
               <section id="liability">
                 <h2 className="text-3xl font-bold mb-4">Limitation of Liability</h2>
                 <div className="space-y-4 text-muted-foreground">
-                  <p className="uppercase font-semibold">
-                    TO THE MAXIMUM EXTENT PERMITTED BY LAW, GTS TRAINING CENTRE SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS OR REVENUES, WHETHER INCURRED DIRECTLY OR INDIRECTLY, OR ANY LOSS OF DATA, USE, GOODWILL, OR OTHER INTANGIBLE LOSSES.
+                  <p>
+                    TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE TRAINING HUB SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS OR REVENUES, WHETHER INCURRED DIRECTLY OR INDIRECTLY, OR ANY LOSS OF DATA, USE, GOODWILL, OR OTHER INTANGIBLE LOSSES.
                   </p>
                   <p>
                     Our total liability shall not exceed the amount you paid to us in the 12 months preceding the claim.
@@ -308,10 +293,8 @@ export default function TermsOfServicePage() {
                 <div className="space-y-4 text-muted-foreground">
                   <p>If you have questions about these Terms, please contact us:</p>
                   <div className="bg-muted p-6 rounded-lg mt-4">
-                    <p><strong>GTS Training Centre</strong></p>
-                    <p>Email: <a href="mailto:legal@gtstraining.com.au" className="text-primary hover:underline">legal@gtstraining.com.au</a></p>
-                    <p>Phone: 1300 XXX XXX</p>
-                    <p>Address: Queensland, Australia</p>
+                    <p><strong>The Training Hub</strong></p>
+                    <p>Email: <a href="mailto:legal@thetraininghub.com.au" className="text-primary hover:underline">legal@thetraininghub.com.au</a></p>
                   </div>
                 </div>
               </section>

@@ -231,8 +231,8 @@ export default function EnrollmentPage() {
   return (
     <>
       <SEO
-        title={`Enroll in ${course.name} - GTS Training`}
-        description={`Enroll in ${course.name} training course`}
+        title={`Enroll in ${course.name} - The Training Hub`}
+        description={`Complete your enrollment for ${course.name}`}
       />
 
       <div className="min-h-screen bg-background">

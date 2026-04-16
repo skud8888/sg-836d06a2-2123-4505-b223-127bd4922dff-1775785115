@@ -99,8 +99,8 @@ export default function PaymentSuccessPage() {
   return (
     <>
       <SEO
-        title="Payment Successful - GTS Training"
-        description="Your booking has been confirmed"
+        title="Payment Successful - The Training Hub"
+        description="Your payment has been processed successfully"
       />
 
       <div className="min-h-screen bg-background flex items-center justify-center p-4">

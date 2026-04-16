@@ -212,9 +212,9 @@ export default function HelpCenter() {
 
   return (
     <>
-      <SEO 
-        title="Help Center - GTS Training"
-        description="Find answers to common questions, video tutorials, and support resources"
+      <SEO
+        title="Help Center - The Training Hub"
+        description="Find answers to common questions about The Training Hub platform"
       />
       <Navigation />
 

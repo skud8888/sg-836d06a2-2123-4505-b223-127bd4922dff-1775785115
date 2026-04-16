@@ -141,8 +141,8 @@ export default function BookingPage() {
   return (
     <>
       <SEO
-        title={`Book ${scheduledClass.course_templates?.name} - GTS Training`}
-        description={scheduledClass.course_templates?.description || ""}
+        title={`Book ${scheduledClass.course_templates?.name} - The Training Hub`}
+        description={`Book your spot in ${scheduledClass.course_templates?.name}`}
       />
       <Navigation />
       <main className="min-h-screen bg-background py-12">

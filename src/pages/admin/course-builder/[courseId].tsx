@@ -346,8 +346,8 @@ export default function CourseBuilderPage() {
   return (
     <>
       <SEO
-        title={`Course Builder - ${courseName} - GTS Training`}
-        description="Build and manage course content"
+        title={`Course Builder - ${courseName} - The Training Hub`}
+        description={`Build and customize your course: ${courseName}`}
       />
 
       <div className="min-h-screen bg-background">

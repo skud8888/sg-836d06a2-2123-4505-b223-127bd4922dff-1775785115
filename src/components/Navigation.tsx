@@ -93,9 +93,13 @@ export function Navigation() {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <Link href="/" className="flex items-center space-x-2 font-bold text-xl">
-              <GraduationCap className="h-6 w-6 text-primary" />
-              <span>GTS Training</span>
+            <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
+                <GraduationCap className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <span className="text-xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                The Training Hub
+              </span>
             </Link>
 
             {/* Desktop Navigation */}

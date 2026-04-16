@@ -45,8 +45,8 @@ export default function CookiePolicyPage() {
   return (
     <>
       <SEO
-        title="Cookie Policy - GTS Training Centre"
-        description="Learn about how GTS Training Centre uses cookies and similar technologies. Understand your cookie preferences and choices."
+        title="Cookie Policy - The Training Hub"
+        description="Learn about how The Training Hub uses cookies and similar technologies. Understand your cookie preferences and choices."
       />
       <Navigation />
       
@@ -92,8 +92,8 @@ export default function CookiePolicyPage() {
               
               {/* Introduction */}
               <section>
-                <p className="text-lg leading-relaxed">
-                  This Cookie Policy explains how GTS Training Centre uses cookies and similar tracking technologies when you use our platform. This policy should be read alongside our Privacy Policy.
+                <p className="text-lg leading-relaxed mb-6">
+                  This Cookie Policy explains how The Training Hub uses cookies and similar tracking technologies when you use our platform. This policy should be read alongside our Privacy Policy.
                 </p>
               </section>
 
@@ -244,10 +244,8 @@ export default function CookiePolicyPage() {
                 <div className="space-y-4 text-muted-foreground">
                   <p>If you have questions about our use of cookies, please contact us:</p>
                   <div className="bg-muted p-6 rounded-lg mt-4">
-                    <p><strong>GTS Training Centre</strong></p>
-                    <p>Email: <a href="mailto:privacy@gtstraining.com.au" className="text-primary hover:underline">privacy@gtstraining.com.au</a></p>
-                    <p>Phone: 1300 XXX XXX</p>
-                    <p>Address: Queensland, Australia</p>
+                    <p><strong>The Training Hub</strong></p>
+                    <p>Email: <a href="mailto:privacy@thetraininghub.com.au" className="text-primary hover:underline">privacy@thetraininghub.com.au</a></p>
                   </div>
                 </div>
               </section>
