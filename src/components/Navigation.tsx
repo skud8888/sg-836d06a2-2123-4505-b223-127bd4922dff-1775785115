@@ -129,6 +129,74 @@ export function Navigation() {
               >
                 Contact
               </Link>
+
+              {/* Auth Buttons - Desktop */}
+              {isAuthenticated ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="gap-2">
+                      <User className="h-4 w-4" />
+                      <span className="max-w-[100px] truncate">{userName}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    
+                    {isAdmin && (
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin" className="cursor-pointer">
+                          <LayoutDashboard className="h-4 w-4 mr-2" />
+                          Admin Dashboard
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    
+                    <DropdownMenuItem asChild>
+                      <Link href="/student/portal" className="cursor-pointer">
+                        <GraduationCap className="h-4 w-4 mr-2" />
+                        Student Portal
+                      </Link>
+                    </DropdownMenuItem>
+
+                    {isAdmin && (
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin/profile" className="cursor-pointer">
+                          <User className="h-4 w-4 mr-2" />
+                          Profile
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+
+                    <DropdownMenuSeparator />
+                    
+                    <DropdownMenuItem 
+                      onClick={handleSignOut}
+                      className="text-red-600 focus:text-red-600 cursor-pointer"
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sign Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => setLoginModalOpen(true)}
+                  >
+                    <LogIn className="h-4 w-4 mr-2" />
+                    Sign In
+                  </Button>
+                  <Button 
+                    size="sm"
+                    onClick={() => router.push("/courses")}
+                  >
+                    Browse Courses
+                  </Button>
+                </div>
+              )}
             </nav>
 
             {/* Mobile Menu Button */}

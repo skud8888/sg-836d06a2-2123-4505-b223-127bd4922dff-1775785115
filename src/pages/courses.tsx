@@ -3,11 +3,19 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import { SEO } from "@/components/SEO";
 import { Navigation } from "@/components/Navigation";
+import { LoginModal } from "@/components/LoginModal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -19,7 +27,13 @@ import {
   Calendar,
   BookOpen,
   ArrowRight,
-  Filter
+  Filter,
+  X,
+  CheckCircle,
+  MapPin,
+  Award,
+  FileText,
+  GraduationCap
 } from "lucide-react";
 
 interface Course {
@@ -40,10 +54,20 @@ export default function CoursesPage() {
   const [loading, setLoading] = useState(true);
   const [courses, setCourses] = useState<Course[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
 
   useEffect(() => {
     loadCourses();
+    checkAuth();
   }, []);
+
+  const checkAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setIsAuthenticated(!!session);
+  };
 
   const loadCourses = async () => {
     setLoading(true);
@@ -65,6 +89,20 @@ export default function CoursesPage() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCourseClick = (course: Course) => {
+    setSelectedCourse(course);
+    setPreviewModalOpen(true);
+  };
+
+  const handleEnrollClick = () => {
+    if (!isAuthenticated) {
+      setPreviewModalOpen(false);
+      setLoginModalOpen(true);
+    } else if (selectedCourse) {
+      router.push(`/enroll/${selectedCourse.id}`);
     }
   };
 
@@ -104,8 +142,30 @@ export default function CoursesPage() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10"
                   />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                    >
+                      <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                    </button>
+                  )}
                 </div>
               </div>
+
+              {!isAuthenticated && (
+                <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 text-sm">
+                  <div className="flex items-start gap-3">
+                    <GraduationCap className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                    <div className="text-left">
+                      <p className="font-medium mb-1">Guest Preview Mode</p>
+                      <p className="text-muted-foreground">
+                        Click any course to preview. Sign in to enroll and access full course materials.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </section>
@@ -142,10 +202,16 @@ export default function CoursesPage() {
             ) : (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredCourses.map((course) => (
-                  <Card key={course.id} className="flex flex-col hover:shadow-lg transition-shadow">
+                  <Card 
+                    key={course.id} 
+                    className="flex flex-col hover:shadow-lg transition-all cursor-pointer group"
+                    onClick={() => handleCourseClick(course)}
+                  >
                     <CardHeader>
                       <div className="flex items-start justify-between mb-2">
-                        <CardTitle className="text-xl">{course.name}</CardTitle>
+                        <CardTitle className="text-xl group-hover:text-primary transition-colors">
+                          {course.name}
+                        </CardTitle>
                       </div>
                       <CardDescription className="line-clamp-3">
                         {course.description}
@@ -173,12 +239,10 @@ export default function CoursesPage() {
                         </div>
                       </div>
 
-                      <Link href={`/enroll/${course.id}`}>
-                        <Button className="w-full">
-                          Enroll Now
-                          <ArrowRight className="h-4 w-4 ml-2" />
-                        </Button>
-                      </Link>
+                      <Button className="w-full group-hover:bg-primary group-hover:scale-105 transition-all">
+                        View Details
+                        <ArrowRight className="h-4 w-4 ml-2" />
+                      </Button>
                     </CardContent>
                   </Card>
                 ))}
@@ -205,6 +269,125 @@ export default function CoursesPage() {
           </div>
         </section>
       </div>
+
+      {/* Course Preview Modal */}
+      <Dialog open={previewModalOpen} onOpenChange={setPreviewModalOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          {selectedCourse && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-2xl">{selectedCourse.name}</DialogTitle>
+                <DialogDescription className="text-base">
+                  {selectedCourse.description}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-6 pt-4">
+                {/* Course Highlights */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="flex items-start gap-3 p-4 bg-muted/50 rounded-lg">
+                    <Clock className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium">Duration</p>
+                      <p className="text-sm text-muted-foreground">{selectedCourse.duration_hours} hours of training</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3 p-4 bg-muted/50 rounded-lg">
+                    <Users className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium">Class Size</p>
+                      <p className="text-sm text-muted-foreground">Maximum {selectedCourse.max_students} students per class</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3 p-4 bg-muted/50 rounded-lg">
+                    <Award className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium">Certification</p>
+                      <p className="text-sm text-muted-foreground">Certificate upon completion</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3 p-4 bg-muted/50 rounded-lg">
+                    <FileText className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium">Materials</p>
+                      <p className="text-sm text-muted-foreground">All course materials included</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* What You'll Learn */}
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-lg">What You&apos;ll Learn</h3>
+                  <ul className="space-y-2">
+                    {[
+                      "Comprehensive understanding of course fundamentals",
+                      "Hands-on practical experience with real-world scenarios",
+                      "Industry best practices and safety protocols",
+                      "Assessment preparation and certification guidance"
+                    ].map((item, idx) => (
+                      <li key={idx} className="flex items-start gap-2">
+                        <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+                        <span className="text-sm">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Pricing */}
+                <div className="border-t pt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Course Fee</p>
+                      <p className="text-3xl font-bold">${selectedCourse.price_full}</p>
+                      {selectedCourse.price_deposit > 0 && (
+                        <p className="text-sm text-muted-foreground">
+                          or ${selectedCourse.price_deposit} deposit + installments
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {!isAuthenticated && (
+                    <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-4">
+                      <p className="text-sm text-amber-900 dark:text-amber-100">
+                        <strong>Sign in required:</strong> You need to sign in or create an account to enroll in this course.
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="flex gap-3">
+                    <Button 
+                      className="flex-1" 
+                      size="lg"
+                      onClick={handleEnrollClick}
+                    >
+                      {isAuthenticated ? "Enroll Now" : "Sign In to Enroll"}
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="lg"
+                      onClick={() => setPreviewModalOpen(false)}
+                    >
+                      Close
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Login Modal */}
+      <LoginModal 
+        open={loginModalOpen} 
+        onOpenChange={setLoginModalOpen}
+        defaultTab="student"
+      />
     </>
   );
 }
