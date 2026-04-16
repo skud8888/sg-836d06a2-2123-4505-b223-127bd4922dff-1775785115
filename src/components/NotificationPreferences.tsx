@@ -6,8 +6,9 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Bell, Mail, MessageSquare, Clock, Volume2, Monitor, Loader2 } from "lucide-react";
+import { Bell, Mail, MessageSquare, Clock, Volume2, Monitor, Loader2, CheckCircle } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import Link from "next/link";
 
 type NotificationPreferences = {
   email_new_booking: boolean;
@@ -37,6 +38,7 @@ export function NotificationPreferences() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [preferences, setPreferences] = useState<NotificationPreferences | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   useEffect(() => {
     loadPreferences();

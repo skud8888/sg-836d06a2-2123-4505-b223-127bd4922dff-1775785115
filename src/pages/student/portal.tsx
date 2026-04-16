@@ -23,7 +23,10 @@ import {
   Download,
   Eye,
   MapPin,
-  PlusCircle
+  PlusCircle,
+  ChevronDown,
+  ChevronUp,
+  Star
 } from "lucide-react";
 import Link from "next/link";
 
@@ -54,17 +57,30 @@ interface Progress {
   };
 }
 
+interface CourseModule {
+  id: string;
+  title: string;
+  description: string;
+  order_index: number;
+  duration_hours: number;
+}
+
+interface CourseLesson {
+  id: string;
+  module_id: string;
+  title: string;
+  content: string;
+  duration_minutes: number;
+  order_index: number;
+  video_url: string | null;
+}
+
 interface LessonCompletion {
   id: string;
+  lesson_id: string;
   completed: boolean;
   completed_at: string | null;
-  lesson: {
-    title: string;
-    duration_minutes: number;
-    module: {
-      title: string;
-    };
-  };
+  notes: string | null;
 }
 
 export default function StudentPortalPage() {
@@ -76,6 +92,10 @@ export default function StudentPortalPage() {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [progressData, setProgressData] = useState<Progress[]>([]);
   const [lessonCompletions, setLessonCompletions] = useState<LessonCompletion[]>([]);
+  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [courseModules, setCourseModules] = useState<CourseModule[]>([]);
+  const [courseLessons, setCourseLessons] = useState<CourseLesson[]>([]);
+  const [loadingProgress, setLoadingProgress] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -133,14 +153,7 @@ export default function StudentPortalPage() {
       if (progressIds.length > 0) {
         const { data: completions, error: completionsError } = await supabase
           .from("lesson_completions")
-          .select(`
-            *,
-            lesson:course_lessons!lesson_completions_lesson_id_fkey(
-              title,
-              duration_minutes,
-              module:course_modules!course_lessons_module_id_fkey(title)
-            )
-          `)
+          .select("*")
           .in("student_progress_id", progressIds);
 
         if (completionsError) throw completionsError;
@@ -156,6 +169,100 @@ export default function StudentPortalPage() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadCourseDetails = async (courseId: string, progressId: string) => {
+    setLoadingProgress(true);
+    try {
+      // Load modules
+      const { data: modules, error: modulesError } = await supabase
+        .from("course_modules")
+        .select("*")
+        .eq("course_id", courseId)
+        .order("order_index");
+
+      if (modulesError) throw modulesError;
+      setCourseModules(modules || []);
+
+      // Load lessons
+      const moduleIds = modules?.map(m => m.id) || [];
+      if (moduleIds.length > 0) {
+        const { data: lessons, error: lessonsError } = await supabase
+          .from("course_lessons")
+          .select("*")
+          .in("module_id", moduleIds)
+          .order("order_index");
+
+        if (lessonsError) throw lessonsError;
+        setCourseLessons(lessons || []);
+      }
+
+      // Load completions for this course
+      const { data: completions, error: completionsError } = await supabase
+        .from("lesson_completions")
+        .select("*")
+        .eq("student_progress_id", progressId);
+
+      if (completionsError) throw completionsError;
+      setLessonCompletions(completions || []);
+
+    } catch (err: any) {
+      console.error("Error loading course details:", err);
+      toast({
+        title: "Error",
+        description: "Failed to load course details",
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingProgress(false);
+    }
+  };
+
+  const handleMarkLessonComplete = async (lessonId: string, progressId: string) => {
+    try {
+      const { error } = await supabase
+        .from("lesson_completions")
+        .upsert({
+          student_progress_id: progressId,
+          lesson_id: lessonId,
+          completed: true,
+          completed_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+
+      // Reload completions
+      const { data: completions } = await supabase
+        .from("lesson_completions")
+        .select("*")
+        .eq("student_progress_id", progressId);
+
+      setLessonCompletions(completions || []);
+
+      // Update overall progress percentage
+      const totalLessons = courseLessons.length;
+      const completedLessons = (completions || []).filter(c => c.completed).length;
+      const percentage = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
+
+      await supabase
+        .from("student_progress")
+        .update({ completion_percentage: percentage })
+        .eq("id", progressId);
+
+      toast({
+        title: "Progress saved",
+        description: "Lesson marked as complete"
+      });
+
+      // Reload progress data
+      loadStudentData(user.id);
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: "Failed to update progress",
+        variant: "destructive"
+      });
     }
   };
 
@@ -331,13 +438,23 @@ export default function StudentPortalPage() {
                               </span>
                             </div>
                           </div>
-                          {enrollment.amount_due > 0 && (
-                            <div className="mt-4">
+                          <div className="mt-4 flex gap-2">
+                            {enrollment.amount_due > 0 && (
                               <Button size="sm">
                                 Make Payment
                               </Button>
-                            </div>
-                          )}
+                            )}
+                            {enrollment.status === "completed" && (
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => router.push(`/student/rate-course?enrollmentId=${enrollment.id}`)}
+                              >
+                                <Star className="h-4 w-4 mr-2" />
+                                Rate Course
+                              </Button>
+                            )}
+                          </div>
                         </CardContent>
                       </Card>
                     ))}
@@ -360,31 +477,25 @@ export default function StudentPortalPage() {
                 ) : (
                   <div className="grid gap-6">
                     {progressData.map((progress) => {
-                      const courseLessons = lessonCompletions.filter(
-                        lc => lc.lesson && progressData.find(p => p.id === lc.id)
-                      );
-                      const completedLessons = courseLessons.filter(lc => lc.completed).length;
-                      const totalLessons = courseLessons.length;
+                      const enrollment = enrollments.find(e => e.id === progress.enrollment_id);
+                      const courseId = enrollment?.course_template_id;
+                      const isExpanded = selectedCourseId === courseId;
 
                       return (
                         <Card key={progress.id}>
                           <CardHeader>
                             <div className="flex items-start justify-between">
-                              <div>
-                                <CardTitle>{progress.enrollment.course.name}</CardTitle>
+                              <div className="flex-1">
+                                <CardTitle className="flex items-center gap-2">
+                                  {progress.enrollment.course.name}
+                                  {progress.status === "completed" && (
+                                    <Badge className="bg-green-600">Completed</Badge>
+                                  )}
+                                </CardTitle>
                                 <CardDescription className="mt-2">
                                   Started: {new Date(progress.started_at).toLocaleDateString()}
                                 </CardDescription>
                               </div>
-                              <Badge 
-                                className={
-                                  progress.status === "completed" 
-                                    ? "bg-green-600" 
-                                    : "bg-blue-600"
-                                }
-                              >
-                                {progress.status === "completed" ? "Completed" : "In Progress"}
-                              </Badge>
                             </div>
                           </CardHeader>
                           <CardContent>
@@ -401,21 +512,119 @@ export default function StudentPortalPage() {
                                 <Progress value={progress.completion_percentage} />
                               </div>
 
-                              {totalLessons > 0 && (
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                  <CheckCircle className="h-4 w-4" />
+                              {progress.status === "completed" && progress.completed_at && (
+                                <div className="flex items-center gap-2 text-sm text-green-600">
+                                  <Award className="h-4 w-4" />
                                   <span>
-                                    {completedLessons} of {totalLessons} lessons completed
+                                    Completed on {new Date(progress.completed_at).toLocaleDateString()}
                                   </span>
                                 </div>
                               )}
 
-                              {progress.status === "completed" && (
-                                <div className="flex items-center gap-2 text-sm text-green-600">
-                                  <Award className="h-4 w-4" />
-                                  <span>
-                                    Completed on {new Date(progress.completed_at!).toLocaleDateString()}
-                                  </span>
+                              <Button
+                                variant="outline"
+                                className="w-full"
+                                onClick={() => {
+                                  if (isExpanded) {
+                                    setSelectedCourseId(null);
+                                  } else {
+                                    setSelectedCourseId(courseId || null);
+                                    if (courseId) {
+                                      loadCourseDetails(courseId, progress.id);
+                                    }
+                                  }
+                                }}
+                              >
+                                {isExpanded ? "Hide" : "View"} Detailed Progress
+                                {isExpanded ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />}
+                              </Button>
+
+                              {isExpanded && (
+                                <div className="mt-4 space-y-6">
+                                  {loadingProgress ? (
+                                    <div className="flex justify-center py-8">
+                                      <Loader2 className="h-6 w-6 animate-spin" />
+                                    </div>
+                                  ) : courseModules.length === 0 ? (
+                                    <p className="text-center text-muted-foreground py-4">
+                                      No modules available yet
+                                    </p>
+                                  ) : (
+                                    courseModules.map((module, moduleIndex) => {
+                                      const moduleLessons = courseLessons.filter(l => l.module_id === module.id);
+                                      const completedInModule = moduleLessons.filter(lesson =>
+                                        lessonCompletions.some(c => c.lesson_id === lesson.id && c.completed)
+                                      ).length;
+                                      const moduleProgress = moduleLessons.length > 0
+                                        ? (completedInModule / moduleLessons.length) * 100
+                                        : 0;
+
+                                      return (
+                                        <div key={module.id} className="border rounded-lg p-4">
+                                          <div className="mb-3">
+                                            <div className="flex items-center justify-between mb-2">
+                                              <h4 className="font-semibold">
+                                                Module {moduleIndex + 1}: {module.title}
+                                              </h4>
+                                              <Badge variant="outline">
+                                                {completedInModule}/{moduleLessons.length}
+                                              </Badge>
+                                            </div>
+                                            {module.description && (
+                                              <p className="text-sm text-muted-foreground mb-2">
+                                                {module.description}
+                                              </p>
+                                            )}
+                                            <Progress value={moduleProgress} className="h-2" />
+                                          </div>
+
+                                          <div className="space-y-2">
+                                            {moduleLessons.map((lesson, lessonIndex) => {
+                                              const isCompleted = lessonCompletions.some(
+                                                c => c.lesson_id === lesson.id && c.completed
+                                              );
+
+                                              return (
+                                                <div
+                                                  key={lesson.id}
+                                                  className={`flex items-center justify-between p-3 rounded-lg border ${
+                                                    isCompleted ? "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800" : "bg-muted/50"
+                                                  }`}
+                                                >
+                                                  <div className="flex items-center gap-3 flex-1">
+                                                    {isCompleted ? (
+                                                      <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                                                    ) : (
+                                                      <div className="h-5 w-5 rounded-full border-2 flex-shrink-0" />
+                                                    )}
+                                                    <div className="flex-1">
+                                                      <p className="font-medium text-sm">
+                                                        {lessonIndex + 1}. {lesson.title}
+                                                      </p>
+                                                      {lesson.duration_minutes && (
+                                                        <p className="text-xs text-muted-foreground">
+                                                          {lesson.duration_minutes} minutes
+                                                        </p>
+                                                      )}
+                                                    </div>
+                                                  </div>
+                                                  {!isCompleted && progress.status !== "completed" && (
+                                                    <Button
+                                                      size="sm"
+                                                      variant="outline"
+                                                      onClick={() => handleMarkLessonComplete(lesson.id, progress.id)}
+                                                    >
+                                                      Mark Complete
+                                                    </Button>
+                                                  )}
+                                                </div>
+                                              );
+                                            })}
+                                          </div>
+                                        </div>
+                                      );
+                                    })
+                                  )}
                                 </div>
                               )}
                             </div>
