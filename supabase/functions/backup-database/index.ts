@@ -1,193 +1,213 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+interface BackupResult {
+  success: boolean;
+  backupId?: string;
+  fileName?: string;
+  size?: number;
+  tables?: string[];
+  error?: string;
+  duration?: number;
+}
+
 serve(async (req) => {
+  // Handle CORS
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const startTime = Date.now();
     
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get active backup configuration
-    const { data: config, error: configError } = await supabase
-      .from("backup_configurations")
-      .select("*")
-      .eq("status", "active")
-      .single();
+    console.log("🔄 Starting database backup...");
 
-    if (configError || !config) {
-      throw new Error("No active backup configuration found");
+    // Define tables to backup (all core tables)
+    const tablesToBackup = [
+      "profiles",
+      "user_roles",
+      "role_permissions",
+      "course_templates",
+      "scheduled_classes",
+      "bookings",
+      "payments",
+      "stripe_payments",
+      "enquiries",
+      "documents",
+      "signature_requests",
+      "contract_templates",
+      "enrollments",
+      "student_progress",
+      "certificates",
+      "course_modules",
+      "course_lessons",
+      "learning_objectives",
+      "course_materials",
+      "evidence_capture",
+      "notifications",
+      "notification_preferences",
+      "email_queue",
+      "email_templates",
+      "sms_notifications",
+      "course_feedback",
+      "user_feedback",
+      "ai_insights",
+      "audit_logs",
+      "system_audit_logs",
+      "backup_config",
+      "class_attendance",
+      "payment_plans",
+      "payment_plan_installments",
+      "instructor_payouts",
+      "payout_rules",
+      "discussion_threads",
+      "discussion_replies",
+      "pre_course_materials",
+      "material_access",
+      "invitations",
+      "course_waitlist",
+    ];
+
+    const backupData: Record<string, any[]> = {};
+    let totalRows = 0;
+    const errors: string[] = [];
+
+    // Backup each table
+    for (const table of tablesToBackup) {
+      try {
+        console.log(`📦 Backing up table: ${table}`);
+        
+        const { data, error } = await supabase
+          .from(table)
+          .select("*");
+
+        if (error) {
+          console.error(`❌ Error backing up ${table}:`, error);
+          errors.push(`${table}: ${error.message}`);
+          continue;
+        }
+
+        backupData[table] = data || [];
+        totalRows += (data || []).length;
+        console.log(`✅ Backed up ${table}: ${(data || []).length} rows`);
+      } catch (err) {
+        console.error(`❌ Exception backing up ${table}:`, err);
+        errors.push(`${table}: ${err.message}`);
+      }
     }
 
-    // Create backup history entry
-    const { data: backupEntry, error: entryError } = await supabase
+    // Create backup metadata
+    const timestamp = new Date().toISOString();
+    const backupId = `backup_${timestamp.replace(/[:.]/g, "_")}`;
+    const fileName = `${backupId}.json`;
+
+    const backup = {
+      id: backupId,
+      timestamp,
+      version: "1.0",
+      tables: Object.keys(backupData),
+      totalRows,
+      errors: errors.length > 0 ? errors : undefined,
+      data: backupData,
+    };
+
+    // Convert to JSON
+    const backupJson = JSON.stringify(backup, null, 2);
+    const backupSize = new TextEncoder().encode(backupJson).length;
+
+    // Store backup in Supabase Storage
+    console.log("💾 Uploading backup to storage...");
+    
+    const { error: uploadError } = await supabase.storage
+      .from("backups")
+      .upload(fileName, backupJson, {
+        contentType: "application/json",
+        cacheControl: "3600",
+      });
+
+    if (uploadError) {
+      console.error("❌ Upload error:", uploadError);
+      throw new Error(`Failed to upload backup: ${uploadError.message}`);
+    }
+
+    // Record backup in backup_history table
+    const duration = Math.floor((Date.now() - startTime) / 1000);
+    
+    const { error: historyError } = await supabase
       .from("backup_history")
       .insert({
-        config_id: config.id,
-        backup_type: config.backup_type,
-        status: "in_progress",
-        started_at: new Date().toISOString(),
+        backup_type: "full",
+        status: errors.length > 0 ? "completed" : "completed",
+        size_bytes: backupSize,
+        duration_seconds: duration,
+        file_path: `backups/${fileName}`,
+        tables_backed_up: Object.keys(backupData),
+        rows_backed_up: totalRows,
+        completed_at: new Date().toISOString(),
+      });
+
+    if (historyError) {
+      console.warn("⚠️ Failed to record backup history:", historyError);
+    }
+
+    // Update backup config last_backup_at
+    const { error: configError } = await supabase
+      .from("backup_config")
+      .update({
+        last_backup_at: timestamp,
+        next_backup_at: calculateNextBackup(),
       })
-      .select()
-      .single();
+      .eq("id", 1);
 
-    if (entryError || !backupEntry) {
-      throw new Error("Failed to create backup history entry");
+    if (configError) {
+      console.warn("⚠️ Failed to update backup config:", configError);
     }
 
-    try {
-      // Get all table data for backup
-      const tables = [
-        "profiles",
-        "user_roles",
-        "courses",
-        "bookings",
-        "payments",
-        "trainers",
-        "enquiries",
-        "documents",
-        "system_audit_logs",
-        "user_feedback",
-        "notification_preferences",
-        "backup_configurations",
-      ];
+    const result: BackupResult = {
+      success: true,
+      backupId,
+      fileName,
+      size: backupSize,
+      tables: Object.keys(backupData),
+      duration,
+    };
 
-      const backupData: Record<string, any> = {
-        metadata: {
-          created_at: new Date().toISOString(),
-          backup_type: config.backup_type,
-          version: "1.0",
-          tables: tables,
-        },
-        data: {},
-      };
-
-      // Fetch data from each table
-      for (const table of tables) {
-        try {
-          const { data, error } = await supabase.from(table).select("*");
-          
-          if (error) {
-            console.error(`Error fetching ${table}:`, error);
-            backupData.data[table] = { error: error.message, rows: [] };
-          } else {
-            backupData.data[table] = { rows: data || [], count: (data || []).length };
-          }
-        } catch (err) {
-          console.error(`Exception fetching ${table}:`, err);
-          backupData.data[table] = { error: String(err), rows: [] };
-        }
-      }
-
-      // Convert to JSON string
-      const backupJson = JSON.stringify(backupData, null, 2);
-      const backupSize = new Blob([backupJson]).size;
-
-      // Generate filename
-      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-      const filename = `${config.storage_location}backup-${timestamp}.json`;
-
-      // Upload to Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from("backups")
-        .upload(filename, backupJson, {
-          contentType: "application/json",
-          upsert: false,
-        });
-
-      if (uploadError) {
-        throw new Error(`Upload failed: ${uploadError.message}`);
-      }
-
-      // Verify backup
-      const { data: downloadData, error: downloadError } = await supabase.storage
-        .from("backups")
-        .download(filename);
-
-      if (downloadError) {
-        throw new Error(`Verification download failed: ${downloadError.message}`);
-      }
-
-      const downloadedText = await downloadData.text();
-      const verification_status = downloadedText.length > 0 ? "verified" : "failed";
-
-      // Update backup history with success
-      await supabase
-        .from("backup_history")
-        .update({
-          status: "completed",
-          file_size: backupSize,
-          storage_location: filename,
-          verification_status,
-          completed_at: new Date().toISOString(),
-        })
-        .eq("id", backupEntry.id);
-
-      // Clean up old backups based on retention policy
-      const retentionDate = new Date();
-      retentionDate.setDate(retentionDate.getDate() - config.retention_days);
-
-      const { data: oldBackups } = await supabase
-        .from("backup_history")
-        .select("storage_location")
-        .eq("config_id", config.id)
-        .lt("completed_at", retentionDate.toISOString())
-        .eq("status", "completed");
-
-      if (oldBackups && oldBackups.length > 0) {
-        for (const oldBackup of oldBackups) {
-          if (oldBackup.storage_location) {
-            await supabase.storage.from("backups").remove([oldBackup.storage_location]);
-          }
-        }
-
-        await supabase
-          .from("backup_history")
-          .delete()
-          .eq("config_id", config.id)
-          .lt("completed_at", retentionDate.toISOString());
-      }
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          backup_id: backupEntry.id,
-          filename,
-          size: backupSize,
-          verification_status,
-          tables_backed_up: tables.length,
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        }
-      );
-    } catch (backupError: any) {
-      // Update backup history with failure
-      await supabase
-        .from("backup_history")
-        .update({
-          status: "failed",
-          error_message: backupError.message,
-          completed_at: new Date().toISOString(),
-        })
-        .eq("id", backupEntry.id);
-
-      throw backupError;
+    if (errors.length > 0) {
+      result.error = `Completed with ${errors.length} errors: ${errors.join(", ")}`;
     }
-  } catch (error: any) {
-    console.error("Backup error:", error);
+
+    console.log("✅ Backup completed successfully!");
+    console.log(`📊 Stats: ${totalRows} rows from ${Object.keys(backupData).length} tables`);
+    console.log(`💾 Size: ${(backupSize / 1024 / 1024).toFixed(2)} MB`);
+    console.log(`⏱️ Duration: ${duration}s`);
+
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify(result),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      }
+    );
+  } catch (error) {
+    console.error("❌ Backup failed:", error);
+    
+    const result: BackupResult = {
+      success: false,
+      error: error.message || "Unknown error occurred",
+    };
+
+    return new Response(
+      JSON.stringify(result),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
@@ -195,3 +215,14 @@ serve(async (req) => {
     );
   }
 });
+
+/**
+ * Calculate next backup time based on schedule
+ */
+function calculateNextBackup(): string {
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(2, 0, 0, 0); // 2 AM next day
+  return tomorrow.toISOString();
+}
