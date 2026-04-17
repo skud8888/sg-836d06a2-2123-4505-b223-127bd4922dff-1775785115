@@ -7,6 +7,7 @@ import { emailService } from "@/services/emailService";
 import { exportService } from "@/services/exportService";
 import { signatureService } from "@/services/signatureService";
 import { contractService } from "@/services/contractService";
+import { aiAgentService } from "@/services/aiAgentService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -322,6 +323,16 @@ export default function BookingsDashboard() {
     pending: bookings.filter((b) => b.status === "pending").length,
     paid: bookings.filter((b) => b.payment_status === "paid").length,
     unpaid: bookings.filter((b) => b.payment_status === "unpaid").length,
+  };
+
+  // Trigger AI analysis in background (non-blocking)
+  const triggerAIAnalysis = async (bookingId: string) => {
+    try {
+      await aiAgentService.analyzeBooking(bookingId);
+      console.log("AI analysis triggered for booking:", bookingId);
+    } catch (err) {
+      console.error("AI analysis failed (non-critical):", err);
+    }
   };
 
   return (
