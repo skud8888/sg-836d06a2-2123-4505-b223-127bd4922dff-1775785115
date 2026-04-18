@@ -28,7 +28,8 @@ import {
   PlusCircle,
   ChevronDown,
   ChevronUp,
-  Star
+  Star,
+  Brain
 } from "lucide-react";
 import Link from "next/link";
 
@@ -102,6 +103,7 @@ export default function StudentPortalPage() {
   const [loadingProgress, setLoadingProgress] = useState(false);
   const [gamificationStats, setGamificationStats] = useState<any>(null);
   const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [insightsCount, setInsightsCount] = useState(0);
 
   useEffect(() => {
     checkAuth();
@@ -119,6 +121,17 @@ export default function StudentPortalPage() {
     await loadStudentData(user.id);
     await loadGamificationStats(user.id);
     await loadRecommendations(user.id);
+    await loadInsightsCount(user.id);
+  };
+
+  const loadInsightsCount = async (userId: string) => {
+    try {
+      const { studentInsightsService } = await import("@/services/studentInsightsService");
+      const count = await studentInsightsService.getUnreadCount(userId);
+      setInsightsCount(count);
+    } catch (err) {
+      console.error("Error loading insights count:", err);
+    }
   };
 
   const loadGamificationStats = async (userId: string) => {
@@ -308,6 +321,11 @@ export default function StudentPortalPage() {
               );
               await gamificationService.checkAchievements(user.id);
               await loadGamificationStats(user.id);
+
+              // Generate AI insights
+              const { studentInsightsService } = await import("@/services/studentInsightsService");
+              await studentInsightsService.generateInsights(user.id);
+              await loadInsightsCount(user.id);
             }
           }
         }
@@ -468,6 +486,15 @@ export default function StudentPortalPage() {
                     <div className="text-center p-3 rounded-lg hover:bg-background transition-colors bg-background border-2 border-primary/20">
                       <p className="font-semibold text-primary mb-1">View All Achievements</p>
                       <p className="text-xs text-muted-foreground">→</p>
+                    </div>
+                  </Link>
+                  <Link href="/student/insights" className="group cursor-pointer">
+                    <div className="text-center p-3 rounded-lg hover:bg-background transition-colors">
+                      <div className="flex items-center justify-center gap-2 mb-1">
+                        <Brain className="h-5 w-5 text-purple-600" />
+                        <p className="font-bold text-2xl">{insightsCount}</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground group-hover:text-primary transition-colors">AI Insights</p>
                     </div>
                   </Link>
                 </div>
