@@ -14,9 +14,12 @@ interface Notification {
   type: string;
   title: string;
   message: string;
-  read: boolean;
+  is_read: boolean;
   created_at: string;
-  action_url?: string;
+  link?: string;
+  metadata?: any;
+  read_at?: string;
+  user_id?: string;
 }
 
 export function NotificationCenter() {
@@ -108,11 +111,11 @@ export function NotificationCenter() {
   const markAsRead = async (id: string) => {
     await supabase
       .from("notifications")
-      .update({ read: true })
+      .update({ is_read: true, read_at: new Date().toISOString() })
       .eq("id", id);
 
     setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+      prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
     );
   };
 
@@ -121,12 +124,12 @@ export function NotificationCenter() {
 
     await supabase
       .from("notifications")
-      .update({ read: true })
+      .update({ is_read: true, read_at: new Date().toISOString() })
       .eq("user_id", user.id)
-      .eq("read", false);
+      .eq("is_read", false);
 
     setNotifications((prev) =>
-      prev.map((n) => ({ ...n, read: true }))
+      prev.map((n) => ({ ...n, is_read: true }))
     );
 
     toast({
@@ -142,7 +145,7 @@ export function NotificationCenter() {
             <CardTitle>Notifications</CardTitle>
             <CardDescription>Stay updated with your activity</CardDescription>
           </div>
-          {notifications.some((n) => !n.read) && (
+          {notifications.some((n) => !n.is_read) && (
             <Button size="sm" variant="ghost" onClick={markAllAsRead}>
               <Check className="h-4 w-4 mr-2" />
               Mark all read
@@ -194,14 +197,14 @@ export function NotificationCenter() {
               <div
                 key={notification.id}
                 className={`p-3 border rounded-lg ${
-                  notification.read ? "bg-background" : "bg-primary/5 border-primary/20"
+                  notification.is_read ? "bg-background" : "bg-primary/5 border-primary/20"
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <h4 className="font-semibold text-sm">{notification.title}</h4>
-                      {!notification.read && (
+                      {!notification.is_read && (
                         <Badge variant="secondary" className="text-xs">New</Badge>
                       )}
                     </div>
@@ -210,7 +213,7 @@ export function NotificationCenter() {
                       {new Date(notification.created_at).toLocaleString()}
                     </p>
                   </div>
-                  {!notification.read && (
+                  {!notification.is_read && (
                     <Button
                       size="icon"
                       variant="ghost"
