@@ -334,6 +334,53 @@ export type Database = {
         }
         Relationships: []
       }
+      batch_reports: {
+        Row: {
+          created_at: string | null
+          data: Json | null
+          file_url: string | null
+          generated_at: string | null
+          generated_by: string | null
+          id: string
+          recipients: string[] | null
+          report_name: string
+          report_type: string
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data?: Json | null
+          file_url?: string | null
+          generated_at?: string | null
+          generated_by?: string | null
+          id?: string
+          recipients?: string[] | null
+          report_name: string
+          report_type: string
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json | null
+          file_url?: string | null
+          generated_at?: string | null
+          generated_by?: string | null
+          id?: string
+          recipients?: string[] | null
+          report_name?: string
+          report_type?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "batch_reports_generated_by_fkey"
+            columns: ["generated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           access_token: string | null
@@ -2045,6 +2092,59 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_queue: {
+        Row: {
+          badge: string | null
+          body: string
+          created_at: string | null
+          data: Json | null
+          error_message: string | null
+          icon: string | null
+          id: string
+          sent_at: string | null
+          status: string | null
+          title: string
+          url: string | null
+          user_id: string
+        }
+        Insert: {
+          badge?: string | null
+          body: string
+          created_at?: string | null
+          data?: Json | null
+          error_message?: string | null
+          icon?: string | null
+          id?: string
+          sent_at?: string | null
+          status?: string | null
+          title: string
+          url?: string | null
+          user_id: string
+        }
+        Update: {
+          badge?: string | null
+          body?: string
+          created_at?: string | null
+          data?: Json | null
+          error_message?: string | null
+          icon?: string | null
+          id?: string
+          sent_at?: string | null
+          status?: string | null
+          title?: string
+          url?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_queue_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string | null
@@ -2503,6 +2603,50 @@ export type Database = {
         }
         Relationships: []
       }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string | null
+          endpoint: string
+          id: string
+          is_active: boolean | null
+          last_used_at: string | null
+          p256dh: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string | null
+          endpoint: string
+          id?: string
+          is_active?: boolean | null
+          last_used_at?: string | null
+          p256dh: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string | null
+          endpoint?: string
+          id?: string
+          is_active?: boolean | null
+          last_used_at?: string | null
+          p256dh?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rate_limit_log: {
         Row: {
           count: number | null
@@ -2844,6 +2988,53 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "payment_tracking"
             referencedColumns: ["booking_id"]
+          },
+        ]
+      }
+      student_ai_insights: {
+        Row: {
+          created_at: string | null
+          data: Json | null
+          description: string
+          expires_at: string | null
+          id: string
+          insight_type: string
+          is_read: boolean | null
+          priority: string | null
+          student_id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          data?: Json | null
+          description: string
+          expires_at?: string | null
+          id?: string
+          insight_type: string
+          is_read?: boolean | null
+          priority?: string | null
+          student_id: string
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json | null
+          description?: string
+          expires_at?: string | null
+          id?: string
+          insight_type?: string
+          is_read?: boolean | null
+          priority?: string | null
+          student_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_ai_insights_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3416,6 +3607,10 @@ export type Database = {
         Args: { p_student_id: string }
         Returns: undefined
       }
+      generate_student_insights: {
+        Args: { student_uuid: string }
+        Returns: undefined
+      }
       generate_student_token: { Args: never; Returns: string }
       get_next_invoice_number: { Args: never; Returns: string }
       has_permission: {
@@ -3446,6 +3641,14 @@ export type Database = {
           p_user_id?: string
         }
         Returns: undefined
+      }
+      schedule_batch_report: {
+        Args: {
+          recipients_param: string[]
+          report_name_param: string
+          report_type_param: string
+        }
+        Returns: string
       }
       schedule_payment_reminder: {
         Args: { p_booking_id: string }
