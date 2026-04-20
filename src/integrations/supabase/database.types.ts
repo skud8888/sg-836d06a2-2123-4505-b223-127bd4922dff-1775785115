@@ -15,6 +15,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_timeline: {
+        Row: {
+          action_description: string
+          action_type: string
+          created_at: string | null
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          metadata: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          action_description: string
+          action_type: string
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          action_description?: string
+          action_type?: string
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       ai_action_queue: {
         Row: {
           action_type: string
@@ -471,6 +504,48 @@ export type Database = {
           },
         ]
       }
+      bulk_operations: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          error_message: string | null
+          failed_items: number | null
+          id: string
+          operation_type: string
+          processed_items: number | null
+          started_at: string | null
+          status: string | null
+          total_items: number | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          failed_items?: number | null
+          id?: string
+          operation_type: string
+          processed_items?: number | null
+          started_at?: string | null
+          status?: string | null
+          total_items?: number | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          failed_items?: number | null
+          id?: string
+          operation_type?: string
+          processed_items?: number | null
+          started_at?: string | null
+          status?: string | null
+          total_items?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       certificate_templates: {
         Row: {
           background_url: string | null
@@ -587,6 +662,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      chat_messages: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string
+          read: boolean | null
+          read_at: string | null
+          recipient_id: string | null
+          room_id: string | null
+          sender_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message: string
+          read?: boolean | null
+          read_at?: string | null
+          recipient_id?: string | null
+          room_id?: string | null
+          sender_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string
+          read?: boolean | null
+          read_at?: string | null
+          recipient_id?: string | null
+          room_id?: string | null
+          sender_id?: string
+        }
+        Relationships: []
+      }
+      chat_rooms: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          name: string
+          type: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          name: string
+          type?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          name?: string
+          type?: string | null
+        }
+        Relationships: []
       }
       class_attendance: {
         Row: {
@@ -1592,6 +1724,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      error_logs: {
+        Row: {
+          created_at: string | null
+          error_message: string
+          error_type: string
+          id: string
+          ip_address: string | null
+          resolved: boolean | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string | null
+          stack_trace: string | null
+          url: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_message: string
+          error_type: string
+          id?: string
+          ip_address?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string | null
+          stack_trace?: string | null
+          url?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string
+          error_type?: string
+          id?: string
+          ip_address?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string | null
+          stack_trace?: string | null
+          url?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       evidence_capture: {
         Row: {
@@ -3485,6 +3665,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      translations: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          id: string
+          key: string
+          language: string
+          updated_at: string | null
+          value: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          key: string
+          language: string
+          updated_at?: string | null
+          value: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          key?: string
+          language?: string
+          updated_at?: string | null
+          value?: string
+        }
+        Relationships: []
       }
       user_activity_logs: {
         Row: {
