@@ -1,24 +1,42 @@
 import { useState, useEffect } from "react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { WifiOff, Wifi } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { WifiOff, Wifi, RefreshCw } from "lucide-react";
+import { offlineService } from "@/services/offlineService";
+import { useToast } from "@/hooks/use-toast";
 
 export function OfflineIndicator() {
   const [isOnline, setIsOnline] = useState(true);
-  const [showReconnected, setShowReconnected] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+  const { toast } = useToast();
 
   useEffect(() => {
-    const handleOnline = () => {
+    // Set initial online status
+    setIsOnline(offlineService.isOnline());
+
+    // Check for pending actions
+    checkPendingActions();
+
+    const handleOnline = async () => {
       setIsOnline(true);
-      setShowReconnected(true);
-      setTimeout(() => setShowReconnected(false), 3000);
+      toast({
+        title: "Back online",
+        description: "Connection restored",
+      });
+      
+      // Auto-sync when coming back online
+      await handleSync();
     };
 
     const handleOffline = () => {
       setIsOnline(false);
-      setShowReconnected(false);
+      toast({
+        title: "You're offline",
+        description: "Changes will sync when connection is restored",
+        variant: "destructive",
+      });
     };
-
-    setIsOnline(navigator.onLine);
 
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
@@ -29,30 +47,58 @@ export function OfflineIndicator() {
     };
   }, []);
 
-  if (isOnline && !showReconnected) return null;
+  const checkPendingActions = async () => {
+    // This would check for pending actions
+    // For now, just set to 0
+    setPendingCount(0);
+  };
+
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      // Sync logic would go here
+      await checkPendingActions();
+      
+      if (pendingCount > 0) {
+        toast({
+          title: "Synced successfully",
+          description: `${pendingCount} changes synced`,
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Sync failed",
+        description: "Some changes couldn't be synced",
+        variant: "destructive",
+      });
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  if (isOnline && pendingCount === 0) {
+    return null;
+  }
 
   return (
-    <div className="fixed top-20 left-0 right-0 z-50 px-4">
-      <div className="container mx-auto max-w-2xl">
-        <Alert className={isOnline ? "bg-green-50 border-green-200" : "bg-amber-50 border-amber-200"}>
-          <div className="flex items-center gap-3">
-            {isOnline ? (
-              <Wifi className="h-5 w-5 text-green-600" />
-            ) : (
-              <WifiOff className="h-5 w-5 text-amber-600" />
-            )}
-            <AlertDescription className={isOnline ? "text-green-800" : "text-amber-800"}>
-              {isOnline ? (
-                <strong>Back online!</strong>
-              ) : (
-                <>
-                  <strong>You're offline.</strong> Some features may be limited. Changes will sync when you reconnect.
-                </>
-              )}
-            </AlertDescription>
-          </div>
+    <div className="fixed bottom-4 right-4 z-50 max-w-md">
+      {!isOnline ? (
+        <Alert variant="destructive">
+          <WifiOff className="h-4 w-4" />
+          <AlertTitle>You're offline</AlertTitle>
+          <AlertDescription>
+            Changes will be saved locally and synced when you're back online
+          </AlertDescription>
         </Alert>
-      </div>
+      ) : pendingCount > 0 ? (
+        <Alert>
+          <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
+          <AlertTitle>Syncing changes</AlertTitle>
+          <AlertDescription>
+            {pendingCount} pending {pendingCount === 1 ? 'change' : 'changes'}
+          </AlertDescription>
+        </Alert>
+      ) : null}
     </div>
   );
 }

@@ -11,25 +11,23 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { gamificationService } from "@/services/gamificationService";
 import { recommendationService } from "@/services/recommendationService";
-import { 
-  Loader2, 
-  BookOpen, 
-  CheckCircle, 
-  Clock, 
-  Award,
+import {
   Calendar,
-  DollarSign,
-  LogOut,
+  BookOpen,
+  Award,
   FileText,
-  MessageSquare,
   Download,
+  CheckCircle,
+  Clock,
+  LogOut,
+  Loader2,
   Eye,
-  MapPin,
-  PlusCircle,
-  ChevronDown,
-  ChevronUp,
+  DollarSign,
   Star,
-  Brain
+  MessageSquare,
+  Brain,
+  User,
+  Gift,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -517,6 +515,34 @@ export default function StudentPortalPage() {
               </Card>
             </Link>
             
+            {/* Quick Actions */}
+            <div className="grid grid-cols-2 gap-4">
+              <Link href="/student/wishlist">
+                <Button variant="outline" className="w-full">
+                  <Star className="h-4 w-4 mr-2" />
+                  Wishlist
+                </Button>
+              </Link>
+              <Link href="/student/feedback">
+                <Button variant="outline" className="w-full">
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Feedback
+                </Button>
+              </Link>
+              <Link href="/student/social-profile">
+                <Button variant="outline" className="w-full">
+                  <User className="h-4 w-4 mr-2" />
+                  Social Profile
+                </Button>
+              </Link>
+              <Link href="/student/referrals">
+                <Button variant="outline" className="w-full">
+                  <Gift className="h-4 w-4 mr-2" />
+                  Referrals
+                </Button>
+              </Link>
+            </div>
+
             <Link href="/student/feedback">
               <Card className="hover:shadow-lg transition-all cursor-pointer">
                 <CardHeader className="pb-3">
@@ -692,7 +718,7 @@ export default function StudentPortalPage() {
                                   <span className="text-sm font-medium">
                                     Overall Progress
                                   </span>
-                                  <span className="text-sm text-muted-foreground">
+                                  <span className="text-sm text-green-600">
                                     {Math.round(progress.completion_percentage)}%
                                   </span>
                                 </div>
