@@ -1,17 +1,29 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { createClient } from "@supabase/supabase-js";
 
+// Validate environment variables
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+  throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL environment variable");
+}
+
+if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  console.error("CRITICAL: Missing SUPABASE_SERVICE_ROLE_KEY environment variable");
+  console.error("This key is required for admin operations. Please set it in .env.local");
+}
+
 // Create admin client with service role key (server-side only)
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  }
-);
+const supabaseAdmin = process.env.SUPABASE_SERVICE_ROLE_KEY
+  ? createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+  : null;
 
 export default async function handler(
   req: NextApiRequest,
@@ -24,10 +36,17 @@ export default async function handler(
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  // Check if service role key is configured
+  if (!supabaseAdmin) {
+    console.error("Service role key not configured");
+    return res.status(500).json({ 
+      error: "Server configuration error: Missing service_role key. Please contact administrator.",
+      details: "SUPABASE_SERVICE_ROLE_KEY is not set in environment variables"
+    });
+  }
+
   try {
     console.log("Create user request received");
-    console.log("Headers:", req.headers);
-    console.log("Body type:", typeof req.body);
 
     // Get request body
     const body = req.body;

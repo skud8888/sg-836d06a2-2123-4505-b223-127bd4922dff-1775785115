@@ -194,20 +194,23 @@ export default function UserManagementPage() {
       });
 
       console.log("Response status:", response.status);
-      console.log("Response headers:", response.headers);
 
       // Check if response is JSON
       const contentType = response.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
         const text = await response.text();
         console.error("Non-JSON response:", text);
-        throw new Error("Server returned an error. Please check the console logs.");
+        throw new Error("Server configuration error. Please check environment variables.");
       }
 
       const result = await response.json();
       console.log("Response data:", result);
 
       if (!response.ok) {
+        // Specific error handling
+        if (result.error?.includes("service_role")) {
+          throw new Error("Server configuration error: Missing service role key. Please contact administrator.");
+        }
         throw new Error(result.error || "Failed to create user");
       }
 

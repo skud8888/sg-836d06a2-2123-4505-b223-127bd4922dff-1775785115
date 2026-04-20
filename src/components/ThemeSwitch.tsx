@@ -1,41 +1,43 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTheme } from "next-themes";
 import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function ThemeSwitch() {
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [mounted, setMounted] = useState(false);
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
-    // Check localStorage and system preference
-    const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
-    const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-    const initialTheme = savedTheme || systemTheme;
-    
-    setTheme(initialTheme);
-    document.documentElement.classList.toggle("dark", initialTheme === "dark");
+    setMounted(true);
   }, []);
 
-  const toggleTheme = () => {
-    const newTheme = theme === "light" ? "dark" : "light";
-    setTheme(newTheme);
-    localStorage.setItem("theme", newTheme);
-    document.documentElement.classList.toggle("dark", newTheme === "dark");
-  };
+  if (!mounted) {
+    return (
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-9 w-9"
+        aria-label="Toggle theme"
+      >
+        <Sun className="h-5 w-5" />
+      </Button>
+    );
+  }
 
   return (
     <Button
       variant="ghost"
       size="icon"
-      onClick={toggleTheme}
-      className="transition-transform hover:scale-110"
+      onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+      className="h-9 w-9 transition-transform hover:scale-110"
       aria-label="Toggle theme"
     >
       {theme === "light" ? (
-        <Moon className="h-5 w-5 transition-transform rotate-0 scale-100" />
+        <Moon className="h-5 w-5 transition-all" />
       ) : (
-        <Sun className="h-5 w-5 transition-transform rotate-0 scale-100" />
+        <Sun className="h-5 w-5 transition-all" />
       )}
     </Button>
   );
