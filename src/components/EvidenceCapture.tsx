@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -185,10 +186,13 @@ export function EvidenceCapture({ bookingId, scheduledClassId, onCaptureComplete
         {/* Preview */}
         {previewUrl && (
           <div className="border rounded-lg overflow-hidden">
-            <img 
+            <Image 
               src={previewUrl} 
-              alt="Preview" 
+              alt="Evidence preview" 
+              width={800}
+              height={400}
               className="w-full h-64 object-cover"
+              priority
             />
           </div>
         )}

@@ -1,0 +1,30 @@
+# Robots.txt for The Training Hub
+
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /field/
+Disallow: /sign/
+
+# Sitemaps
+Sitemap: https://training-hub.com/sitemap.xml
+
+# Crawl delay
+Crawl-delay: 10
+
+# Specific bots
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 5
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 10
+
+# Block bad bots
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /

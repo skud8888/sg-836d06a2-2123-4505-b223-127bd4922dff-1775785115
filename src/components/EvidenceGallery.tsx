@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { FileText, MapPin, Calendar, User, Download, Eye } from "lucide-react";
 import { format } from "date-fns";
+import Image from "next/image";
 
 type Evidence = {
   id: string;
@@ -202,10 +203,13 @@ export function EvidenceGallery({ bookingId, scheduledClassId }: EvidenceGallery
           {selectedEvidence && (
             <div className="space-y-4">
               {imageUrl && selectedEvidence.mime_type?.startsWith("image/") && (
-                <img 
+                <Image
                   src={imageUrl} 
-                  alt={selectedEvidence.file_name}
+                  alt={`${selectedEvidence.file_name} - ${selectedEvidence.description || 'Evidence photo'}`}
+                  width={1200}
+                  height={800}
                   className="w-full rounded-lg"
+                  priority
                 />
               )}
               <div className="space-y-2">

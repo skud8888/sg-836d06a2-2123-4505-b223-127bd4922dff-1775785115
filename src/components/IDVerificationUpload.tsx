@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -207,10 +208,13 @@ export function IDVerificationUpload({
         {/* Photo Preview */}
         {idPhotoPreview && (
           <div className="border rounded-lg overflow-hidden">
-            <img 
+            <Image 
               src={idPhotoPreview} 
-              alt="ID Preview" 
+              alt={`${idType} preview for ${studentName}`}
+              width={800}
+              height={400}
               className="w-full h-64 object-cover"
+              priority
             />
           </div>
         )}
