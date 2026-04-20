@@ -1,10 +1,6 @@
-<![CDATA[
 import { supabase } from "@/integrations/supabase/client";
 
 export const referralService = {
-  /**
-   * Generate referral code for user
-   */
   async generateCode(userId: string) {
     const { data, error } = await supabase.rpc("generate_referral_code", {
       p_user_id: userId,
@@ -13,9 +9,6 @@ export const referralService = {
     return { code: data, error };
   },
 
-  /**
-   * Get user's referral codes
-   */
   async getUserCodes(userId: string) {
     const { data, error } = await supabase
       .from("referral_codes")
@@ -26,9 +19,6 @@ export const referralService = {
     return { codes: data || [], error };
   },
 
-  /**
-   * Get user's referrals
-   */
   async getUserReferrals(userId: string) {
     const { data, error } = await supabase
       .from("referrals")
@@ -45,9 +35,6 @@ export const referralService = {
     return { referrals: data || [], error };
   },
 
-  /**
-   * Process referral code
-   */
   async processReferral(code: string, userId: string) {
     const { data, error } = await supabase.rpc("process_referral", {
       p_code: code,
@@ -57,9 +44,6 @@ export const referralService = {
     return { result: data, error };
   },
 
-  /**
-   * Get referral stats
-   */
   async getReferralStats(userId: string) {
     const { data: referrals } = await supabase
       .from("referrals")
@@ -78,4 +62,3 @@ export const referralService = {
     };
   },
 };
-</![CDATA[>

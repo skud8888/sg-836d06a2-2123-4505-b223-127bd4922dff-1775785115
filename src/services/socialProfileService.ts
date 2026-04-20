@@ -1,10 +1,6 @@
-<![CDATA[
 import { supabase } from "@/integrations/supabase/client";
 
 export const socialProfileService = {
-  /**
-   * Get public profile by user ID
-   */
   async getProfile(userId: string) {
     const { data, error } = await supabase
       .from("student_profiles")
@@ -15,9 +11,6 @@ export const socialProfileService = {
     return { profile: data, error };
   },
 
-  /**
-   * Get all public profiles
-   */
   async getPublicProfiles(limit = 20, offset = 0) {
     const { data, error } = await supabase
       .from("student_profiles")
@@ -29,9 +22,6 @@ export const socialProfileService = {
     return { profiles: data || [], error };
   },
 
-  /**
-   * Create or update profile
-   */
   async upsertProfile(userId: string, profileData: any) {
     const { data, error } = await supabase
       .from("student_profiles")
@@ -46,9 +36,6 @@ export const socialProfileService = {
     return { profile: data, error };
   },
 
-  /**
-   * Search profiles by name or interests
-   */
   async searchProfiles(query: string) {
     const { data, error } = await supabase
       .from("student_profiles")
@@ -60,9 +47,6 @@ export const socialProfileService = {
     return { profiles: data || [], error };
   },
 
-  /**
-   * Get profile achievements
-   */
   async getProfileAchievements(userId: string) {
     const { data, error } = await supabase
       .from("student_badges")
@@ -73,9 +57,6 @@ export const socialProfileService = {
     return { achievements: data || [], error };
   },
 
-  /**
-   * Get profile courses
-   */
   async getProfileCourses(userId: string) {
     const { data, error } = await supabase
       .from("enrollments")
@@ -95,4 +76,3 @@ export const socialProfileService = {
     return { courses: data || [], error };
   },
 };
-</![CDATA[>

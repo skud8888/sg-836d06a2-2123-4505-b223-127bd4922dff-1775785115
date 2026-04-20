@@ -1,17 +1,10 @@
-<![CDATA[
 import { supabase } from "@/integrations/supabase/client";
 
 export const offlineService = {
-  /**
-   * Check if online
-   */
   isOnline(): boolean {
-    return navigator.onLine;
+    return typeof window !== 'undefined' ? navigator.onLine : true;
   },
 
-  /**
-   * Add action to offline sync queue
-   */
   async queueAction(
     userId: string,
     actionType: string,
@@ -33,9 +26,6 @@ export const offlineService = {
     return { action: data, error };
   },
 
-  /**
-   * Get pending sync actions
-   */
   async getPendingActions(userId: string) {
     const { data, error } = await supabase
       .from("offline_sync_queue")
@@ -47,9 +37,6 @@ export const offlineService = {
     return { actions: data || [], error };
   },
 
-  /**
-   * Process sync queue
-   */
   async processSyncQueue(userId: string) {
     const { actions } = await this.getPendingActions(userId);
 
@@ -79,7 +66,6 @@ export const offlineService = {
 
         if (result?.error) throw result.error;
 
-        // Mark as synced
         await supabase
           .from("offline_sync_queue")
           .update({
@@ -90,7 +76,6 @@ export const offlineService = {
 
         results.push({ id: action.id, success: true });
       } catch (err: any) {
-        // Mark as failed
         await supabase
           .from("offline_sync_queue")
           .update({
@@ -106,42 +91,36 @@ export const offlineService = {
     return results;
   },
 
-  /**
-   * Cache data for offline use (IndexedDB)
-   */
   async cacheData(key: string, data: any) {
-    if (!("indexedDB" in window)) return;
+    if (typeof window === 'undefined' || !("indexedDB" in window)) return;
 
     const db = await this.openDB();
-    const tx = db.transaction("offline_cache", "readwrite");
-    const store = tx.objectStore("offline_cache");
-
-    await store.put({
-      key,
-      data,
-      timestamp: Date.now(),
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction("offline_cache", "readwrite");
+      const store = tx.objectStore("offline_cache");
+      const request = store.put({
+        key,
+        data,
+        timestamp: Date.now(),
+      });
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
     });
-
-    await tx.done;
   },
 
-  /**
-   * Get cached data
-   */
   async getCachedData(key: string) {
-    if (!("indexedDB" in window)) return null;
+    if (typeof window === 'undefined' || !("indexedDB" in window)) return null;
 
     const db = await this.openDB();
-    const tx = db.transaction("offline_cache", "readonly");
-    const store = tx.objectStore("offline_cache");
-
-    const result = await store.get(key);
-    return result?.data || null;
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction("offline_cache", "readonly");
+      const store = tx.objectStore("offline_cache");
+      const request = store.get(key);
+      request.onsuccess = () => resolve(request.result?.data || null);
+      request.onerror = () => reject(request.error);
+    });
   },
 
-  /**
-   * Open IndexedDB
-   */
   async openDB() {
     return new Promise<any>((resolve, reject) => {
       const request = indexedDB.open("training_hub_offline", 1);
@@ -158,4 +137,3 @@ export const offlineService = {
     });
   },
 };
-</![CDATA[>
