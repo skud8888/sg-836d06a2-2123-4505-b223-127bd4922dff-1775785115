@@ -364,8 +364,8 @@ export default function CoursesPage() {
       </div>
 
       <LoginModal
-        isOpen={loginModalOpen}
-        onClose={() => setLoginModalOpen(false)}
+        open={loginModalOpen}
+        onOpenChange={setLoginModalOpen}
       />
     </>
   );
