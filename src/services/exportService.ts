@@ -48,6 +48,28 @@ export const exportService = {
     document.body.removeChild(link);
   },
 
+  downloadCSV(data: any[], filename: string) {
+    this.exportToCSV(data, filename);
+  },
+
+  async exportBookingsCSV() {
+    return this.exportBookings("csv");
+  },
+
+  async exportEnquiriesCSV() {
+    const { data, error } = await supabase.from("enquiries").select("*");
+    if (error) throw error;
+    if (!data) throw new Error("No enquiries found");
+    this.exportToCSV(data, `enquiries_export_${new Date().toISOString().split("T")[0]}`);
+  },
+
+  async exportFeedbackCSV() {
+    const { data, error } = await supabase.from("course_feedback").select("*");
+    if (error) throw error;
+    if (!data) throw new Error("No feedback found");
+    this.exportToCSV(data, `feedback_export_${new Date().toISOString().split("T")[0]}`);
+  },
+
   async exportStudents(format: "csv" | "json" = "csv") {
     const { data, error } = await supabase
       .from("profiles")

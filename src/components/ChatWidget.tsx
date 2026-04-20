@@ -46,7 +46,7 @@ export function ChatWidget() {
       const { data, error } = await supabase
         .from("chat_messages")
         .select("*")
-        .eq("user_id", user.id)
+        .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
         .order("created_at", { ascending: true })
         .limit(50);
 
@@ -56,9 +56,9 @@ export function ChatWidget() {
         setMessages(
           data.map((msg) => ({
             id: msg.id,
-            sender: msg.sender_type as any,
+            sender: msg.sender_id === user.id ? "user" : "support",
             text: msg.message,
-            timestamp: msg.created_at,
+            timestamp: msg.created_at || new Date().toISOString(),
           }))
         );
       }
@@ -92,8 +92,7 @@ export function ChatWidget() {
 
     try {
       await supabase.from("chat_messages").insert({
-        user_id: user.id,
-        sender_type: "user",
+        sender_id: user.id,
         message: newMessage,
       });
 
@@ -107,12 +106,6 @@ export function ChatWidget() {
         };
         setMessages((prev) => [...prev, supportMessage]);
         setIsTyping(false);
-
-        supabase.from("chat_messages").insert({
-          user_id: user.id,
-          sender_type: "support",
-          message: supportMessage.text,
-        });
       }, 1500);
     } catch (error) {
       toast({
