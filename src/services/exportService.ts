@@ -1,269 +1,248 @@
+<![CDATA[
 import { supabase } from "@/integrations/supabase/client";
-import { auditService } from "./auditService";
-import type { Tables } from "@/integrations/supabase/types";
 
-type Booking = Tables<"bookings">;
-type Enquiry = Tables<"enquiries">;
-type Feedback = Tables<"course_feedback">;
-
-/**
- * Data Export Service - CSV/Excel/PDF exports
- */
 export const exportService = {
   /**
-   * Export bookings to CSV
+   * Export data to CSV
    */
-  async exportBookingsCSV(params?: {
-    startDate?: Date;
-    endDate?: Date;
-    status?: string;
-    paymentStatus?: string;
-  }): Promise<string> {
-    let query = supabase
-      .from("bookings")
-      .select(`
-        *,
-        scheduled_classes (
-          start_datetime,
-          end_datetime,
-          location,
-          course_templates (name, code)
-        )
-      `)
-      .order("created_at", { ascending: false });
-
-    if (params?.startDate) {
-      query = query.gte("created_at", params.startDate.toISOString());
+  exportToCSV(data: any[], filename: string) {
+    if (!data || data.length === 0) {
+      throw new Error("No data to export");
     }
 
-    if (params?.endDate) {
-      query = query.lte("created_at", params.endDate.toISOString());
-    }
-
-    if (params?.status) {
-      query = query.eq("status", params.status);
-    }
-
-    if (params?.paymentStatus) {
-      query = query.eq("payment_status", params.paymentStatus);
-    }
-
-    const { data: bookings, error } = await query;
-
-    if (error) throw error;
-
-    // CSV header
-    const headers = [
-      "Booking ID",
-      "Student Name",
-      "Email",
-      "Phone",
-      "Course",
-      "Course Code",
-      "Start Date",
-      "Location",
-      "Status",
-      "Payment Status",
-      "Total Amount",
-      "Paid Amount",
-      "Balance",
-      "Booked At"
-    ];
-
-    // CSV rows
-    const rows = (bookings || []).map((booking: any) => [
-      booking.id,
-      booking.student_name,
-      booking.student_email,
-      booking.student_phone,
-      booking.scheduled_classes?.course_templates?.name || "",
-      booking.scheduled_classes?.course_templates?.code || "",
-      booking.scheduled_classes?.start_datetime || "",
-      booking.scheduled_classes?.location || "",
-      booking.status,
-      booking.payment_status,
-      booking.total_amount,
-      booking.paid_amount,
-      booking.total_amount - booking.paid_amount,
-      booking.created_at
-    ]);
-
-    const csv = [
-      headers.join(","),
-      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+    // Get headers from first object
+    const headers = Object.keys(data[0]);
+    
+    // Create CSV content
+    const csvContent = [
+      headers.join(","), // Header row
+      ...data.map(row => 
+        headers.map(header => {
+          const value = row[header];
+          // Handle values with commas, quotes, or newlines
+          if (value === null || value === undefined) return "";
+          const stringValue = String(value);
+          if (stringValue.includes(",") || stringValue.includes('"') || stringValue.includes("\n")) {
+            return `"${stringValue.replace(/"/g, '""')}"`;
+          }
+          return stringValue;
+        }).join(",")
+      )
     ].join("\n");
 
-    // Log export
-    await auditService.logEvent({
-      action: "export_csv",
-      actionCategory: "system",
-      details: "Exported bookings to CSV",
-      metadata: {
-        export_type: "csv",
-        filters: params,
-        record_count: bookings?.length || 0
-      }
-    });
-
-    return csv;
-  },
-
-  /**
-   * Export enquiries to CSV
-   */
-  async exportEnquiriesCSV(params?: {
-    startDate?: Date;
-    endDate?: Date;
-    status?: string;
-  }): Promise<string> {
-    let query = supabase
-      .from("enquiries")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (params?.startDate) {
-      query = query.gte("created_at", params.startDate.toISOString());
-    }
-
-    if (params?.endDate) {
-      query = query.lte("created_at", params.endDate.toISOString());
-    }
-
-    if (params?.status) {
-      query = query.eq("status", params.status);
-    }
-
-    const { data: enquiries, error } = await query;
-
-    if (error) throw error;
-
-    const headers = ["ID", "Name", "Email", "Phone", "Course Interest", "Message", "Status", "Created At"];
-
-    const rows = (enquiries || []).map((enq: Enquiry) => [
-      enq.id,
-      enq.name,
-      enq.email,
-      enq.phone || "",
-      enq.course_interest || "",
-      enq.message,
-      enq.status,
-      enq.created_at
-    ]);
-
-    const csv = [
-      headers.join(","),
-      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
-    ].join("\n");
-
-    await auditService.logEvent({
-      action: "export_csv",
-      actionCategory: "system",
-      details: "Exported enquiries to CSV",
-      metadata: {
-        export_type: "csv",
-        filters: params,
-        record_count: enquiries?.length || 0
-      }
-    });
-
-    return csv;
-  },
-
-  /**
-   * Export feedback/reviews to CSV
-   */
-  async exportFeedbackCSV(params?: {
-    startDate?: Date;
-    endDate?: Date;
-    minRating?: number;
-  }): Promise<string> {
-    let query = supabase
-      .from("course_feedback")
-      .select(`
-        *,
-        bookings (
-          student_name,
-          student_email,
-          scheduled_classes (
-            course_templates (name, code)
-          )
-        )
-      `)
-      .order("created_at", { ascending: false });
-
-    if (params?.startDate) {
-      query = query.gte("created_at", params.startDate.toISOString());
-    }
-
-    if (params?.endDate) {
-      query = query.lte("created_at", params.endDate.toISOString());
-    }
-
-    if (params?.minRating) {
-      query = query.gte("rating", params.minRating);
-    }
-
-    const { data: feedback, error } = await query;
-
-    if (error) throw error;
-
-    const headers = [
-      "Student Name",
-      "Email",
-      "Course",
-      "Overall Rating",
-      "Course Quality",
-      "Trainer Quality",
-      "Venue Quality",
-      "Comments",
-      "Would Recommend",
-      "Submitted At"
-    ];
-
-    const rows = (feedback || []).map((f: any) => [
-      f.bookings?.student_name || "",
-      f.bookings?.student_email || "",
-      f.bookings?.scheduled_classes?.course_templates?.name || "",
-      f.rating,
-      f.course_quality || "",
-      f.trainer_quality || "",
-      f.venue_quality || "",
-      f.comments || "",
-      f.would_recommend ? "Yes" : "No",
-      f.created_at
-    ]);
-
-    const csv = [
-      headers.join(","),
-      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
-    ].join("\n");
-
-    await auditService.logEvent({
-      action: "export_csv",
-      actionCategory: "system",
-      details: "Exported feedback to CSV",
-      metadata: {
-        export_type: "csv",
-        filters: params,
-        record_count: feedback?.length || 0
-      }
-    });
-
-    return csv;
-  },
-
-  /**
-   * Trigger CSV download in browser
-   */
-  downloadCSV(csv: string, filename: string) {
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
+    // Create and download file
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `${filename}.csv`);
+    link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+  },
+
+  /**
+   * Export data to JSON
+   */
+  exportToJSON(data: any[], filename: string) {
+    if (!data || data.length === 0) {
+      throw new Error("No data to export");
+    }
+
+    const jsonContent = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonContent], { type: "application/json" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `${filename}.json`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  },
+
+  /**
+   * Export all students data
+   */
+  async exportStudents(format: "csv" | "json" = "csv") {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, email, full_name, phone, created_at, role")
+      .eq("role", "student")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    if (!data) throw new Error("No students found");
+
+    const filename = `students_export_${new Date().toISOString().split("T")[0]}`;
+    if (format === "csv") {
+      this.exportToCSV(data, filename);
+    } else {
+      this.exportToJSON(data, filename);
+    }
+  },
+
+  /**
+   * Export all bookings data
+   */
+  async exportBookings(format: "csv" | "json" = "csv") {
+    const { data, error } = await supabase
+      .from("bookings")
+      .select(`
+        id,
+        student_name,
+        student_email,
+        student_phone,
+        class_date,
+        status,
+        total_amount,
+        payment_status,
+        created_at
+      `)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    if (!data) throw new Error("No bookings found");
+
+    const filename = `bookings_export_${new Date().toISOString().split("T")[0]}`;
+    if (format === "csv") {
+      this.exportToCSV(data, filename);
+    } else {
+      this.exportToJSON(data, filename);
+    }
+  },
+
+  /**
+   * Export all courses data
+   */
+  async exportCourses(format: "csv" | "json" = "csv") {
+    const { data, error } = await supabase
+      .from("course_templates")
+      .select("id, name, description, duration_hours, price_full, is_active, created_at")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    if (!data) throw new Error("No courses found");
+
+    const filename = `courses_export_${new Date().toISOString().split("T")[0]}`;
+    if (format === "csv") {
+      this.exportToCSV(data, filename);
+    } else {
+      this.exportToJSON(data, filename);
+    }
+  },
+
+  /**
+   * Export all enrollments data
+   */
+  async exportEnrollments(format: "csv" | "json" = "csv") {
+    const { data, error } = await supabase
+      .from("enrollments")
+      .select(`
+        id,
+        student_id,
+        course_template_id,
+        status,
+        payment_status,
+        amount_paid,
+        amount_due,
+        created_at
+      `)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    if (!data) throw new Error("No enrollments found");
+
+    const filename = `enrollments_export_${new Date().toISOString().split("T")[0]}`;
+    if (format === "csv") {
+      this.exportToCSV(data, filename);
+    } else {
+      this.exportToJSON(data, filename);
+    }
+  },
+
+  /**
+   * Export all certificates data
+   */
+  async exportCertificates(format: "csv" | "json" = "csv") {
+    const { data, error } = await supabase
+      .from("certificates")
+      .select(`
+        id,
+        student_id,
+        course_template_id,
+        certificate_number,
+        issue_date,
+        completion_date,
+        status,
+        created_at
+      `)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    if (!data) throw new Error("No certificates found");
+
+    const filename = `certificates_export_${new Date().toISOString().split("T")[0]}`;
+    if (format === "csv") {
+      this.exportToCSV(data, filename);
+    } else {
+      this.exportToJSON(data, filename);
+    }
+  },
+
+  /**
+   * Export all payments data
+   */
+  async exportPayments(format: "csv" | "json" = "csv") {
+    const { data, error } = await supabase
+      .from("payments")
+      .select("id, booking_id, amount, method, status, transaction_id, created_at")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    if (!data) throw new Error("No payments found");
+
+    const filename = `payments_export_${new Date().toISOString().split("T")[0]}`;
+    if (format === "csv") {
+      this.exportToCSV(data, filename);
+    } else {
+      this.exportToJSON(data, filename);
+    }
+  },
+
+  /**
+   * Export complete database backup (all tables)
+   */
+  async exportCompleteBackup() {
+    try {
+      const backup: any = {
+        exported_at: new Date().toISOString(),
+        data: {}
+      };
+
+      // Fetch all tables
+      const tables = [
+        "profiles",
+        "bookings",
+        "course_templates",
+        "enrollments",
+        "certificates",
+        "payments",
+        "student_progress",
+        "course_feedback"
+      ];
+
+      for (const table of tables) {
+        const { data } = await supabase.from(table as any).select("*");
+        backup.data[table] = data || [];
+      }
+
+      const filename = `complete_backup_${new Date().toISOString().split("T")[0]}`;
+      this.exportToJSON([backup], filename);
+    } catch (error: any) {
+      throw new Error(`Backup failed: ${error.message}`);
+    }
   }
 };
+</![CDATA[>
