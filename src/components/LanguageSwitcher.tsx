@@ -1,4 +1,3 @@
-<![CDATA[
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,7 +31,6 @@ export function LanguageSwitcher() {
   const handleLanguageChange = async (languageCode: string) => {
     await i18n.setLanguage(languageCode);
     setCurrentLanguage(languageCode);
-    // Reload page to apply translations
     window.location.reload();
   };
 
@@ -62,4 +60,3 @@ export function LanguageSwitcher() {
     </DropdownMenu>
   );
 }
-</![CDATA[>

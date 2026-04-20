@@ -1,4 +1,3 @@
-<![CDATA[
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,7 +56,7 @@ export function ChatWidget() {
         setMessages(
           data.map((msg) => ({
             id: msg.id,
-            sender: msg.sender_type,
+            sender: msg.sender_type as any,
             text: msg.message,
             timestamp: msg.created_at,
           }))
@@ -92,14 +91,12 @@ export function ChatWidget() {
     setNewMessage("");
 
     try {
-      // Save to database
       await supabase.from("chat_messages").insert({
         user_id: user.id,
         sender_type: "user",
         message: newMessage,
       });
 
-      // Simulate support response (in production, this would be real-time via websocket)
       setIsTyping(true);
       setTimeout(() => {
         const supportMessage: Message = {
@@ -111,7 +108,6 @@ export function ChatWidget() {
         setMessages((prev) => [...prev, supportMessage]);
         setIsTyping(false);
 
-        // Save support message
         supabase.from("chat_messages").insert({
           user_id: user.id,
           sender_type: "support",
@@ -129,7 +125,6 @@ export function ChatWidget() {
 
   return (
     <>
-      {/* Chat Button */}
       {!isOpen && (
         <Button
           className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50"
@@ -147,7 +142,6 @@ export function ChatWidget() {
         </Button>
       )}
 
-      {/* Chat Window */}
       {isOpen && (
         <Card
           className={`fixed bottom-6 right-6 w-96 shadow-2xl z-50 transition-all ${
@@ -166,11 +160,7 @@ export function ChatWidget() {
                 className="h-8 w-8"
                 onClick={() => setIsMinimized(!isMinimized)}
               >
-                {isMinimized ? (
-                  <Maximize2 className="h-4 w-4" />
-                ) : (
-                  <Minimize2 className="h-4 w-4" />
-                )}
+                {isMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
               </Button>
               <Button
                 variant="ghost"
@@ -262,4 +252,3 @@ export function ChatWidget() {
     </>
   );
 }
-</![CDATA[>

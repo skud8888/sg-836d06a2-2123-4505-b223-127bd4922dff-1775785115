@@ -1,25 +1,16 @@
-<![CDATA[
 import { supabase } from "@/integrations/supabase/client";
 
 export const exportService = {
-  /**
-   * Export data to CSV
-   */
   exportToCSV(data: any[], filename: string) {
     if (!data || data.length === 0) {
       throw new Error("No data to export");
     }
-
-    // Get headers from first object
     const headers = Object.keys(data[0]);
-    
-    // Create CSV content
     const csvContent = [
-      headers.join(","), // Header row
+      headers.join(","),
       ...data.map(row => 
         headers.map(header => {
           const value = row[header];
-          // Handle values with commas, quotes, or newlines
           if (value === null || value === undefined) return "";
           const stringValue = String(value);
           if (stringValue.includes(",") || stringValue.includes('"') || stringValue.includes("\n")) {
@@ -30,7 +21,6 @@ export const exportService = {
       )
     ].join("\n");
 
-    // Create and download file
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
@@ -42,14 +32,10 @@ export const exportService = {
     document.body.removeChild(link);
   },
 
-  /**
-   * Export data to JSON
-   */
   exportToJSON(data: any[], filename: string) {
     if (!data || data.length === 0) {
       throw new Error("No data to export");
     }
-
     const jsonContent = JSON.stringify(data, null, 2);
     const blob = new Blob([jsonContent], { type: "application/json" });
     const link = document.createElement("a");
@@ -62,9 +48,6 @@ export const exportService = {
     document.body.removeChild(link);
   },
 
-  /**
-   * Export all students data
-   */
   async exportStudents(format: "csv" | "json" = "csv") {
     const { data, error } = await supabase
       .from("profiles")
@@ -83,23 +66,10 @@ export const exportService = {
     }
   },
 
-  /**
-   * Export all bookings data
-   */
   async exportBookings(format: "csv" | "json" = "csv") {
     const { data, error } = await supabase
       .from("bookings")
-      .select(`
-        id,
-        student_name,
-        student_email,
-        student_phone,
-        class_date,
-        status,
-        total_amount,
-        payment_status,
-        created_at
-      `)
+      .select(`id, student_name, student_email, student_phone, class_date, status, total_amount, payment_status, created_at`)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
@@ -113,9 +83,6 @@ export const exportService = {
     }
   },
 
-  /**
-   * Export all courses data
-   */
   async exportCourses(format: "csv" | "json" = "csv") {
     const { data, error } = await supabase
       .from("course_templates")
@@ -133,22 +100,10 @@ export const exportService = {
     }
   },
 
-  /**
-   * Export all enrollments data
-   */
   async exportEnrollments(format: "csv" | "json" = "csv") {
     const { data, error } = await supabase
       .from("enrollments")
-      .select(`
-        id,
-        student_id,
-        course_template_id,
-        status,
-        payment_status,
-        amount_paid,
-        amount_due,
-        created_at
-      `)
+      .select(`id, student_id, course_template_id, status, payment_status, amount_paid, amount_due, created_at`)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
@@ -162,22 +117,10 @@ export const exportService = {
     }
   },
 
-  /**
-   * Export all certificates data
-   */
   async exportCertificates(format: "csv" | "json" = "csv") {
     const { data, error } = await supabase
       .from("certificates")
-      .select(`
-        id,
-        student_id,
-        course_template_id,
-        certificate_number,
-        issue_date,
-        completion_date,
-        status,
-        created_at
-      `)
+      .select(`id, student_id, course_template_id, certificate_number, issue_date, completion_date, status, created_at`)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
@@ -191,9 +134,6 @@ export const exportService = {
     }
   },
 
-  /**
-   * Export all payments data
-   */
   async exportPayments(format: "csv" | "json" = "csv") {
     const { data, error } = await supabase
       .from("payments")
@@ -211,9 +151,6 @@ export const exportService = {
     }
   },
 
-  /**
-   * Export complete database backup (all tables)
-   */
   async exportCompleteBackup() {
     try {
       const backup: any = {
@@ -221,7 +158,6 @@ export const exportService = {
         data: {}
       };
 
-      // Fetch all tables
       const tables = [
         "profiles",
         "bookings",
@@ -245,4 +181,3 @@ export const exportService = {
     }
   }
 };
-</![CDATA[>
