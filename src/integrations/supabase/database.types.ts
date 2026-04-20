@@ -3051,6 +3051,50 @@ export type Database = {
           },
         ]
       }
+      security_audits: {
+        Row: {
+          created_at: string | null
+          grade: string
+          id: string
+          issues: Json | null
+          metadata: Json | null
+          passed_checks: Json | null
+          scan_type: string
+          scanned_by: string | null
+          score: number
+        }
+        Insert: {
+          created_at?: string | null
+          grade: string
+          id?: string
+          issues?: Json | null
+          metadata?: Json | null
+          passed_checks?: Json | null
+          scan_type: string
+          scanned_by?: string | null
+          score: number
+        }
+        Update: {
+          created_at?: string | null
+          grade?: string
+          id?: string
+          issues?: Json | null
+          metadata?: Json | null
+          passed_checks?: Json | null
+          scan_type?: string
+          scanned_by?: string | null
+          score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "security_audits_scanned_by_fkey"
+            columns: ["scanned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       signature_requests: {
         Row: {
           booking_id: string | null

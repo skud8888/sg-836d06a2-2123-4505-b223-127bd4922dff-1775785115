@@ -1,0 +1,141 @@
+config:
+  target: 'http://localhost:3000'
+  phases:
+    # Warm-up phase
+    - duration: 60
+      arrivalRate: 5
+      name: "Warm-up"
+    
+    # Ramp-up phase
+    - duration: 300
+      arrivalRate: 10
+      rampTo: 50
+      name: "Ramp-up load"
+    
+    # Sustained load
+    - duration: 600
+      arrivalRate: 50
+      name: "Sustained load"
+    
+    # Spike test
+    - duration: 120
+      arrivalRate: 100
+      name: "Spike load"
+    
+    # Cool-down
+    - duration: 60
+      arrivalRate: 5
+      name: "Cool-down"
+
+  processor: "./load-test-processor.js"
+  
+  # Performance thresholds
+  ensure:
+    maxErrorRate: 1
+    p95: 2000  # 95th percentile response time < 2s
+    p99: 5000  # 99th percentile response time < 5s
+
+  # Plugins
+  plugins:
+    expect: {}
+    metrics-by-endpoint:
+      stripQueryString: true
+
+scenarios:
+  # Public pages load test
+  - name: "Browse Public Pages"
+    weight: 30
+    flow:
+      - get:
+          url: "/"
+          expect:
+            - statusCode: 200
+            - contentType: text/html
+      - think: 2
+      - get:
+          url: "/courses"
+          expect:
+            - statusCode: 200
+      - think: 3
+      - get:
+          url: "/about"
+          expect:
+            - statusCode: 200
+      - think: 2
+      - get:
+          url: "/contact"
+          expect:
+            - statusCode: 200
+
+  # API endpoints load test
+  - name: "API Health Checks"
+    weight: 20
+    flow:
+      - get:
+          url: "/api/health"
+          expect:
+            - statusCode: 200
+            - contentType: json
+            - hasProperty: status
+      - think: 1
+      - get:
+          url: "/api/diagnostic"
+          expect:
+            - statusCode: 200
+
+  # Student portal simulation
+  - name: "Student Portal Usage"
+    weight: 25
+    flow:
+      - get:
+          url: "/student/portal"
+          expect:
+            - statusCode: 200
+      - think: 5
+      - get:
+          url: "/courses"
+          expect:
+            - statusCode: 200
+      - think: 3
+      - get:
+          url: "/student/certificates"
+          expect:
+            - statusCode: 200
+
+  # Admin dashboard simulation
+  - name: "Admin Dashboard"
+    weight: 15
+    flow:
+      - get:
+          url: "/admin/login"
+          expect:
+            - statusCode: 200
+      - think: 2
+      - get:
+          url: "/admin/calendar"
+          expect:
+            - statusCode: 200
+      - think: 4
+      - get:
+          url: "/admin/bookings"
+          expect:
+            - statusCode: 200
+
+  # Static assets
+  - name: "Static Assets"
+    weight: 10
+    flow:
+      - get:
+          url: "/favicon.ico"
+          expect:
+            - statusCode: 200
+      - get:
+          url: "/manifest.json"
+          expect:
+            - statusCode: 200
+            - contentType: json
+      - get:
+          url: "/sitemap.xml"
+          expect:
+            - statusCode: 200
+            - contentType: xml
