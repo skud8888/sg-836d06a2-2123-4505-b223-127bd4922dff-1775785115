@@ -84,8 +84,8 @@ export const securityAuditService = {
       for (const testCase of testCases) {
         try {
           // Try to inject via search
-          const { error } = await supabase
-            .from("students")
+          const { error } = await (supabase as any)
+            .from("profiles")
             .select("id")
             .ilike("full_name", testCase)
             .limit(1);
@@ -231,8 +231,8 @@ export const securityAuditService = {
   async checkDataExposure(issues: SecurityIssue[], passed: string[]): Promise<void> {
     try {
       // Check if sensitive data is exposed via unauthenticated queries
-      const { data, error } = await supabase
-        .from("students")
+      const { data, error } = await (supabase as any)
+        .from("profiles")
         .select("email, phone")
         .limit(1);
 
@@ -384,14 +384,14 @@ export const securityAuditService = {
       await supabase.from("audit_logs").insert({
         user_id: user?.id,
         action: "security_audit",
-        resource_type: "system",
-        details: {
+        action_category: "system",
+        details: JSON.stringify({
           score: result.score,
           grade: result.grade,
           issues_count: result.issues.length,
           critical_issues: result.issues.filter(i => i.severity === "critical").length,
           high_issues: result.issues.filter(i => i.severity === "high").length,
-        },
+        }),
       });
     } catch (error) {
       console.error("Failed to log security audit:", error);
