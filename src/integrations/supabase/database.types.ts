@@ -929,6 +929,7 @@ export type Database = {
       }
       course_templates: {
         Row: {
+          average_rating: number | null
           code: string
           created_at: string | null
           description: string | null
@@ -941,10 +942,12 @@ export type Database = {
           price_deposit: number
           price_full: number
           requirements: string | null
+          total_ratings: number | null
           units: string[] | null
           updated_at: string | null
         }
         Insert: {
+          average_rating?: number | null
           code: string
           created_at?: string | null
           description?: string | null
@@ -957,10 +960,12 @@ export type Database = {
           price_deposit?: number
           price_full: number
           requirements?: string | null
+          total_ratings?: number | null
           units?: string[] | null
           updated_at?: string | null
         }
         Update: {
+          average_rating?: number | null
           code?: string
           created_at?: string | null
           description?: string | null
@@ -973,6 +978,7 @@ export type Database = {
           price_deposit?: number
           price_full?: number
           requirements?: string | null
+          total_ratings?: number | null
           units?: string[] | null
           updated_at?: string | null
         }
@@ -3668,6 +3674,10 @@ export type Database = {
           subtitle: string
           title: string
         }[]
+      }
+      update_course_rating: {
+        Args: { p_course_id: string }
+        Returns: undefined
       }
       update_daily_streak: { Args: { p_student_id: string }; Returns: number }
     }

@@ -9,32 +9,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
   Loader2,
   Search,
   Clock,
-  Users,
   DollarSign,
-  Calendar,
   BookOpen,
   ArrowRight,
   Filter,
-  X,
-  CheckCircle,
-  MapPin,
-  Award,
-  FileText,
-  GraduationCap,
-  Heart
+  Heart,
+  Star,
+  Users
 } from "lucide-react";
 
 interface Course {
@@ -47,6 +34,8 @@ interface Course {
   max_students: number;
   created_at: string;
   is_featured?: boolean;
+  average_rating?: number;
+  total_ratings?: number;
 }
 
 export default function CoursesPage() {
@@ -55,17 +44,21 @@ export default function CoursesPage() {
 
   const [loading, setLoading] = useState(true);
   const [courses, setCourses] = useState<Course[]>([]);
+  const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState("featured");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
-  const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [wishlistIds, setWishlistIds] = useState<string[]>([]);
 
   useEffect(() => {
     loadCourses();
     checkAuth();
   }, []);
+
+  useEffect(() => {
+    filterAndSortCourses();
+  }, [courses, searchQuery, sortBy]);
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -164,322 +157,215 @@ export default function CoursesPage() {
     }
   };
 
-  const handleCourseClick = (course: Course) => {
-    setSelectedCourse(course);
-    setPreviewModalOpen(true);
-  };
+  const filterAndSortCourses = () => {
+    let filtered = [...courses];
 
-  const handleEnrollClick = () => {
-    if (!isAuthenticated) {
-      setPreviewModalOpen(false);
-      setLoginModalOpen(true);
-    } else if (selectedCourse) {
-      router.push(`/enroll/${selectedCourse.id}`);
+    // Search filter
+    if (searchQuery) {
+      filtered = filtered.filter(course =>
+        course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        course.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
     }
+
+    // Sort
+    switch (sortBy) {
+      case "featured":
+        filtered.sort((a, b) => {
+          if (a.is_featured && !b.is_featured) return -1;
+          if (!a.is_featured && b.is_featured) return 1;
+          return 0;
+        });
+        break;
+      case "rating":
+        filtered.sort((a, b) => (b.average_rating || 0) - (a.average_rating || 0));
+        break;
+      case "price-low":
+        filtered.sort((a, b) => a.price_full - b.price_full);
+        break;
+      case "price-high":
+        filtered.sort((a, b) => b.price_full - a.price_full);
+        break;
+      case "duration":
+        filtered.sort((a, b) => a.duration_hours - b.duration_hours);
+        break;
+    }
+
+    setFilteredCourses(filtered);
   };
 
-  const filteredCourses = courses.filter(course => {
-    return course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           course.description.toLowerCase().includes(searchQuery.toLowerCase());
-  });
+  const renderStars = (rating: number) => {
+    return (
+      <div className="flex items-center gap-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Star
+            key={star}
+            className={`h-4 w-4 ${
+              star <= Math.round(rating)
+                ? "fill-yellow-400 text-yellow-400"
+                : "text-gray-300"
+            }`}
+          />
+        ))}
+      </div>
+    );
+  };
 
   return (
     <>
       <SEO
-        title="Training Courses - The Training Hub"
-        description="Browse our comprehensive training courses"
+        title="Browse Courses - The Training Hub"
+        description="Explore our comprehensive range of professional training courses"
       />
-
       <Navigation />
-
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background pt-16">
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-primary/10 via-primary/5 to-background pt-24 pb-12">
-          <div className="container mx-auto px-4">
-            <div className="max-w-3xl mx-auto text-center">
-              <h1 className="text-4xl md:text-5xl font-bold mb-4">
-                Our Training Courses
-              </h1>
-              <p className="text-xl text-muted-foreground mb-8">
-                Professional training programs designed to help you succeed
-              </p>
+        <section className="bg-gradient-to-br from-primary/10 via-accent/10 to-background py-16 px-4">
+          <div className="container mx-auto max-w-6xl">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+              Explore Our Courses
+            </h1>
+            <p className="text-lg text-muted-foreground mb-8">
+              Professional training programs designed to advance your career
+            </p>
 
-              {/* Search and Filter */}
-              <div className="flex flex-col md:flex-row gap-4 mb-8">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search courses..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
-                  />
-                  {searchQuery && (
-                    <button
-                      onClick={() => setSearchQuery("")}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                    >
-                      <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-                    </button>
-                  )}
-                </div>
+            {/* Search and Filter */}
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Search courses..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
               </div>
-
-              {!isAuthenticated && (
-                <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 text-sm">
-                  <div className="flex items-start gap-3">
-                    <GraduationCap className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                    <div className="text-left">
-                      <p className="font-medium mb-1">Guest Preview Mode</p>
-                      <p className="text-muted-foreground">
-                        Click any course to preview. Sign in to enroll and access full course materials.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-full md:w-[200px]">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="featured">Featured First</SelectItem>
+                  <SelectItem value="rating">Highest Rated</SelectItem>
+                  <SelectItem value="price-low">Price: Low to High</SelectItem>
+                  <SelectItem value="price-high">Price: High to Low</SelectItem>
+                  <SelectItem value="duration">Duration</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </section>
 
         {/* Courses Grid */}
-        <section className="py-12">
-          <div className="container mx-auto px-4">
-            {loading ? (
-              <div className="flex items-center justify-center py-20">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : filteredCourses.length === 0 ? (
-              <Card className="max-w-md mx-auto">
-                <CardContent className="pt-12 pb-12 text-center">
-                  <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No courses found</h3>
-                  <p className="text-muted-foreground mb-6">
-                    {searchQuery
-                      ? "Try adjusting your search"
-                      : "Check back soon for new courses"}
-                  </p>
-                  {searchQuery && (
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setSearchQuery("");
-                      }}
-                    >
-                      Clear Search
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredCourses.map((course) => (
-                  <Card 
-                    key={course.id} 
-                    className="flex flex-col hover:shadow-lg transition-all cursor-pointer group"
-                    onClick={() => handleCourseClick(course)}
-                  >
-                    <CardHeader>
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex-1">
-                          <CardTitle className="text-xl group-hover:text-primary transition-colors">
-                            {course.name}
-                          </CardTitle>
+        <section className="container mx-auto px-4 py-12">
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : filteredCourses.length === 0 ? (
+            <Card>
+              <CardContent className="pt-12 pb-12 text-center">
+                <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No Courses Found</h3>
+                <p className="text-muted-foreground">
+                  {searchQuery
+                    ? "Try adjusting your search terms"
+                    : "Check back later for new courses"}
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredCourses.map((course) => (
+                <Card
+                  key={course.id}
+                  className="group hover:shadow-lg transition-all cursor-pointer relative"
+                  onClick={() => router.push(`/enroll/${course.id}`)}
+                >
+                  <CardHeader>
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <CardTitle className="text-xl group-hover:text-primary transition-colors">
+                          {course.name}
+                        </CardTitle>
+                        <div className="flex items-center gap-2 mt-2">
                           {course.is_featured && (
-                            <Badge className="mt-2 bg-amber-600">Featured</Badge>
+                            <Badge className="bg-amber-600">Featured</Badge>
                           )}
+                          {course.total_ratings && course.total_ratings > 0 && (
+                            <div className="flex items-center gap-1">
+                              {renderStars(course.average_rating || 0)}
+                              <span className="text-xs text-muted-foreground ml-1">
+                                ({course.total_ratings})
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleWishlist(course.id);
+                        }}
+                      >
+                        <Heart
+                          className={`h-5 w-5 ${
+                            wishlistIds.includes(course.id)
+                              ? "fill-red-600 text-red-600"
+                              : "text-muted-foreground"
+                          }`}
+                        />
+                      </Button>
+                    </div>
+                    <CardDescription className="line-clamp-3">
+                      {course.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Clock className="h-4 w-4" />
+                        <span>{course.duration_hours} hours</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Users className="h-4 w-4" />
+                        <span>Max {course.max_students} students</span>
+                      </div>
+                      <div className="flex items-center justify-between pt-3 border-t">
+                        <div>
+                          <div className="text-2xl font-bold text-primary">
+                            ${course.price_full}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            ${course.price_deposit} deposit
+                          </div>
                         </div>
                         <Button
-                          variant="ghost"
-                          size="icon"
                           onClick={(e) => {
                             e.stopPropagation();
-                            toggleWishlist(course.id);
+                            router.push(`/enroll/${course.id}`);
                           }}
                         >
-                          <Heart
-                            className={`h-5 w-5 ${
-                              wishlistIds.includes(course.id)
-                                ? "fill-red-600 text-red-600"
-                                : "text-muted-foreground"
-                            }`}
-                          />
+                          Enroll Now
+                          <ArrowRight className="h-4 w-4 ml-2" />
                         </Button>
                       </div>
-                      <CardDescription className="line-clamp-3">
-                        {course.description}
-                      </CardDescription>
-                    </CardHeader>
-
-                    <CardContent className="flex-1 flex flex-col justify-between">
-                      <div className="space-y-3 mb-6">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Clock className="h-4 w-4" />
-                          <span>{course.duration_hours} hours</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Users className="h-4 w-4" />
-                          <span>Max {course.max_students} students</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <DollarSign className="h-4 w-4 text-primary" />
-                          <span className="font-semibold text-lg">${course.price_full}</span>
-                          {course.price_deposit > 0 && (
-                            <span className="text-sm text-muted-foreground">
-                              or ${course.price_deposit} deposit
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      <Button className="w-full group-hover:bg-primary group-hover:scale-105 transition-all">
-                        View Details
-                        <ArrowRight className="h-4 w-4 ml-2" />
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* CTA Section */}
-        <section className="bg-primary/5 py-16">
-          <div className="container mx-auto px-4 text-center">
-            <h2 className="text-3xl font-bold mb-4">
-              Can&apos;t Find What You&apos;re Looking For?
-            </h2>
-            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Contact us to discuss custom training programs tailored to your needs
-            </p>
-            <Link href="/contact">
-              <Button size="lg">
-                Contact Us
-                <ArrowRight className="h-5 w-5 ml-2" />
-              </Button>
-            </Link>
-          </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </section>
       </div>
 
-      {/* Course Preview Modal */}
-      <Dialog open={previewModalOpen} onOpenChange={setPreviewModalOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          {selectedCourse && (
-            <>
-              <DialogHeader>
-                <DialogTitle className="text-2xl">{selectedCourse.name}</DialogTitle>
-                <DialogDescription className="text-base">
-                  {selectedCourse.description}
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="space-y-6 pt-4">
-                {/* Course Highlights */}
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="flex items-start gap-3 p-4 bg-muted/50 rounded-lg">
-                    <Clock className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-medium">Duration</p>
-                      <p className="text-sm text-muted-foreground">{selectedCourse.duration_hours} hours of training</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3 p-4 bg-muted/50 rounded-lg">
-                    <Users className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-medium">Class Size</p>
-                      <p className="text-sm text-muted-foreground">Maximum {selectedCourse.max_students} students per class</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3 p-4 bg-muted/50 rounded-lg">
-                    <Award className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-medium">Certification</p>
-                      <p className="text-sm text-muted-foreground">Certificate upon completion</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3 p-4 bg-muted/50 rounded-lg">
-                    <FileText className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-medium">Materials</p>
-                      <p className="text-sm text-muted-foreground">All course materials included</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* What You'll Learn */}
-                <div className="space-y-3">
-                  <h3 className="font-semibold text-lg">What You&apos;ll Learn</h3>
-                  <ul className="space-y-2">
-                    {[
-                      "Comprehensive understanding of course fundamentals",
-                      "Hands-on practical experience with real-world scenarios",
-                      "Industry best practices and safety protocols",
-                      "Assessment preparation and certification guidance"
-                    ].map((item, idx) => (
-                      <li key={idx} className="flex items-start gap-2">
-                        <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm">{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Pricing */}
-                <div className="border-t pt-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Course Fee</p>
-                      <p className="text-3xl font-bold">${selectedCourse.price_full}</p>
-                      {selectedCourse.price_deposit > 0 && (
-                        <p className="text-sm text-muted-foreground">
-                          or ${selectedCourse.price_deposit} deposit + installments
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {!isAuthenticated && (
-                    <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-4">
-                      <p className="text-sm text-amber-900 dark:text-amber-100">
-                        <strong>Sign in required:</strong> You need to sign in or create an account to enroll in this course.
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="flex gap-3">
-                    <Button 
-                      className="flex-1" 
-                      size="lg"
-                      onClick={handleEnrollClick}
-                    >
-                      {isAuthenticated ? "Enroll Now" : "Sign In to Enroll"}
-                      <ArrowRight className="h-4 w-4 ml-2" />
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="lg"
-                      onClick={() => setPreviewModalOpen(false)}
-                    >
-                      Close
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Login Modal */}
-      <LoginModal 
-        open={loginModalOpen} 
-        onOpenChange={setLoginModalOpen}
-        defaultTab="student"
+      <LoginModal
+        isOpen={loginModalOpen}
+        onClose={() => setLoginModalOpen(false)}
       />
     </>
   );

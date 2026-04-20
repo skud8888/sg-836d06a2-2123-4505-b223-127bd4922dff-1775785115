@@ -1,24 +1,57 @@
-import { useState } from "react";
-import { Navigation } from "@/components/Navigation";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
+import Link from "next/link";
 import { SEO } from "@/components/SEO";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Navigation } from "@/components/Navigation";
 import { NotificationPreferences } from "@/components/NotificationPreferences";
-import { Settings, Bell, User, Key } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
+import { Settings, Bell, User, Shield, ArrowLeft } from "lucide-react";
 
 export default function SettingsPage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      router.push("/admin/login");
+      return;
+    }
+    setLoading(false);
+  };
+
+  if (loading) {
+    return null;
+  }
+
   return (
     <>
-      <SEO 
-        title="Settings - Admin"
-        description="Manage your account and notification preferences"
-      />
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
-        <Navigation />
-        <div className="container mx-auto px-4 py-8 max-w-5xl">
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold text-slate-900 mb-2">Settings</h1>
-            <p className="text-slate-600">Manage your account and preferences</p>
+      <SEO title="Settings - Admin Dashboard" />
+      <Navigation />
+      <div className="min-h-screen bg-background pt-16">
+        <div className="container mx-auto px-4 py-8">
+          <div className="mb-6">
+            <Link href="/admin">
+              <Button variant="ghost">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Dashboard
+              </Button>
+            </Link>
+          </div>
+
+          <div className="flex items-center gap-3 mb-8">
+            <Settings className="h-8 w-8 text-primary" />
+            <div>
+              <h1 className="text-3xl font-bold">Settings</h1>
+              <p className="text-muted-foreground">Manage your preferences and notifications</p>
+            </div>
           </div>
 
           <Tabs defaultValue="notifications" className="space-y-6">
@@ -27,55 +60,29 @@ export default function SettingsPage() {
                 <Bell className="h-4 w-4 mr-2" />
                 Notifications
               </TabsTrigger>
-              <TabsTrigger value="account">
+              <TabsTrigger value="profile">
                 <User className="h-4 w-4 mr-2" />
-                Account
+                Profile
               </TabsTrigger>
               <TabsTrigger value="security">
-                <Key className="h-4 w-4 mr-2" />
+                <Shield className="h-4 w-4 mr-2" />
                 Security
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="notifications">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Notification Preferences</CardTitle>
-                  <CardDescription>
-                    Control how and when you receive notifications
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <NotificationPreferences />
-                </CardContent>
-              </Card>
+              <NotificationPreferences />
             </TabsContent>
 
-            <TabsContent value="account">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Account Settings</CardTitle>
-                  <CardDescription>
-                    Manage your profile and account information
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-slate-600">Account settings coming soon...</p>
-                </CardContent>
+            <TabsContent value="profile">
+              <Card className="p-6">
+                <p className="text-muted-foreground">Profile settings coming soon</p>
               </Card>
             </TabsContent>
 
             <TabsContent value="security">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Security Settings</CardTitle>
-                  <CardDescription>
-                    Password, two-factor authentication, and session management
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-slate-600">Security settings coming soon...</p>
-                </CardContent>
+              <Card className="p-6">
+                <p className="text-muted-foreground">Security settings coming soon</p>
               </Card>
             </TabsContent>
           </Tabs>
