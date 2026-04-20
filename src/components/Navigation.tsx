@@ -35,6 +35,7 @@ import {
   Moon,
   Laptop
 } from "lucide-react";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 export function Navigation() {
   const router = useRouter();
@@ -142,6 +143,9 @@ export function Navigation() {
                   <HelpCircle className="h-5 w-5" />
                 </Button>
               </Link>
+
+              {/* Language Switcher */}
+              <LanguageSwitcher />
 
               {/* Theme Toggle */}
               {mounted && (
