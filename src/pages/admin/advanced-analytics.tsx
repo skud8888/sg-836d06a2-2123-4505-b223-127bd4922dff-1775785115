@@ -207,14 +207,14 @@ export default function AdvancedAnalytics() {
 
   const fetchEngagementMetrics = async (startDate: Date) => {
     const { data: activities } = await supabase
-      .from("user_activities")
+      .from("activity_timeline")
       .select("user_id, created_at")
       .gte("created_at", subDays(new Date(), 1).toISOString());
 
     const dailyActiveUsers = new Set(activities?.map(a => a.user_id)).size;
 
-    const { data: forum } = await supabase
-      .from("forum_posts")
+    const { data: forum } = await (supabase as any)
+      .from("discussion_threads")
       .select("id")
       .gte("created_at", startDate.toISOString());
 

@@ -42,7 +42,7 @@ export function ActivityFeed({ userId, limit = 10 }: ActivityFeedProps) {
   const loadActivities = async () => {
     try {
       const { activities: data } = userId
-        ? await activityTimelineService.getUserActivities(userId, limit)
+        ? await activityTimelineService.getUserTimeline(userId, limit)
         : await activityTimelineService.getRecentActivities(limit);
       
       setActivities(data);
