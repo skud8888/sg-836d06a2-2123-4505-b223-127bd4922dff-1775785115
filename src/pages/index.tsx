@@ -241,14 +241,25 @@ export default function HomePage() {
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 ) : (
-                  <Button 
-                    size="lg" 
-                    onClick={() => router.push("/admin")}
-                    className="text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all"
-                  >
-                    Go to Dashboard
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
+                  <>
+                    <Button 
+                      size="lg" 
+                      onClick={() => router.push("/admin")}
+                      className="text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all"
+                    >
+                      Go to Dashboard
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </Button>
+                    <Button 
+                      size="lg" 
+                      variant="outline"
+                      onClick={() => router.push("/student/portal")}
+                      className="text-lg px-8 py-6 border-2 hover:bg-primary/5"
+                    >
+                      <GraduationCap className="mr-2 h-5 w-5" />
+                      Student Portal
+                    </Button>
+                  </>
                 )
               ) : (
                 <>
@@ -262,9 +273,9 @@ export default function HomePage() {
                   </Button>
                   <Button 
                     size="lg" 
-                    variant="outline"
+                    variant="default"
                     onClick={() => router.push("/student/portal")}
-                    className="text-lg px-8 py-6 border-2 hover:bg-primary/5"
+                    className="text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all bg-primary hover:bg-primary/90"
                   >
                     <GraduationCap className="mr-2 h-5 w-5" />
                     Student Portal
