@@ -80,7 +80,7 @@ export const bulkOperationsService = {
       for (let i = 0; i < ids.length; i += 10) {
         const batch = ids.slice(i, i + 10);
         
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from(table)
           .delete()
           .in("id", batch);
@@ -127,7 +127,7 @@ export const bulkOperationsService = {
       for (let i = 0; i < ids.length; i += 10) {
         const batch = ids.slice(i, i + 10);
         
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from(table)
           .update(updates)
           .in("id", batch);
