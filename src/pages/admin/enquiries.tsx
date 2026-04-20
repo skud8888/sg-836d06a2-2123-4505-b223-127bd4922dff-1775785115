@@ -126,8 +126,7 @@ export default function Enquiries() {
           </div>
           <Button
             onClick={async () => {
-              const csv = await exportService.exportEnquiriesCSV();
-              exportService.downloadCSV(csv, `enquiries-${format(new Date(), "yyyy-MM-dd")}.csv`);
+              await exportService.exportEnquiriesCSV();
             }}
           >
             <Download className="h-4 w-4 mr-2" />

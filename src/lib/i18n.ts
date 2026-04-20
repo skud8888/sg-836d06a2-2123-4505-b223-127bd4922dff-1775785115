@@ -68,7 +68,7 @@ class I18nService {
 
   async loadTranslations(languageCode: string): Promise<void> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("i18n_translations")
         .select("translation_key, translation_value")
         .eq("language_code", languageCode);
@@ -98,7 +98,7 @@ class I18nService {
 
   async getAvailableLanguages(): Promise<string[]> {
     try {
-      const { data, error } = await supabase.from("i18n_translations").select("language_code").limit(100);
+      const { data, error } = await (supabase as any).from("i18n_translations").select("language_code").limit(100);
       if (error) throw error;
       const languages = new Set<string>(["en"]);
       data?.forEach((item) => languages.add(item.language_code));
@@ -111,7 +111,7 @@ class I18nService {
 
   async setTranslation(languageCode: string, key: TranslationKey, value: string): Promise<void> {
     try {
-      const { error } = await supabase.from("i18n_translations").upsert({
+      const { error } = await (supabase as any).from("i18n_translations").upsert({
         language_code: languageCode,
         translation_key: key,
         translation_value: value,

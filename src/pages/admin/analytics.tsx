@@ -491,8 +491,7 @@ export default function Analytics() {
               <h2 className="text-2xl font-bold">Student Satisfaction</h2>
               <Button
                 onClick={async () => {
-                  const csv = await exportService.exportFeedbackCSV();
-                  exportService.downloadCSV(csv, `feedback-${format(new Date(), "yyyy-MM-dd")}.csv`);
+                  await exportService.exportFeedbackCSV();
                 }}
                 variant="outline"
               >
