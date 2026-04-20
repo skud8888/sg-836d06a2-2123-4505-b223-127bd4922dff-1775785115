@@ -2198,6 +2198,42 @@ export type Database = {
           },
         ]
       }
+      offline_sync_queue: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          error_message: string | null
+          id: string
+          record_data: Json
+          sync_status: string | null
+          synced_at: string | null
+          table_name: string
+          user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          record_data: Json
+          sync_status?: string | null
+          synced_at?: string | null
+          table_name: string
+          user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          record_data?: Json
+          sync_status?: string | null
+          synced_at?: string | null
+          table_name?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       onboarding_progress: {
         Row: {
           completed: boolean | null
@@ -2680,6 +2716,80 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_codes: {
+        Row: {
+          code: string
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          max_uses: number | null
+          user_id: string | null
+          uses_count: number | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          user_id?: string | null
+          uses_count?: number | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          user_id?: string | null
+          uses_count?: number | null
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          referral_code: string | null
+          referred_id: string | null
+          referrer_id: string | null
+          reward_amount: number | null
+          status: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          referral_code?: string | null
+          referred_id?: string | null
+          referrer_id?: string | null
+          reward_amount?: number | null
+          status?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          referral_code?: string | null
+          referred_id?: string | null
+          referrer_id?: string | null
+          reward_amount?: number | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_referral_code_fkey"
+            columns: ["referral_code"]
+            isOneToOne: false
+            referencedRelation: "referral_codes"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
       role_permissions: {
         Row: {
           action: string
@@ -3125,6 +3235,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      student_profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          display_name: string | null
+          id: string
+          interests: string[] | null
+          is_public: boolean | null
+          location: string | null
+          show_achievements: boolean | null
+          show_activity: boolean | null
+          show_courses: boolean | null
+          social_links: Json | null
+          updated_at: string | null
+          user_id: string | null
+          website: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string
+          interests?: string[] | null
+          is_public?: boolean | null
+          location?: string | null
+          show_achievements?: boolean | null
+          show_activity?: boolean | null
+          show_courses?: boolean | null
+          social_links?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+          website?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string
+          interests?: string[] | null
+          is_public?: boolean | null
+          location?: string | null
+          show_achievements?: boolean | null
+          show_activity?: boolean | null
+          show_courses?: boolean | null
+          social_links?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+          website?: string | null
+        }
+        Relationships: []
       }
       student_progress: {
         Row: {
@@ -3613,6 +3777,7 @@ export type Database = {
         Args: { p_student_id: string }
         Returns: undefined
       }
+      generate_referral_code: { Args: { p_user_id: string }; Returns: string }
       generate_student_insights: {
         Args: { student_uuid: string }
         Returns: undefined
@@ -3647,6 +3812,10 @@ export type Database = {
           p_user_id?: string
         }
         Returns: undefined
+      }
+      process_referral: {
+        Args: { p_code: string; p_referred_id: string }
+        Returns: Json
       }
       schedule_batch_report: {
         Args: {
