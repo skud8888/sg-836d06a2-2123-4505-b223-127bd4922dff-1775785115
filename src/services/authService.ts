@@ -15,8 +15,9 @@ export interface AuthError {
 
 // Dynamic URL Helper
 const getURL = () => {
-  let url = process?.env?.NEXT_PUBLIC_VERCEL_URL ?? 
-           process?.env?.NEXT_PUBLIC_SITE_URL ?? 
+  // Priority: 1. Production Site URL, 2. Vercel URL, 3. Localhost
+  let url = process?.env?.NEXT_PUBLIC_SITE_URL ?? 
+           process?.env?.NEXT_PUBLIC_VERCEL_URL ?? 
            'http://localhost:3000'
   
   // Handle undefined or null url
