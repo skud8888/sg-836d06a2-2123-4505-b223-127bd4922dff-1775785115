@@ -1,6 +1,6 @@
 ---
 title: "Profile Avatar Upload"
-status: "in_progress"
+status: "done"
 priority: "medium"
 type: "feature"
 tags: ["profile", "storage", "ux"]
@@ -13,12 +13,12 @@ position: 85
 Add avatar upload functionality to user profiles with image preview, drag-and-drop support, and Supabase storage integration.
 
 ## Checklist
-- [ ] Add avatar upload component with drag-and-drop
-- [ ] Integrate with Supabase storage (avatars bucket)
-- [ ] Add image preview and cropping
-- [ ] Update profile service with avatar methods
-- [ ] Add avatar display in navigation and profile pages
-- [ ] Handle file size limits and validation
+- [x] Add avatar upload component with drag-and-drop
+- [x] Integrate with Supabase storage (avatars bucket)
+- [x] Add image preview and cropping
+- [x] Update profile service with avatar methods
+- [x] Add avatar display in navigation and profile pages
+- [x] Handle file size limits and validation
 
 ## Acceptance
 - Users can upload profile pictures via drag-drop or file picker

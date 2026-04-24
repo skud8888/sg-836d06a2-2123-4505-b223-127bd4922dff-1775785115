@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import { Navigation } from "@/components/Navigation";
 import { AdminWelcomeTour } from "@/components/AdminWelcomeTour";
+import { DashboardWelcome } from "@/components/DashboardWelcome";
 import { ActivityFeed } from "@/components/ActivityFeed";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { supabase } from "@/integrations/supabase/client";
@@ -71,6 +72,7 @@ export default function AdminDashboard() {
       }
 
       setUser(session.user);
+      setUserName(session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "Admin");
       
       // Check if user has super_admin or admin role
       const { data: roles } = await supabase
@@ -88,6 +90,8 @@ export default function AdminDashboard() {
         router.push("/");
         return;
       }
+
+      setUserRole(roles[0].role);
 
       // Check if this is user's first login to admin dashboard
       const { data: preferences } = await supabase
@@ -462,6 +466,9 @@ export default function AdminDashboard() {
               💡 Tip: Press <kbd className="px-2 py-1 text-xs bg-muted rounded">Cmd+K</kbd> to open universal search
             </p>
           </div>
+
+          {/* Dashboard Welcome Message */}
+          <DashboardWelcome userName={userName} userRole={userRole} />
 
           {/* Quick Stats */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
