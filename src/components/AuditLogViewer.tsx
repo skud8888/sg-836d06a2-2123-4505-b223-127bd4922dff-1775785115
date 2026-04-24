@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,6 @@ import { Shield, Search, Download, CalendarIcon, Filter, RefreshCw } from "lucid
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import type { Tables } from "@/integrations/supabase/types";
 
 interface AuditLog {
   id: string;
@@ -24,7 +23,7 @@ interface AuditLog {
   user_agent: string;
   severity: string;
   created_at: string;
-  metadata: any;
+  metadata: unknown;
   affected_user_id: string;
   profiles?: {
     full_name: string | null;
@@ -43,27 +42,7 @@ export function AuditLogViewer() {
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchLogs();
-    
-    // Set up real-time subscription
-    const channel = supabase
-      .channel("audit_logs_changes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "audit_logs" },
-        () => {
-          fetchLogs();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [dateRange, actionFilter, userFilter]);
-
-  async function fetchLogs() {
+  const fetchLogs = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -97,22 +76,42 @@ export function AuditLogViewer() {
 
       if (error) throw error;
       
-      // Type assertion to handle the profiles join
-      setLogs((data as any[]).map((log: any) => ({
-        ...log,
-        profiles: log.profiles || null
-      })));
-    } catch (error: any) {
+      setLogs((data as unknown[]).map((log: unknown) => ({
+        ...(log as Record<string, unknown>),
+        profiles: (log as Record<string, unknown>).profiles || null
+      })) as AuditLog[]);
+    } catch (error) {
       console.error("Error fetching audit logs:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to fetch audit logs";
       toast({
         title: "Error",
-        description: "Failed to fetch audit logs",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
-  }
+  }, [dateRange, actionFilter, userFilter, toast]);
+
+  useEffect(() => {
+    fetchLogs();
+    
+    // Set up real-time subscription
+    const channel = supabase
+      .channel("audit_logs_changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "audit_logs" },
+        () => {
+          fetchLogs();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchLogs]);
 
   async function exportToCsv() {
     try {
@@ -139,10 +138,11 @@ export function AuditLogViewer() {
         title: "Export successful",
         description: `Exported ${logs.length} audit log entries`
       });
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Export failed";
       toast({
         title: "Export failed",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive"
       });
     }

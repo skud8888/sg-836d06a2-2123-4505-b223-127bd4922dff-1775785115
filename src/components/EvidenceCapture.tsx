@@ -2,7 +2,6 @@ import { useState, useRef } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -133,10 +132,12 @@ export function EvidenceCapture({ bookingId, scheduledClassId, onCaptureComplete
 
       onCaptureComplete?.();
 
-    } catch (error: any) {
+    } catch (error) {
+      console.error("Error uploading evidence:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to upload evidence";
       toast({
         title: "Upload failed",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {

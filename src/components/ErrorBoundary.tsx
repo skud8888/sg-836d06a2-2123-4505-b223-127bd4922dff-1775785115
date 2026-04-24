@@ -32,23 +32,9 @@ export class ErrorBoundary extends Component<Props, State> {
     return { hasError: true };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Log error to console
-    console.error("ErrorBoundary caught an error:", error, errorInfo);
-
-    // Update state with error details
-    this.setState({
-      error,
-      errorInfo
-    });
-
-    // Call custom error handler if provided
-    if (this.props.onError) {
-      this.props.onError(error, errorInfo);
-    }
-
-    // Log to monitoring service (could be Sentry, LogRocket, etc.)
-    this.logErrorToService(error, errorInfo);
+  componentDidCatch() {
+    // Log error to service
+    console.error("Error caught by boundary");
   }
 
   logErrorToService = (error: Error, errorInfo: React.ErrorInfo) => {

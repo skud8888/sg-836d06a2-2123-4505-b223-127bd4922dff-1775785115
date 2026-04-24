@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -35,19 +34,19 @@ export function FeaturedCoursesSection() {
   const [wishlistIds, setWishlistIds] = useState<string[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  useEffect(() => {
-    loadFeaturedCourses();
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
     setIsAuthenticated(!!session);
     
     if (session) {
       loadWishlist(session.user.id);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadFeaturedCourses();
+    checkAuth();
+  }, [checkAuth]);
 
   const loadWishlist = async (userId: string) => {
     try {
@@ -80,7 +79,9 @@ export function FeaturedCoursesSection() {
     }
   };
 
-  const toggleWishlist = async (courseId: string) => {
+  const toggleWishlist = async (courseId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
     if (!isAuthenticated) {
       router.push("/admin/login");
       return;
@@ -170,7 +171,7 @@ export function FeaturedCoursesSection() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => toggleWishlist(course.id)}
+                      onClick={(e) => toggleWishlist(course.id, e)}
                     >
                       <Heart
                         className={`h-5 w-5 ${

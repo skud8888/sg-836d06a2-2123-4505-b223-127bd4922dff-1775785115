@@ -43,27 +43,17 @@ export function ChatWidget() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data, error } = await supabase
-        .from("chat_messages")
+      const { data: messages } = await supabase
+        .from("support_messages")
         .select("*")
-        .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
-        .order("created_at", { ascending: true })
-        .limit(50);
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: true });
 
-      if (error) throw error;
-
-      if (data) {
-        setMessages(
-          data.map((msg) => ({
-            id: msg.id,
-            sender: msg.sender_id === user.id ? "user" : "support",
-            text: msg.message,
-            timestamp: msg.created_at || new Date().toISOString(),
-          }))
-        );
+      if (messages) {
+        setMessages(messages);
       }
-    } catch (error) {
-      console.error("Error loading chat:", error);
+    } catch (err) {
+      console.error("Error loading messages:", err);
     }
   };
 

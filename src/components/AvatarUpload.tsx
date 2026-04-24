@@ -123,11 +123,12 @@ export function AvatarUpload({
         title: "Avatar updated",
         description: "Your profile picture has been updated successfully"
       });
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error uploading avatar:", error);
+      const errorMessage = error instanceof Error ? error.message : "Upload failed";
       toast({
         title: "Upload failed",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
@@ -162,10 +163,11 @@ export function AvatarUpload({
         title: "Avatar removed",
         description: "Your profile picture has been removed"
       });
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Remove failed";
       toast({
         title: "Remove failed",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {

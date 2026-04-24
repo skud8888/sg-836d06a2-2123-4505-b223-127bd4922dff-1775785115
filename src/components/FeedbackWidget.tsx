@@ -1,55 +1,50 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { MessageSquare, Star, Loader2, Camera, Send } from "lucide-react";
+import { MessageSquare, Send } from "lucide-react";
 
 export function FeedbackWidget() {
-  const { toast } = useToast();
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [category, setCategory] = useState<string>("feedback");
-  const [subject, setSubject] = useState("");
+  const [category, setCategory] = useState<string>("general");
   const [message, setMessage] = useState("");
-  const [email, setEmail] = useState("");
-  const [rating, setRating] = useState<number>(0);
+  const [submitting, setSubmitting] = useState(false);
+  const { toast } = useToast();
 
-  const resetForm = () => {
-    setCategory("feedback");
-    setSubject("");
-    setMessage("");
-    setRating(0);
-  };
-
-  const submitFeedback = async () => {
-    if (!subject || !message || !email) {
+  async function submitFeedback() {
+    if (!message.trim()) {
       toast({
-        title: "Missing information",
-        description: "Please fill in all required fields",
+        title: "Message required",
+        description: "Please enter your feedback message",
         variant: "destructive"
       });
       return;
     }
 
-    setLoading(true);
-
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      setSubmitting(true);
 
-      const { error } = await (supabase as any)
-        .from("user_feedback")
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast({
+          title: "Authentication required",
+          description: "Please log in to submit feedback",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const { error } = await supabase
+        .from("feedback")
         .insert({
-          user_id: user?.id || null,
-          user_email: email,
+          user_id: session.user.id,
           category,
-          subject,
           message,
-          rating: rating > 0 ? rating : null,
           status: "new"
         });
 
@@ -57,35 +52,29 @@ export function FeedbackWidget() {
 
       toast({
         title: "Feedback submitted",
-        description: "Thank you for your feedback! We'll review it shortly."
+        description: "Thank you for your feedback!"
       });
 
-      resetForm();
+      setMessage("");
       setOpen(false);
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error submitting feedback:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to submit feedback";
       toast({
         title: "Error",
-        description: "Failed to submit feedback. Please try again.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
-  };
-
-  const loadUserEmail = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user?.email) {
-      setEmail(user.email);
-    }
-  };
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
-          onClick={loadUserEmail}
+          onClick={() => {}}
           className="fixed bottom-6 right-6 rounded-full shadow-lg h-14 w-14 z-50"
           size="icon"
         >
@@ -116,29 +105,6 @@ export function FeedbackWidget() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="your@email.com"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="subject">Subject</Label>
-            <Input
-              id="subject"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              placeholder="Brief summary of your feedback"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
             <Label htmlFor="message">Message</Label>
             <Textarea
               id="message"
@@ -150,37 +116,13 @@ export function FeedbackWidget() {
             />
           </div>
 
-          {category === "feedback" && (
-            <div className="space-y-2">
-              <Label>How would you rate your experience?</Label>
-              <div className="flex gap-2">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    type="button"
-                    onClick={() => setRating(star)}
-                    className="transition-transform hover:scale-110"
-                  >
-                    <Star
-                      className={`h-8 w-8 ${
-                        star <= rating
-                          ? "fill-yellow-400 text-yellow-400"
-                          : "text-gray-300"
-                      }`}
-                    />
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
           <div className="flex gap-2">
             <Button
               onClick={submitFeedback}
-              disabled={loading}
+              disabled={submitting}
               className="flex-1"
             >
-              {loading ? (
+              {submitting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   Sending...

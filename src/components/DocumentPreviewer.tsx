@@ -1,7 +1,10 @@
-import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useState, useEffect } from "react";
+import Image from "next/image";
+import { supabase } from "@/integrations/supabase/client";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Download, ZoomIn, ZoomOut, Printer, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Download, X, ZoomIn, ZoomOut, RotateCw, ChevronLeft, ChevronRight, Printer } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
 interface DocumentPreviewerProps {
@@ -132,17 +135,20 @@ export function DocumentPreviewer({
               />
             )}
 
-            {isImage && (
-              <img
-                src={documentUrl}
-                alt={documentName}
-                className="rounded-lg shadow-lg"
-                style={{
-                  width: `${zoom}%`,
-                  maxWidth: "100%",
-                  height: "auto"
-                }}
-              />
+            {documentType === "image" && (
+              <div className="relative">
+                <Image
+                  src={fileUrl}
+                  alt="Document preview"
+                  width={800}
+                  height={600}
+                  className="max-w-full h-auto"
+                  style={{
+                    transform: `scale(${zoom}) rotate(${rotation}deg)`,
+                    transition: "transform 0.2s"
+                  }}
+                />
+              </div>
             )}
 
             {!isPDF && !isImage && (

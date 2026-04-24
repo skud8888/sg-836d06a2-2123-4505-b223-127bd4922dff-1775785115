@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -8,7 +7,6 @@ import {
   Users, 
   BookOpen, 
   TrendingUp,
-  Clock,
   Sun,
   Moon,
   Sunrise
@@ -19,10 +17,14 @@ interface DashboardWelcomeProps {
   userRole?: string;
 }
 
+interface TimeIconType {
+  className?: string;
+}
+
 export function DashboardWelcome({ userName, userRole }: DashboardWelcomeProps) {
   const [visible, setVisible] = useState(true);
   const [greeting, setGreeting] = useState("");
-  const [timeIcon, setTimeIcon] = useState<any>(Sun);
+  const [timeIcon, setTimeIcon] = useState<React.ComponentType<TimeIconType>>(Sun);
 
   useEffect(() => {
     // Check if user has dismissed the welcome message

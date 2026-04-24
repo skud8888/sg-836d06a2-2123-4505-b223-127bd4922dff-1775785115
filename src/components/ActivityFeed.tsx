@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -35,11 +35,7 @@ export function ActivityFeed({ userId, limit = 10 }: ActivityFeedProps) {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadActivities();
-  }, [userId, limit]);
-
-  const loadActivities = async () => {
+  const loadActivities = useCallback(async () => {
     try {
       const { activities: data } = userId
         ? await activityTimelineService.getUserTimeline(userId, limit)
@@ -50,7 +46,11 @@ export function ActivityFeed({ userId, limit = 10 }: ActivityFeedProps) {
       console.error("Error loading activities:", error);
     }
     setLoading(false);
-  };
+  }, [userId, limit]);
+
+  useEffect(() => {
+    loadActivities();
+  }, [loadActivities]);
 
   const getActivityIcon = (actionType: string) => {
     switch (actionType) {
