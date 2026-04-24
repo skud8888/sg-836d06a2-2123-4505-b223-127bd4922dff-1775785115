@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Link from "next/link";
 import { Navigation } from "@/components/Navigation";
 import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
 import {
   Search,
   MessageCircle,
@@ -17,7 +19,12 @@ import {
   HelpCircle,
   CheckCircle,
   AlertCircle,
-  FileText
+  FileText,
+  BookOpen,
+  GraduationCap,
+  Users,
+  Settings,
+  CreditCard
 } from "lucide-react";
 import Image from "next/image";
 
