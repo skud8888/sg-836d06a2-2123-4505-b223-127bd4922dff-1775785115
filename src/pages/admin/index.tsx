@@ -39,12 +39,14 @@ import {
   RefreshCw,
   Award
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function AdminDashboard() {
   const router = useRouter();
+  const { toast } = useToast();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [stats, setStats] = useState<any>(null);
   const [showTour, setShowTour] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>("");
@@ -100,7 +102,7 @@ export default function AdminDashboard() {
         setTimeout(() => setShowTour(true), 1000);
       }
 
-      fetchStats();
+      loadQuickStats();
     } catch (error: any) {
       console.error("Auth error:", error);
       toast({
@@ -404,7 +406,6 @@ export default function AdminDashboard() {
   return (
     <>
       <Navigation />
-      <AdminWelcomeTour />
       <OfflineIndicator />
       <div className="min-h-screen bg-slate-50 pt-20">
         <div className="container mx-auto px-4 py-8">
