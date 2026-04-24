@@ -1,37 +1,27 @@
 import { useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { SEO } from "@/components/SEO";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Badge } from "@/components/ui/badge";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import {
   Search,
-  BookOpen,
-  Video,
   MessageCircle,
+  Book,
+  Video,
+  Download,
   Mail,
   Phone,
-  FileText,
-  Users,
-  GraduationCap,
-  Settings,
-  CreditCard,
-  Calendar,
-  Award,
   HelpCircle,
-  ExternalLink
+  CheckCircle,
+  AlertCircle,
+  FileText
 } from "lucide-react";
-import Link from "next/link";
+import Image from "next/image";
 
-export default function HelpCenter() {
+export default function Help() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const categories = [
@@ -385,17 +375,13 @@ export default function HelpCenter() {
                   {videoTutorials.map((video, index) => (
                     <Card key={index} className="overflow-hidden hover:shadow-lg transition-all cursor-pointer">
                       <div className="relative aspect-video bg-muted">
-                        <img 
-                          src={video.thumbnail} 
-                          alt={video.title}
+                        <Image
+                          src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800"
+                          alt="Platform tutorial"
+                          width={800}
+                          height={450}
                           className="w-full h-full object-cover"
                         />
-                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                          <div className="h-14 w-14 rounded-full bg-white/90 flex items-center justify-center">
-                            <div className="h-0 w-0 border-t-8 border-t-transparent border-l-12 border-l-primary border-b-8 border-b-transparent ml-1" />
-                          </div>
-                        </div>
-                        <Badge className="absolute top-2 right-2">{video.duration}</Badge>
                       </div>
                       <CardHeader>
                         <Badge variant="outline" className="w-fit mb-2">{video.category}</Badge>

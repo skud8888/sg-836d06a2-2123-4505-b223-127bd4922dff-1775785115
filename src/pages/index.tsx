@@ -1,89 +1,68 @@
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/router";
+import { supabase } from "@/integrations/supabase/client";
 import { Navigation } from "@/components/Navigation";
 import { SEO } from "@/components/SEO";
-import { Features } from "@/components/Features";
-import { FeaturedCoursesSection } from "@/components/FeaturedCourses";
-import { Button } from "@/components/ui/button";
+import { Hero } from "@/components/Hero";
+import { FeaturedCourses } from "@/components/FeaturedCourses";
+import { InstallPWA } from "@/components/InstallPWA";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import Link from "next/link";
-import { useRouter } from "next/router";
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { 
-  Calendar, 
-  Users, 
-  BookOpen, 
-  BarChart3, 
-  Shield, 
-  Zap,
-  CheckCircle,
-  ArrowRight,
-  Star,
-  TrendingUp,
-  Clock,
+import { Button } from "@/components/ui/button";
+import {
+  Users,
   Award,
-  FileText,
-  CreditCard,
-  Bell,
-  Search,
-  Database,
-  Lock,
-  Smartphone,
+  TrendingUp,
+  CheckCircle,
+  Shield,
+  Clock,
+  Zap,
   Globe,
-  MessageSquare,
-  Camera,
-  PenTool,
-  Brain,
-  Mail,
-  Activity,
-  Code,
-  Sparkles,
-  LayoutDashboard,
-  GraduationCap
+  BookOpen,
+  Star
 } from "lucide-react";
 
-export default function HomePage() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userRole, setUserRole] = useState<string | null>(null);
+export default function Home() {
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [userType, setUserType] = useState<string | null>(null);
+
+  const checkAuth = useCallback(async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        setUserType(null);
+        return;
+      }
+
+      // Check user role
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", session.user.id);
+
+      if (roles && roles.length > 0) {
+        const role = roles[0].role;
+        if (role === "super_admin" || role === "admin") {
+          setUserType("admin");
+        } else if (role === "trainer") {
+          setUserType("trainer");
+        } else {
+          setUserType("student");
+        }
+      } else {
+        setUserType("student");
+      }
+    } catch (error) {
+      console.error("Auth error:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     checkAuth();
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      setIsAuthenticated(!!session);
-      if (session) {
-        checkUserRole(session.user.id);
-      } else {
-        setUserRole(null);
-      }
-    });
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, []);
-
-  const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    setIsAuthenticated(!!session);
-    if (session) {
-      await checkUserRole(session.user.id);
-    }
-  };
-
-  const checkUserRole = async (userId: string) => {
-    const { data: roleData } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .in("role", ["super_admin", "admin", "trainer"]);
-
-    if (roleData && roleData.length > 0) {
-      setUserRole(roleData[0].role);
-    } else {
-      setUserRole("student");
-    }
-  };
+  }, [checkAuth]);
 
   const features = [
     {
@@ -196,8 +175,8 @@ export default function HomePage() {
     }
   ];
 
-  const isAdmin = userRole === "super_admin" || userRole === "admin";
-  const isStudent = userRole === "student";
+  const isAdmin = userType === "super_admin" || userType === "admin";
+  const isStudent = userType === "student";
 
   return (
     <>
