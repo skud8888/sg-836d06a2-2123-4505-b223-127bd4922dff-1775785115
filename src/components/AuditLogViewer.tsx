@@ -14,27 +14,38 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import type { Tables } from "@/integrations/supabase/types";
 
-type AuditLog = Tables<"audit_logs"> & {
+interface AuditLog {
+  id: string;
+  user_id: string;
+  action: string;
+  action_category: string;
+  details: string;
+  ip_address: string;
+  user_agent: string;
+  severity: string;
+  created_at: string;
+  metadata: any;
+  affected_user_id: string;
   profiles?: {
     full_name: string | null;
     email: string | null;
-  };
-};
+  } | null;
+}
 
 export function AuditLogViewer() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [dateRange, setDateRange] = useState<string>("7d");
   const [actionFilter, setActionFilter] = useState<string>("all");
-  const [dateFrom, setDateFrom] = useState<Date>();
-  const [dateTo, setDateTo] = useState<Date>();
+  const [userFilter, setUserFilter] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
 
   useEffect(() => {
     fetchLogs();
-
-    // Set up realtime subscription
-    const subscription = supabase
+    
+    // Set up real-time subscription
+    const channel = supabase
       .channel("audit_logs_changes")
       .on(
         "postgres_changes",
@@ -46,9 +57,9 @@ export function AuditLogViewer() {
       .subscribe();
 
     return () => {
-      subscription.unsubscribe();
+      supabase.removeChannel(channel);
     };
-  }, [actionFilter, dateFrom, dateTo]);
+  }, [dateRange, actionFilter, userFilter]);
 
   async function fetchLogs() {
     try {
@@ -58,43 +69,43 @@ export function AuditLogViewer() {
         .from("audit_logs")
         .select(`
           *,
-          profiles(full_name, email)
+          profiles!audit_logs_user_id_fkey (full_name, email)
         `)
-        .order("created_at", { ascending: false })
-        .limit(100);
+        .order("created_at", { ascending: false });
+
+      // Apply date range filter
+      if (dateRange !== "all") {
+        const daysAgo = parseInt(dateRange.replace("d", ""));
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - daysAgo);
+        query = query.gte("created_at", cutoffDate.toISOString());
+      }
 
       // Apply action filter
       if (actionFilter !== "all") {
-        query = query.eq("action", actionFilter);
+        query = query.eq("action_category", actionFilter);
       }
 
-      // Apply date filters
-      if (dateFrom) {
-        query = query.gte("created_at", dateFrom.toISOString());
-      }
-      if (dateTo) {
-        const endOfDay = new Date(dateTo);
-        endOfDay.setHours(23, 59, 59, 999);
-        query = query.lte("created_at", endOfDay.toISOString());
+      // Apply user filter
+      if (userFilter !== "all") {
+        query = query.eq("user_id", userFilter);
       }
 
       const { data, error } = await query;
 
       if (error) throw error;
       
-      // Map data to match the expected AuditLog type
-      const formattedData: AuditLog[] = (data || []).map((item: any) => ({
-        ...item,
-        profiles: item.profiles || null
-      }));
-      
-      setLogs(formattedData);
+      // Type assertion to handle the profiles join
+      setLogs((data as any[]).map((log: any) => ({
+        ...log,
+        profiles: log.profiles || null
+      })));
     } catch (error: any) {
       console.error("Error fetching audit logs:", error);
       toast({
-        title: "Error loading logs",
-        description: error.message,
-        variant: "destructive"
+        title: "Error",
+        description: "Failed to fetch audit logs",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);

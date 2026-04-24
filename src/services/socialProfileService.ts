@@ -1,6 +1,41 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
+
+type Profile = Tables<"profiles">;
 
 export const socialProfileService = {
+  /**
+   * Get user's social profile with stats
+   */
+  async getSocialProfile(userId: string) {
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .single();
+
+    if (error) throw error;
+
+    // Get additional stats
+    const { data: enrollments } = await supabase
+      .from("enrollments")
+      .select("*")
+      .eq("user_id", userId);
+
+    const { data: achievements } = await supabase
+      .from("achievements" as any)
+      .select("*")
+      .eq("user_id", userId);
+
+    return {
+      profile: profile as Profile,
+      stats: {
+        totalCourses: enrollments?.length || 0,
+        achievements: achievements?.length || 0,
+      }
+    };
+  },
+
   async getProfile(userId: string) {
     const { data, error } = await supabase
       .from("student_profiles")
