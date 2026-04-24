@@ -42,7 +42,10 @@ import {
 
 export default function AdminDashboard() {
   const router = useRouter();
+  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [showTour, setShowTour] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>("");
   const [quickStats, setQuickStats] = useState({
@@ -54,27 +57,61 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     checkAuth();
-    loadQuickStats();
   }, []);
 
-  const checkAuth = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      router.push("/admin/login");
-      return;
-    }
+  async function checkAuth() {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        router.push("/admin/login");
+        return;
+      }
 
-    const role = await rbacService.getUserPrimaryRole();
-    if (!role) {
-      router.push("/admin/login");
-      return;
-    }
+      setUser(session.user);
+      
+      // Check if user has super_admin or admin role
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", session.user.id)
+        .in("role", ["super_admin", "admin"]);
 
-    setUserRole(role);
-    setUserName(user.user_metadata?.full_name || user.email || "Admin");
-    setLoading(false);
-  };
+      if (!roles || roles.length === 0) {
+        toast({
+          title: "Access Denied",
+          description: "You don't have admin access",
+          variant: "destructive",
+        });
+        router.push("/");
+        return;
+      }
+
+      // Check if this is user's first login to admin dashboard
+      const { data: preferences } = await supabase
+        .from("notification_preferences")
+        .select("has_seen_admin_tour")
+        .eq("user_id", session.user.id)
+        .single();
+
+      // Auto-start tour for first-time users
+      if (!preferences?.has_seen_admin_tour) {
+        // Small delay to let the dashboard render first
+        setTimeout(() => setShowTour(true), 1000);
+      }
+
+      fetchStats();
+    } catch (error: any) {
+      console.error("Auth error:", error);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const loadQuickStats = async () => {
     try {
@@ -694,6 +731,12 @@ export default function AdminDashboard() {
               <ActivityFeed limit={15} />
             </div>
           </div>
+
+          {/* Admin Welcome Tour - Auto-starts on first login */}
+          <AdminWelcomeTour 
+            open={showTour} 
+            onOpenChange={setShowTour}
+          />
         </div>
       </div>
     </>

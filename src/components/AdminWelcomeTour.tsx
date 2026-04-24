@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface OnboardingStep {
   title: string;
@@ -117,10 +118,16 @@ const STUDENT_STEPS: OnboardingStep[] = [
   }
 ];
 
-export function AdminWelcomeTour() {
+interface AdminWelcomeTourProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function AdminWelcomeTour({ open, onOpenChange }: AdminWelcomeTourProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
   const [userRole, setUserRole] = useState<string>("student");
+  const { toast } = useToast();
 
   useEffect(() => {
     checkOnboardingStatus();
@@ -165,11 +172,33 @@ export function AdminWelcomeTour() {
   const steps = userRole === "admin" ? ADMIN_STEPS : userRole === "trainer" ? TRAINER_STEPS : STUDENT_STEPS;
   const progress = ((currentStep + 1) / steps.length) * 100;
 
+  const handleClose = async () => {
+    onOpenChange(false);
+    setCurrentStep(0);
+
+    // Mark tour as completed for this user
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        await supabase
+          .from("notification_preferences")
+          .update({ has_seen_admin_tour: true })
+          .eq("user_id", session.user.id);
+      }
+    } catch (error) {
+      console.error("Error marking tour as completed:", error);
+    }
+  };
+
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      completeOnboarding();
+      handleClose();
+      toast({
+        title: "Welcome aboard! 🎉",
+        description: "You're all set to start managing your training center.",
+      });
     }
   };
 
@@ -180,26 +209,7 @@ export function AdminWelcomeTour() {
   };
 
   const handleSkip = () => {
-    completeOnboarding();
-  };
-
-  const completeOnboarding = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      await supabase
-        .from("user_onboarding")
-        .update({ 
-          is_completed: true,
-          completed_at: new Date().toISOString()
-        })
-        .eq("user_id", user.id);
-
-      setIsVisible(false);
-    } catch (error) {
-      console.error("Error completing onboarding:", error);
-    }
+    handleClose();
   };
 
   const handleAction = () => {
