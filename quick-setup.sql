@@ -11,7 +11,7 @@
 --
 -- 2. Replace 'YOUR-EMAIL-HERE' below with the email you just created
 -- 3. Run this entire script in Supabase SQL Editor
--- 4. Login at: http://localhost:3000/admin/login
+-- 4. Login at: https://gtstrain.eastshoresit.com.au/admin/login
 --
 -- ============================================
 
@@ -58,7 +58,7 @@ BEGIN
     ON CONFLICT (user_id) DO NOTHING;
     
     RAISE NOTICE '✅ SUCCESS! Super Admin created for: %', v_email;
-    RAISE NOTICE 'Login at: http://localhost:3000/admin/login';
+    RAISE NOTICE 'Login at: https://gtstrain.eastshoresit.com.au/admin/login';
 END $$;
 
 -- Verify everything worked:
