@@ -37,7 +37,8 @@ import {
   Activity,
   MessageSquare,
   Smartphone,
-  Mail
+  Mail,
+  Lock
 } from "lucide-react";
 
 export default function Home() {
