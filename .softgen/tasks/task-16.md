@@ -10,7 +10,7 @@ position: 16
 ---
 
 ## Notes
-Complete contract lifecycle management with digital signatures, automated workflows, and legal compliance tracking. Full integration with booking system.
+Complete contract lifecycle management with digital signatures, automated workflows, and legal compliance tracking. Full integration with booking system. Welcome tour auto-starts on first admin login.
 
 ## Checklist
 - [x] Create contracts table with templates
@@ -22,3 +22,10 @@ Complete contract lifecycle management with digital signatures, automated workfl
 - [x] Add audit trail (who signed, when, IP address)
 - [x] Integrate signed docs back to booking records
 - [x] Add contract expiry tracking and renewals
+- [x] Auto-start welcome tour on first admin login
+
+## Acceptance
+- Users see guided tour automatically on first dashboard visit
+- Tour can be skipped or completed
+- Tour completion tracked in database
+- Tour can be restarted from profile settings
