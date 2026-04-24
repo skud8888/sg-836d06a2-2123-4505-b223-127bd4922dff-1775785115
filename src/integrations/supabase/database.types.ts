@@ -1,4 +1,4 @@
- 
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 export type Json =
   | string
   | number
@@ -364,6 +364,45 @@ export type Database = {
           size_bytes?: number | null
           status?: string
           tables_backed_up?: string[] | null
+        }
+        Relationships: []
+      }
+      backup_metadata: {
+        Row: {
+          backup_size_kb: number
+          backup_timestamp: string
+          backup_type: string
+          created_at: string | null
+          created_by: string | null
+          error_message: string | null
+          id: string
+          record_counts: Json
+          status: string
+          tables_backed_up: string[]
+        }
+        Insert: {
+          backup_size_kb: number
+          backup_timestamp: string
+          backup_type: string
+          created_at?: string | null
+          created_by?: string | null
+          error_message?: string | null
+          id?: string
+          record_counts: Json
+          status: string
+          tables_backed_up: string[]
+        }
+        Update: {
+          backup_size_kb?: number
+          backup_timestamp?: string
+          backup_type?: string
+          created_at?: string | null
+          created_by?: string | null
+          error_message?: string | null
+          id?: string
+          record_counts?: Json
+          status?: string
+          tables_backed_up?: string[]
         }
         Relationships: []
       }
