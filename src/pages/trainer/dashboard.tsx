@@ -1,28 +1,17 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import Link from "next/link";
-import { SEO } from "@/components/SEO";
-import { Navigation } from "@/components/Navigation";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
-import { rbacService } from "@/services/rbacService";
+import { Navigation } from "@/components/Navigation";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Loader2,
-  Users,
   Calendar,
-  DollarSign,
-  BookOpen,
-  TrendingUp,
-  Award,
+  Users,
   Clock,
-  MessageSquare,
-  FileText,
-  BarChart3,
-  Star
+  CheckCircle,
+  AlertCircle,
+  FileText
 } from "lucide-react";
 
 interface DashboardStats {

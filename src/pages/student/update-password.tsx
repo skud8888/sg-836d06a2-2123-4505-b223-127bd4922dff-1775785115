@@ -86,10 +86,11 @@ export default function StudentUpdatePasswordPage() {
       setTimeout(() => {
         router.push("/student/portal");
       }, 3000);
-    } catch (err: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to update password";
       toast({
         title: "Error",
-        description: err.message,
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
