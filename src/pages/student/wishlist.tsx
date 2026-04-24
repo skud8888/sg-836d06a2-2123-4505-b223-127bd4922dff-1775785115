@@ -48,7 +48,7 @@ export default function Wishlist() {
   async function loadWishlist(userId: string) {
     try {
       const { data, error } = await supabase
-        .from("wishlist")
+        .from("wishlist" as any)
         .select(`
           *,
           course_templates (*)
@@ -58,7 +58,7 @@ export default function Wishlist() {
 
       if (error) throw error;
 
-      setWishlist(data as WishlistItem[]);
+      setWishlist(data || []);
     } catch (error) {
       console.error("Error loading wishlist:", error);
       toast({
@@ -72,7 +72,7 @@ export default function Wishlist() {
   async function removeFromWishlist(itemId: string) {
     try {
       const { error } = await supabase
-        .from("wishlist")
+        .from("wishlist" as any)
         .delete()
         .eq("id", itemId);
 

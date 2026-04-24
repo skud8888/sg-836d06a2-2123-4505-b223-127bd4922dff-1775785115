@@ -21,9 +21,17 @@ import {
 import type { Tables } from "@/integrations/supabase/types";
 
 type Profile = Tables<"profiles">;
-type Achievement = Tables<"achievements">;
 type Enrollment = Tables<"enrollments">;
 type CourseTemplate = Tables<"course_templates">;
+
+interface Achievement {
+  id: string;
+  user_id: string;
+  achievement_type: string;
+  achievement_name: string;
+  achievement_description?: string;
+  earned_at: string;
+}
 
 export default function SocialProfile() {
   const router = useRouter();
