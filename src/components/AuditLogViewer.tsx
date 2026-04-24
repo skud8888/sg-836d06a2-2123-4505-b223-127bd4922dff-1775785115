@@ -76,10 +76,28 @@ export function AuditLogViewer() {
 
       if (error) throw error;
       
-      setLogs((data as unknown[]).map((log: unknown) => ({
-        ...(log as Record<string, unknown>),
-        profiles: (log as Record<string, unknown>).profiles || null
-      })) as AuditLog[]);
+      // Map the data to ensure profiles is properly typed
+      const mappedLogs: AuditLog[] = (data || []).map((log) => ({
+        id: log.id,
+        user_id: log.user_id,
+        action: log.action,
+        action_category: log.action_category,
+        details: log.details,
+        ip_address: log.ip_address,
+        user_agent: log.user_agent,
+        severity: log.severity,
+        created_at: log.created_at,
+        metadata: log.metadata,
+        affected_user_id: log.affected_user_id,
+        profiles: log.profiles && typeof log.profiles === 'object' && 'full_name' in log.profiles
+          ? {
+              full_name: log.profiles.full_name,
+              email: log.profiles.email
+            }
+          : null
+      }));
+      
+      setLogs(mappedLogs);
     } catch (error) {
       console.error("Error fetching audit logs:", error);
       const errorMessage = error instanceof Error ? error.message : "Failed to fetch audit logs";
