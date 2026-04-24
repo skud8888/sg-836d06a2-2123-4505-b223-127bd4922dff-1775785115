@@ -81,7 +81,14 @@ export function AuditLogViewer() {
       const { data, error } = await query;
 
       if (error) throw error;
-      setLogs(data || []);
+      
+      // Map data to match the expected AuditLog type
+      const formattedData: AuditLog[] = (data || []).map((item: any) => ({
+        ...item,
+        profiles: item.profiles || null
+      }));
+      
+      setLogs(formattedData);
     } catch (error: any) {
       console.error("Error fetching audit logs:", error);
       toast({
@@ -97,12 +104,12 @@ export function AuditLogViewer() {
   async function exportToCsv() {
     try {
       const csv = [
-        ["Date", "User", "Action", "Description", "IP Address", "User Agent"].join(","),
+        ["Date", "User", "Action", "Details", "IP Address", "User Agent"].join(","),
         ...logs.map(log => [
           format(new Date(log.created_at), "yyyy-MM-dd HH:mm:ss"),
           log.profiles?.full_name || log.profiles?.email || "System",
           log.action,
-          `"${log.description || ""}"`,
+          `"${log.details || ""}"`,
           log.ip_address || "",
           `"${log.user_agent || ""}"`
         ].join(","))
@@ -133,7 +140,7 @@ export function AuditLogViewer() {
     const search = searchTerm.toLowerCase();
     return (
       log.action.toLowerCase().includes(search) ||
-      log.description?.toLowerCase().includes(search) ||
+      log.details?.toLowerCase().includes(search) ||
       log.profiles?.full_name?.toLowerCase().includes(search) ||
       log.profiles?.email?.toLowerCase().includes(search) ||
       log.ip_address?.toLowerCase().includes(search)
@@ -269,7 +276,7 @@ export function AuditLogViewer() {
                   <TableHead>Date & Time</TableHead>
                   <TableHead>User</TableHead>
                   <TableHead>Action</TableHead>
-                  <TableHead>Description</TableHead>
+                  <TableHead>Details</TableHead>
                   <TableHead>IP Address</TableHead>
                 </TableRow>
               </TableHeader>
@@ -293,7 +300,7 @@ export function AuditLogViewer() {
                     </TableCell>
                     <TableCell>{getActionBadge(log.action)}</TableCell>
                     <TableCell className="max-w-md truncate">
-                      {log.description}
+                      {log.details}
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
                       {log.ip_address || "-"}
