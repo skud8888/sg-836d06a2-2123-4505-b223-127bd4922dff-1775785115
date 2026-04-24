@@ -9,9 +9,14 @@ import { Heart, Trash2, Calendar, Clock, DollarSign } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
 type CourseTemplate = Tables<"course_templates">;
-type WishlistItem = Tables<"wishlist"> & {
+
+interface WishlistItem {
+  id: string;
+  user_id: string;
+  course_id: string;
+  created_at: string;
   course_templates: CourseTemplate;
-};
+}
 
 export default function Wishlist() {
   const router = useRouter();
@@ -58,7 +63,7 @@ export default function Wishlist() {
 
       if (error) throw error;
 
-      setWishlist(data || []);
+      setWishlist((data || []) as unknown as WishlistItem[]);
     } catch (error) {
       console.error("Error loading wishlist:", error);
       toast({
