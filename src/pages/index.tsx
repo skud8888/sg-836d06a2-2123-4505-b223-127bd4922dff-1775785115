@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Navigation } from "@/components/Navigation";
 import { SEO } from "@/components/SEO";
 import { Hero } from "@/components/Hero";
-import { FeaturedCourses } from "@/components/FeaturedCourses";
+import FeaturedCourses from "@/components/FeaturedCourses";
 import { InstallPWA } from "@/components/InstallPWA";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
