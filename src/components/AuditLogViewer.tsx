@@ -36,6 +36,8 @@ export function AuditLogViewer() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState<string>("7d");
+  const [dateFrom, setDateFrom] = useState<Date | undefined>();
+  const [dateTo, setDateTo] = useState<Date | undefined>();
   const [actionFilter, setActionFilter] = useState<string>("all");
   const [userFilter, setUserFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");

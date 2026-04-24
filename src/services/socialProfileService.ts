@@ -20,12 +20,12 @@ export const socialProfileService = {
     const { data: enrollments } = await supabase
       .from("enrollments")
       .select("*")
-      .eq("user_id", userId);
+      .eq("student_id", userId);
 
     const { data: achievements } = await supabase
-      .from("achievements" as any)
+      .from("student_badges" as any)
       .select("*")
-      .eq("user_id", userId);
+      .eq("student_id", userId);
 
     return {
       profile: profile as Profile,
