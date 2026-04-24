@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Download, FileText, CheckCircle, XCircle, Clock } from "lucide-react";
@@ -51,7 +51,7 @@ export function DocumentList({ bookingId, studentId, documentType }: DocumentLis
       const { data, error } = await query;
 
       if (error) throw error;
-      setDocuments(data || []);
+      setDocuments((data || []) as any[]);
     } catch (error) {
       console.error("Error fetching documents:", error);
       toast({

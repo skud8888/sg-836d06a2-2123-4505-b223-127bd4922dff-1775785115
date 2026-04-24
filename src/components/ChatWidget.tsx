@@ -54,7 +54,7 @@ export function ChatWidget() {
           id: m.id,
           text: m.message,
           sender: m.is_from_student ? "user" : "support",
-          timestamp: new Date(m.created_at)
+          timestamp: new Date(m.created_at).toISOString()
         })));
       }
     } catch (err) {

@@ -44,7 +44,7 @@ export function DocumentViewer({ bookingId, studentId }: DocumentViewerProps) {
       }
 
       const { data } = await query;
-      setDocuments(data || []);
+      setDocuments((data || []) as any[]);
     } catch (err) {
       console.error("Error loading documents:", err);
       toast({
@@ -84,7 +84,7 @@ export function DocumentViewer({ bookingId, studentId }: DocumentViewerProps) {
             <CardContent>
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                  <Badge variant={doc.status === "approved" ? "success" : doc.status === "rejected" ? "destructive" : "default"}>
+                  <Badge variant={doc.status === "approved" ? "default" : doc.status === "rejected" ? "destructive" : "secondary"}>
                     {doc.status}
                   </Badge>
                   <span className="text-muted-foreground">
