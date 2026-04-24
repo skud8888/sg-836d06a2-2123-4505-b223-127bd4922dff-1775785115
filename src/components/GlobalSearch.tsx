@@ -51,7 +51,7 @@ export function GlobalSearch() {
         }
 
         const searchResults = await searchService.search(query);
-        setResults(searchResults as SearchResult[]);
+        setResults(searchResults as unknown as SearchResult[]);
       } catch (error) {
         console.error("Search error:", error);
       } finally {

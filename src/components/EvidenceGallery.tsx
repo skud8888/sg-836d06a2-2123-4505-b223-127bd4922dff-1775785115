@@ -44,7 +44,7 @@ export function EvidenceGallery({ classId, studentId, scheduledClassId, bookingI
       const { data, error } = await query;
 
       if (error) throw error;
-      setEvidence(data || []);
+      setEvidence((data || []) as any[]);
     } catch (error) {
       console.error("Error fetching evidence:", error);
       toast({
