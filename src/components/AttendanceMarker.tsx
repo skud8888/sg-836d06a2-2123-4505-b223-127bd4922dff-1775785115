@@ -31,13 +31,20 @@ export function AttendanceMarker({ classId }: AttendanceMarkerProps) {
   async function loadEnrollments() {
     try {
       const { data, error } = await supabase
-        .from("enrollments")
-        .select("*")
-        .eq("class_id", classId)
+        .from("enrollments" as any)
+        .select(`
+          *,
+          profiles!enrollments_student_id_fkey(full_name, email)
+        `)
+        .eq("scheduled_class_id", classId)
         .eq("status", "confirmed");
 
       if (error) throw error;
-      setStudents(data || []);
+      setStudents((data || []).map((d: any) => ({
+        ...d,
+        student_name: d.profiles?.full_name || "Unknown",
+        student_email: d.profiles?.email || ""
+      })));
     } catch (error) {
       console.error("Error loading enrollments:", error);
       toast({
@@ -53,13 +60,13 @@ export function AttendanceMarker({ classId }: AttendanceMarkerProps) {
   async function markAttendance(studentId: string, attended: boolean) {
     try {
       const { error } = await supabase
-        .from("enrollments")
+        .from("enrollments" as any)
         .update({ attended, updated_at: new Date().toISOString() })
         .eq("id", studentId);
 
       if (error) throw error;
 
-      setStudents(students.map(s => 
+      setStudents(students.map((s: any) => 
         s.id === studentId ? { ...s, attended } : s
       ));
 

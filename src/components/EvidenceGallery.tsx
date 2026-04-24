@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -16,11 +17,13 @@ interface Evidence {
 }
 
 interface EvidenceGalleryProps {
-  classId: string;
+  classId?: string;
   studentId?: string;
+  scheduledClassId?: string;
+  bookingId?: string;
 }
 
-export function EvidenceGallery({ classId, studentId }: EvidenceGalleryProps) {
+export function EvidenceGallery({ classId, studentId, scheduledClassId, bookingId }: EvidenceGalleryProps) {
   const [evidence, setEvidence] = useState<Evidence[]>([]);
   const [selectedEvidence, setSelectedEvidence] = useState<Evidence | null>(null);
   const [loading, setLoading] = useState(true);
@@ -29,14 +32,14 @@ export function EvidenceGallery({ classId, studentId }: EvidenceGalleryProps) {
   const fetchEvidence = useCallback(async () => {
     try {
       let query = supabase
-        .from("field_evidence")
+        .from("field_evidence" as any)
         .select("*")
-        .eq("class_id", classId)
         .order("captured_at", { ascending: false });
 
-      if (studentId) {
-        query = query.eq("student_id", studentId);
-      }
+      if (classId) query = query.eq("class_id", classId);
+      if (scheduledClassId) query = query.eq("scheduled_class_id", scheduledClassId);
+      if (studentId) query = query.eq("student_id", studentId);
+      if (bookingId) query = query.eq("booking_id", bookingId);
 
       const { data, error } = await query;
 
@@ -52,9 +55,47 @@ export function EvidenceGallery({ classId, studentId }: EvidenceGalleryProps) {
     } finally {
       setLoading(false);
     }
-  }, [classId, studentId, toast]);
+  }, [classId, studentId, scheduledClassId, bookingId, toast]);
 
   useEffect(() => {
     fetchEvidence();
   }, [fetchEvidence]);
+
+  if (loading) {
+    return <div className="p-4 text-center">Loading evidence...</div>;
+  }
+
+  return (
+    <div className="space-y-4">
+      {evidence.length === 0 ? (
+        <Card>
+          <CardHeader>
+            <CardDescription>No evidence available</CardDescription>
+          </CardHeader>
+        </Card>
+      ) : (
+        evidence.map((e) => (
+          <Card key={e.id}>
+            <CardHeader>
+              <CardDescription>{e.notes}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  <span className="text-sm">{format(new Date(e.captured_at), "MMM d, yyyy")}</span>
+                </div>
+                {e.location && (
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4" />
+                    <span className="text-sm">{e.location}</span>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        ))
+      )}
+    </div>
+  );
 }

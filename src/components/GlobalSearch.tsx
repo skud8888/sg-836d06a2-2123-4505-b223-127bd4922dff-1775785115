@@ -50,8 +50,8 @@ export function GlobalSearch() {
           return;
         }
 
-        const searchResults = await searchService.globalSearch(query, session.user.id);
-        setResults(searchResults);
+        const searchResults = await searchService.search(query);
+        setResults(searchResults as SearchResult[]);
       } catch (error) {
         console.error("Search error:", error);
       } finally {

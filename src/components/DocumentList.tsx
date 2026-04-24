@@ -32,9 +32,9 @@ export function DocumentList({ bookingId, studentId, documentType }: DocumentLis
   const fetchDocuments = useCallback(async () => {
     try {
       let query = supabase
-        .from("documents")
+        .from("documents" as any)
         .select("*")
-        .order("uploaded_at", { ascending: false });
+        .order("created_at", { ascending: false });
 
       if (bookingId) {
         query = query.eq("booking_id", bookingId);
@@ -67,4 +67,64 @@ export function DocumentList({ bookingId, studentId, documentType }: DocumentLis
   useEffect(() => {
     fetchDocuments();
   }, [fetchDocuments]);
+
+  if (loading) {
+    return <div className="p-4 text-center">Loading documents...</div>;
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <CardDescription>
+          {documents.length === 0 ? (
+            <div className="p-4 text-center">No documents found.</div>
+          ) : (
+            <div className="space-y-4">
+              {documents.map((doc) => (
+                <div key={doc.id} className="flex items-center justify-between p-4 border rounded">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-muted-foreground" />
+                    <div className="flex-1">
+                      <div className="font-medium">{doc.file_name}</div>
+                      <div className="text-sm text-muted-foreground">{doc.document_type}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-5 h-5 text-muted-foreground" />
+                      <div className="text-sm text-muted-foreground">
+                        Uploaded {format(new Date(doc.uploaded_at), "MMM d, yyyy")}
+                      </div>
+                    </div>
+                    {doc.status === "reviewed" && (
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="w-5 h-5 text-green-500" />
+                        <div className="text-sm text-green-500">
+                          Reviewed {format(new Date(doc.reviewed_at || doc.uploaded_at), "MMM d, yyyy")}
+                        </div>
+                      </div>
+                    )}
+                    {doc.status === "rejected" && (
+                      <div className="flex items-center gap-2">
+                        <XCircle className="w-5 h-5 text-red-500" />
+                        <div className="text-sm text-red-500">
+                          Rejected {format(new Date(doc.reviewed_at || doc.uploaded_at), "MMM d, yyyy")}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardDescription>
+      </CardContent>
+    </Card>
+  );
 }

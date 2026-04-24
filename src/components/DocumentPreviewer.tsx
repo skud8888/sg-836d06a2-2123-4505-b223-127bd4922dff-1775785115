@@ -25,6 +25,8 @@ export function DocumentPreviewer({
   const [zoom, setZoom] = useState(100);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages] = useState(1);
+  const [rotation, setRotation] = useState(0);
+  const fileUrl = documentUrl;
 
   const handleDownload = () => {
     const link = document.createElement("a");

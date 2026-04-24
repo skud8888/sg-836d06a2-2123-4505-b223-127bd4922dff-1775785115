@@ -39,7 +39,7 @@ export function CertificateGenerator({ enrollmentId, studentId, courseId }: Cert
       setGenerating(true);
 
       const { data: certificate, error } = await supabase
-        .from("certificates")
+        .from("certificates" as any)
         .insert({
           student_id: selectedStudent,
           course_id: selectedCourse,

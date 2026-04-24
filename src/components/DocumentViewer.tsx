@@ -31,9 +31,9 @@ export function DocumentViewer({ bookingId, studentId }: DocumentViewerProps) {
   const loadDocuments = useCallback(async () => {
     try {
       let query = supabase
-        .from("documents")
+        .from("documents" as any)
         .select("*")
-        .order("uploaded_at", { ascending: false });
+        .order("created_at", { ascending: false });
 
       if (bookingId) {
         query = query.eq("booking_id", bookingId);
@@ -60,4 +60,48 @@ export function DocumentViewer({ bookingId, studentId }: DocumentViewerProps) {
   useEffect(() => {
     loadDocuments();
   }, [loadDocuments]);
+
+  if (loading) {
+    return <div className="p-4 text-center">Loading documents...</div>;
+  }
+
+  return (
+    <div className="space-y-4">
+      {documents.length === 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>No documents found</CardTitle>
+            <CardDescription>No documents have been uploaded for this booking.</CardDescription>
+          </CardHeader>
+        </Card>
+      ) : (
+        documents.map((doc) => (
+          <Card key={doc.id}>
+            <CardHeader>
+              <CardTitle>{doc.file_name}</CardTitle>
+              <CardDescription>{doc.document_type}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <Badge variant={doc.status === "approved" ? "success" : doc.status === "rejected" ? "destructive" : "default"}>
+                    {doc.status}
+                  </Badge>
+                  <span className="text-muted-foreground">
+                    Uploaded {format(new Date(doc.uploaded_at), "MMM d, yyyy")}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={() => window.open(doc.file_url, "_blank")}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Download
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))
+      )}
+    </div>
+  );
 }

@@ -44,13 +44,18 @@ export function ChatWidget() {
       if (!user) return;
 
       const { data: messages } = await supabase
-        .from("support_messages")
+        .from("support_messages" as any)
         .select("*")
-        .eq("user_id", user.id)
+        .eq("student_id", user.id)
         .order("created_at", { ascending: true });
 
       if (messages) {
-        setMessages(messages);
+        setMessages(messages.map((m: any) => ({
+          id: m.id,
+          text: m.message,
+          sender: m.is_from_student ? "user" : "support",
+          timestamp: new Date(m.created_at)
+        })));
       }
     } catch (err) {
       console.error("Error loading messages:", err);

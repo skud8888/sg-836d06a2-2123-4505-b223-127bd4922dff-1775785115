@@ -40,7 +40,7 @@ export function FeedbackWidget() {
       }
 
       const { error } = await supabase
-        .from("feedback")
+        .from("feedback" as any)
         .insert({
           user_id: session.user.id,
           category,
