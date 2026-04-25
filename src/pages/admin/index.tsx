@@ -79,7 +79,7 @@ export default function AdminDashboard() {
         .from("user_roles")
         .select("role")
         .eq("user_id", session.user.id)
-        .in("role", ["super_admin", "admin"]);
+        .in("role", ["super_admin", "admin", "trainer", "receptionist"]);
 
       if (!roles || roles.length === 0) {
         toast({
@@ -100,7 +100,7 @@ export default function AdminDashboard() {
         .eq("user_id", session.user.id)
         .single();
 
-      // Auto-start tour for first-time users
+      // Auto-start tour for first-time admin dashboard users ONLY
       if (!preferences?.has_seen_admin_tour) {
         // Small delay to let the dashboard render first
         setTimeout(() => setShowTour(true), 1000);
