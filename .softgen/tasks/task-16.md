@@ -10,7 +10,9 @@ position: 16
 ---
 
 ## Notes
-✅ COMPLETE - Full contract lifecycle management with digital signatures, automated workflows, and legal compliance tracking. Signed contracts fully integrated with booking system. Complete documentation created.
+Complete contract lifecycle management with digital signatures, automated workflows, and legal compliance tracking. Full integration with booking system.
+
+Tour properly scoped to admin dashboard only - won't interrupt users on other admin pages.
 
 ## Checklist
 - [x] Create contracts table with templates
@@ -22,12 +24,9 @@ position: 16
 - [x] Add audit trail (who signed, when, IP address)
 - [x] Integrate signed docs back to booking records
 - [x] Add contract expiry tracking and renewals
-- [x] Complete documentation with guides and examples
 
 ## Acceptance
-✅ Complete signature cycle works end-to-end
-✅ Contracts integrate seamlessly with booking system
-✅ Audit trail captures all signature events with legal compliance
-✅ Contract preview and generation from booking page
-✅ Expiry tracking and renewal workflows implemented
-✅ Comprehensive documentation created (170+ pages)
+- Admin can generate contracts from booking data
+- Students receive signature request emails
+- Signed contracts are stored with audit trail
+- Tour only appears on admin dashboard for first-time users
