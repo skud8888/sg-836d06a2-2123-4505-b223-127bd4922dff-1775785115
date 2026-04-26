@@ -30,7 +30,7 @@ export default async function handler(
 
     // Check if user already exists
     const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
-    const existingUser = existingUsers?.users.find(u => u.email === email);
+    const existingUser = existingUsers?.users.find((u: any) => u.email === email);
 
     let userId: string;
 
