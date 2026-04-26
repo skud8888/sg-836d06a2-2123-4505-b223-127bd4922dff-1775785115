@@ -93,14 +93,14 @@ export default function AdminDashboard() {
 
       setUserRole(roles[0].role);
 
-      // Check if this is user's first login to admin dashboard
+      // Check if this is user's first time on the ADMIN DASHBOARD (not other pages)
       const { data: preferences } = await supabase
         .from("notification_preferences")
         .select("has_seen_admin_tour")
         .eq("user_id", session.user.id)
         .single();
 
-      // Auto-start tour for first-time admin dashboard users ONLY
+      // Only auto-start tour on DASHBOARD page for first-time users
       if (!preferences?.has_seen_admin_tour) {
         // Small delay to let the dashboard render first
         setTimeout(() => setShowTour(true), 1000);

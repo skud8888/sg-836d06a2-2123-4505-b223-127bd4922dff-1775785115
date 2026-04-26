@@ -125,29 +125,19 @@ interface AdminWelcomeTourProps {
 
 export function AdminWelcomeTour({ open, onOpenChange }: AdminWelcomeTourProps) {
   const [currentStep, setCurrentStep] = useState(0);
-  const [isVisible, setIsVisible] = useState(false);
   const [userRole, setUserRole] = useState<string>("student");
   const { toast } = useToast();
 
   useEffect(() => {
-    checkOnboardingStatus();
-  }, []);
+    if (open) {
+      getUserRole();
+    }
+  }, [open]);
 
-  const checkOnboardingStatus = async () => {
+  const getUserRole = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-
-      // Check if onboarding is completed
-      const { data: onboarding } = await supabase
-        .from("user_onboarding")
-        .select("*")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (onboarding && !onboarding.is_completed) {
-        setIsVisible(true);
-      }
 
       // Determine user role
       const { data: roles } = await supabase
@@ -165,7 +155,7 @@ export function AdminWelcomeTour({ open, onOpenChange }: AdminWelcomeTourProps) 
         }
       }
     } catch (error) {
-      console.error("Error checking onboarding:", error);
+      console.error("Error getting user role:", error);
     }
   };
 
@@ -221,7 +211,7 @@ export function AdminWelcomeTour({ open, onOpenChange }: AdminWelcomeTourProps) 
     }
   };
 
-  if (!isVisible) return null;
+  if (!open) return null;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
