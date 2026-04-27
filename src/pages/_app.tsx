@@ -1,4 +1,5 @@
 import type { AppProps } from "next/app";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ThemeProvider } from "@/contexts/ThemeProvider";
 import { Toaster } from "@/components/ui/toaster";
 import { StudentChatSupport } from "@/components/StudentChatSupport";
@@ -18,6 +19,7 @@ export default function App({ Component, pageProps }: AppProps) {
       <OfflineIndicator />
       <ChatWidget />
       <FeatureDiscoveryTour />
+      <SpeedInsights />
     </ThemeProvider>
   );
 }
