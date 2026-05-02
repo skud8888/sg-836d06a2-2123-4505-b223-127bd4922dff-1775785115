@@ -37,7 +37,7 @@ export default function Trainers() {
 
   useEffect(() => {
     checkAuth();
-    fetchTrainers();
+    loadTrainers();
   }, []);
 
   const checkAuth = async () => {
@@ -47,19 +47,45 @@ export default function Trainers() {
     }
   };
 
-  const fetchTrainers = async () => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .in("role", ["admin", "trainer"])
-      .order("full_name");
+  const loadTrainers = async () => {
+    try {
+      setLoading(true);
+      
+      // Get all users with trainer or admin roles
+      const { data: userRoles, error: rolesError } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .in("role", ["admin", "trainer"]);
 
-    console.log("Fetched trainers:", { data, error });
+      if (rolesError) throw rolesError;
 
-    if (data) {
-      setTrainers(data);
+      const trainerIds = userRoles?.map(r => r.user_id) || [];
+
+      if (trainerIds.length === 0) {
+        setTrainers([]);
+        setLoading(false);
+        return;
+      }
+
+      // Get profiles for these users
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .in("id", trainerIds)
+        .order("full_name", { ascending: true });
+
+      if (error) throw error;
+      setTrainers(data || []);
+    } catch (error: any) {
+      console.error("Error loading trainers:", error);
+      toast({
+        title: "Error loading trainers",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleOpenDialog = (trainer?: Profile) => {
@@ -106,7 +132,7 @@ export default function Trainers() {
       } else {
         toast({ title: "Trainer updated successfully" });
         setDialogOpen(false);
-        fetchTrainers();
+        loadTrainers();
       }
     } else {
       // For new trainers, they need to sign up themselves
