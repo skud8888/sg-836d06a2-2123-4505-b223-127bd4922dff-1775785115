@@ -20,6 +20,7 @@ export type Database = {
           action_description: string
           action_type: string
           created_at: string | null
+          description: string | null
           entity_id: string | null
           entity_type: string | null
           id: string
@@ -30,6 +31,7 @@ export type Database = {
           action_description: string
           action_type: string
           created_at?: string | null
+          description?: string | null
           entity_id?: string | null
           entity_type?: string | null
           id?: string
@@ -40,6 +42,7 @@ export type Database = {
           action_description?: string
           action_type?: string
           created_at?: string | null
+          description?: string | null
           entity_id?: string | null
           entity_type?: string | null
           id?: string
@@ -3109,8 +3112,10 @@ export type Database = {
       }
       scheduled_classes: {
         Row: {
+          capacity: number | null
           course_template_id: string
           created_at: string | null
+          current_enrollment: number | null
           end_datetime: string
           id: string
           location: string
@@ -3122,8 +3127,10 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          capacity?: number | null
           course_template_id: string
           created_at?: string | null
+          current_enrollment?: number | null
           end_datetime: string
           id?: string
           location: string
@@ -3135,8 +3142,10 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          capacity?: number | null
           course_template_id?: string
           created_at?: string | null
+          current_enrollment?: number | null
           end_datetime?: string
           id?: string
           location?: string

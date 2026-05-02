@@ -10,7 +10,8 @@ import {
   FileText, 
   UserPlus,
   Calendar,
-  Clock
+  Clock,
+  Activity
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -50,7 +51,55 @@ export function ActivityFeed({ userId, limit = 10 }: ActivityFeedProps) {
 
   useEffect(() => {
     loadActivities();
-  }, [loadActivities]);
+  }, [limit]);
+
+  async function loadActivities() {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("activity_timeline")
+        .select(`
+          id,
+          action_type,
+          action_description,
+          description,
+          entity_type,
+          entity_id,
+          metadata,
+          created_at,
+          user_id,
+          users!activity_timeline_user_id_fkey (
+            email
+          ),
+          profiles!activity_timeline_user_id_fkey (
+            full_name
+          )
+        `)
+        .order("created_at", { ascending: false })
+        .limit(limit || 10);
+
+      if (error) throw error;
+
+      // Map and ensure all required fields exist
+      const mappedActivities = (data || []).map(activity => ({
+        ...activity,
+        action_type: activity.action_type || 'activity',
+        action_description: activity.action_description || activity.description || 'Activity recorded',
+        user_name: activity.profiles?.full_name || activity.users?.email?.split('@')[0] || 'Unknown User'
+      }));
+
+      setActivities(mappedActivities);
+    } catch (error: any) {
+      console.error("Error loading activities:", error);
+      toast({
+        title: "Error loading activities",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const getActivityIcon = (actionType: string) => {
     switch (actionType) {
@@ -130,30 +179,26 @@ export function ActivityFeed({ userId, limit = 10 }: ActivityFeedProps) {
       <CardContent>
         <div className="space-y-4">
           {activities.map((activity) => {
-            const Icon = getActivityIcon(activity.action_type);
-            const colorClass = getActivityColor(activity.action_type);
-            const userName = activity.profiles?.full_name || activity.profiles?.email || "User";
-            const initials = userName.substring(0, 2).toUpperCase();
-
+            const userName = activity.user_name || 'Unknown User';
+            const actionType = activity.action_type || 'activity';
+            const description = activity.action_description || 'Activity recorded';
+            
             return (
-              <div key={activity.id} className="flex gap-4">
-                <Avatar className="h-10 w-10">
-                  <AvatarFallback>{initials}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 space-y-1">
-                  <div className="flex items-center gap-2">
-                    <Icon className={`h-4 w-4 ${colorClass}`} />
+              <Card key={activity.id} className="hover:shadow-md transition-shadow">
+                <CardContent className="pt-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Activity className="h-4 w-4 text-primary" />
                     <span className="text-sm font-medium">{userName}</span>
                     <Badge variant="outline" className="text-xs">
-                      {activity.action_type.replace(/_/g, " ")}
+                      {actionType.replace(/_/g, " ")}
                     </Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground">{activity.action_description}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(activity.created_at), { addSuffix: true })}
+                  <p className="text-sm text-muted-foreground">{description}</p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {new Date(activity.created_at).toLocaleString()}
                   </p>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             );
           })}
         </div>
