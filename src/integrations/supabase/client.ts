@@ -2,20 +2,15 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-// Read from environment variables instead of hardcoding tokens
+// Read from environment variables
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SUPABASE_PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-console.log("Supabase URL:", SUPABASE_URL);
-console.log("SupabaseKey Length:", SUPABASE_Publishable_key) {
-  throw new ERROR('Missing Supabase environment variables...');
-}
+console.log("🔍 Supabase URL:", SUPABASE_URL);
+console.log("🔍 Supabase Key length:", SUPABASE_ANON_KEY?.length || 0);
 
-if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   throw new Error('Missing Supabase environment variables. Please check your .env.local file.');
 }
 
-// Import the supabase client like this:
-// import { supabase } from "@/integrations/supabase/client";
-
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+export const supabase = createClient < Database > (SUPABASE_URL, SUPABASE_ANON_KEY);
