@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { activityTimelineService } from "@/services/activityTimelineService";
 import { 
   BookOpen, 
@@ -11,20 +10,24 @@ import {
   UserPlus,
   Calendar,
   Clock,
-  Activity
+  Activity as ActivityIcon
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
 
 interface Activity {
   id: string;
   user_id: string;
   action_type: string;
   action_description: string;
+  description?: string;
   created_at: string;
   profiles?: {
     full_name?: string;
-    email: string;
+    email?: string;
   };
+  users?: {
+    email?: string;
+  };
+  user_name?: string;
 }
 
 interface ActivityFeedProps {
@@ -38,68 +41,30 @@ export function ActivityFeed({ userId, limit = 10 }: ActivityFeedProps) {
 
   const loadActivities = useCallback(async () => {
     try {
+      setLoading(true);
       const { activities: data } = userId
         ? await activityTimelineService.getUserTimeline(userId, limit)
         : await activityTimelineService.getRecentActivities(limit);
       
-      setActivities(data);
-    } catch (error) {
-      console.error("Error loading activities:", error);
-    }
-    setLoading(false);
-  }, [userId, limit]);
-
-  useEffect(() => {
-    loadActivities();
-  }, [limit]);
-
-  async function loadActivities() {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("activity_timeline")
-        .select(`
-          id,
-          action_type,
-          action_description,
-          description,
-          entity_type,
-          entity_id,
-          metadata,
-          created_at,
-          user_id,
-          users!activity_timeline_user_id_fkey (
-            email
-          ),
-          profiles!activity_timeline_user_id_fkey (
-            full_name
-          )
-        `)
-        .order("created_at", { ascending: false })
-        .limit(limit || 10);
-
-      if (error) throw error;
-
-      // Map and ensure all required fields exist
-      const mappedActivities = (data || []).map(activity => ({
+      // Ensure we map any potentially missing fields with safe fallbacks
+      const mappedActivities = (data || []).map((activity: any) => ({
         ...activity,
         action_type: activity.action_type || 'activity',
         action_description: activity.action_description || activity.description || 'Activity recorded',
         user_name: activity.profiles?.full_name || activity.users?.email?.split('@')[0] || 'Unknown User'
       }));
-
-      setActivities(mappedActivities);
-    } catch (error: any) {
+      
+      setActivities(mappedActivities as Activity[]);
+    } catch (error) {
       console.error("Error loading activities:", error);
-      toast({
-        title: "Error loading activities",
-        description: error.message,
-        variant: "destructive",
-      });
     } finally {
       setLoading(false);
     }
-  }
+  }, [userId, limit]);
+
+  useEffect(() => {
+    loadActivities();
+  }, [loadActivities]);
 
   const getActivityIcon = (actionType: string) => {
     switch (actionType) {
@@ -117,6 +82,7 @@ export function ActivityFeed({ userId, limit = 10 }: ActivityFeedProps) {
       case "user_signup":
         return UserPlus;
       case "class_booking":
+      case "booking_created":
         return Calendar;
       default:
         return Clock;
@@ -131,6 +97,7 @@ export function ActivityFeed({ userId, limit = 10 }: ActivityFeedProps) {
         return "text-green-500";
       case "course_enrollment":
       case "class_booking":
+      case "booking_created":
         return "text-blue-500";
       case "forum_post":
       case "forum_reply":
@@ -182,12 +149,14 @@ export function ActivityFeed({ userId, limit = 10 }: ActivityFeedProps) {
             const userName = activity.user_name || 'Unknown User';
             const actionType = activity.action_type || 'activity';
             const description = activity.action_description || 'Activity recorded';
+            const Icon = getActivityIcon(actionType);
+            const colorClass = getActivityColor(actionType);
             
             return (
               <Card key={activity.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="pt-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <Activity className="h-4 w-4 text-primary" />
+                    <Icon className={`h-4 w-4 ${colorClass}`} />
                     <span className="text-sm font-medium">{userName}</span>
                     <Badge variant="outline" className="text-xs">
                       {actionType.replace(/_/g, " ")}
