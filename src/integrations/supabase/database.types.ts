@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-empty-object-type */
+ 
 export type Json =
   | string
   | number
@@ -4093,6 +4093,12 @@ export type Database = {
           student_email: string | null
           student_name: string | null
           total_amount: number | null
+        }
+        Relationships: []
+      }
+      schema_reload_trigger: {
+        Row: {
+          last_reload: string | null
         }
         Relationships: []
       }
