@@ -133,12 +133,23 @@ export function Navigation() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            {/* Logo - Smart Home Button */}
+            <Link 
+              href={
+                user && userRole 
+                  ? (userRole === 'admin' || userRole === 'super_admin' 
+                      ? '/admin' 
+                      : userRole === 'trainer' 
+                      ? '/trainer/dashboard' 
+                      : '/student/portal')
+                  : '/'
+              }
+              className="flex items-center gap-2"
+            >
               <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
                 <GraduationCap className="h-5 w-5 text-primary-foreground" />
               </div>
-              <span className="text-xl font-bold">
+              <span className="text-xl font-bold hidden sm:inline">
                 The Training Hub
               </span>
             </Link>
