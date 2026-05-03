@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { Navigation } from "@/components/Navigation";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { supabase } from "@/integrations/supabase/client";
-import { hasPermission, Role, Permission } from "@/lib/rbac";
+import { checkPermission, getRolePermissions, Role, Permission } from "@/lib/rbac";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -50,7 +50,7 @@ interface UserRole {
   id: string;
   user_id: string;
   role: Role;
-  created_at: string;
+  assigned_at: string;
   profiles?: {
     email: string;
     full_name: string;
@@ -63,28 +63,6 @@ const ROLE_COLORS: Record<Role, string> = {
   trainer: "bg-green-500",
   receptionist: "bg-yellow-500",
   student: "bg-gray-500"
-};
-
-const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
-  super_admin: [
-    "manage_users",
-    "manage_roles",
-    "view_financials",
-    "manage_system",
-    "delete_records",
-    "view_audit_logs",
-    "manage_backups"
-  ],
-  admin: [
-    "manage_users",
-    "manage_roles",
-    "view_financials",
-    "manage_system",
-    "view_audit_logs"
-  ],
-  trainer: ["manage_own_classes", "view_students"],
-  receptionist: ["manage_bookings", "view_students"],
-  student: ["view_own_data", "manage_own_profile"]
 };
 
 export default function AdminRoleManagement() {
@@ -114,7 +92,7 @@ export default function AdminRoleManagement() {
         return;
       }
 
-      const canManageRoles = await hasPermission(session.user.id, "manage_roles");
+      const canManageRoles = await checkPermission("manage_team");
       
       if (!canManageRoles) {
         toast({
@@ -141,19 +119,39 @@ export default function AdminRoleManagement() {
 
   async function loadUserRoles() {
     try {
-      const { data, error } = await supabase
+      // Fetch user_roles
+      const { data: rolesData, error: rolesError } = await supabase
         .from("user_roles")
-        .select(`
-          *,
-          profiles (
-            email,
-            full_name
-          )
-        `)
-        .order("created_at", { ascending: false });
+        .select("*")
+        .order("assigned_at", { ascending: false });
 
-      if (error) throw error;
-      setUserRoles(data || []);
+      if (rolesError) throw rolesError;
+      
+      if (!rolesData || rolesData.length === 0) {
+        setUserRoles([]);
+        return;
+      }
+
+      // Fetch profiles
+      const userIds = rolesData.map(r => r.user_id);
+      const { data: profilesData, error: profilesError } = await supabase
+        .from("profiles")
+        .select("id, email, full_name")
+        .in("id", userIds);
+
+      if (profilesError) throw profilesError;
+
+      const profilesMap = new Map(profilesData?.map(p => [p.id, p]));
+
+      const combinedData: UserRole[] = rolesData.map((role: any) => ({
+        id: role.id,
+        user_id: role.user_id,
+        role: role.role as Role,
+        assigned_at: role.assigned_at || new Date().toISOString(),
+        profiles: profilesMap.get(role.user_id) || { email: "Unknown", full_name: "Unknown" }
+      }));
+
+      setUserRoles(combinedData);
     } catch (error: any) {
       toast({
         title: "Error loading roles",
@@ -442,11 +440,11 @@ export default function AdminRoleManagement() {
                       </TableCell>
                       <TableCell>
                         <div className="text-xs text-muted-foreground">
-                          {ROLE_PERMISSIONS[userRole.role].length} permissions
+                          {getRolePermissions(userRole.role).length} permissions
                         </div>
                       </TableCell>
                       <TableCell>
-                        {new Date(userRole.created_at).toLocaleDateString()}
+                        {new Date(userRole.assigned_at).toLocaleDateString()}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
@@ -490,10 +488,12 @@ export default function AdminRoleManagement() {
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                {Object.entries(ROLE_PERMISSIONS).map(([role, permissions]) => (
+                {(["super_admin", "admin", "trainer", "receptionist", "student"] as Role[]).map((role) => {
+                  const permissions = getRolePermissions(role);
+                  return (
                   <div key={role}>
                     <div className="flex items-center gap-2 mb-3">
-                      <Badge className={ROLE_COLORS[role as Role]}>
+                      <Badge className={ROLE_COLORS[role]}>
                         {role.replace('_', ' ')}
                       </Badge>
                       <span className="text-sm text-muted-foreground">
@@ -512,7 +512,8 @@ export default function AdminRoleManagement() {
                       ))}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
