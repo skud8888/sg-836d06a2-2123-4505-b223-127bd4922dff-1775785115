@@ -9,11 +9,9 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <ErrorBoundary>
       <ThemeProvider>
-        <div className="min-h-screen bg-background text-foreground">
-          <Component {...pageProps} />
-          <Toaster />
-          <CommandPalette />
-        </div>
+        <Component {...pageProps} />
+        <Toaster />
+        <CommandPalette />
       </ThemeProvider>
     </ErrorBoundary>
   );
