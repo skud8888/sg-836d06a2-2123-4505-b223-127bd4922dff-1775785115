@@ -1,4 +1,4 @@
- 
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 export type Json =
   | string
   | number
@@ -1187,6 +1187,7 @@ export type Database = {
           price_deposit: number
           price_full: number
           requirements: string | null
+          status: string | null
           total_ratings: number | null
           units: string[] | null
           updated_at: string | null
@@ -1205,6 +1206,7 @@ export type Database = {
           price_deposit?: number
           price_full: number
           requirements?: string | null
+          status?: string | null
           total_ratings?: number | null
           units?: string[] | null
           updated_at?: string | null
@@ -1223,6 +1225,7 @@ export type Database = {
           price_deposit?: number
           price_full?: number
           requirements?: string | null
+          status?: string | null
           total_ratings?: number | null
           units?: string[] | null
           updated_at?: string | null
