@@ -55,7 +55,7 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<any>({
     activeBookings: 0,
     totalStudents: 0,
-    monthlyRevenue: 0,
+    monthlyRevenueAmount: 0,
     pendingEnquiries: 0,
     monthlyRevenue: [],
     courseDistribution: [],
@@ -257,7 +257,7 @@ export default function AdminDashboard() {
       setStats({
         activeBookings: bookings?.length || 0,
         totalStudents: students?.length || 0,
-        monthlyRevenue: revenue,
+        monthlyRevenueAmount: revenue,
         pendingEnquiries: enquiries?.length || 0,
         monthlyRevenue: monthlyData,
         courseDistribution,
@@ -581,7 +581,7 @@ export default function AdminDashboard() {
             {[
               { label: "Active Bookings", value: stats.activeBookings, icon: Calendar, color: "text-blue-600" },
               { label: "Total Students", value: stats.totalStudents, icon: Users, color: "text-green-600" },
-              { label: "This Month Revenue", value: `$${stats.monthlyRevenue}`, icon: DollarSign, color: "text-purple-600" },
+              { label: "This Month Revenue", value: `$${stats.monthlyRevenueAmount}`, icon: DollarSign, color: "text-purple-600" },
               { label: "Pending Enquiries", value: stats.pendingEnquiries, icon: Mail, color: "text-orange-600" }
             ].map((stat, i) => {
               const Icon = stat.icon;

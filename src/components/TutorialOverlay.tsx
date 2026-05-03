@@ -46,12 +46,15 @@ export function TutorialOverlay({ steps, onComplete, tutorialKey }: TutorialOver
     // Save completion to user preferences
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user) {
+      // Cast to any to bypass strict type checking for dynamic keys
+      const updateData: any = {
+        user_id: session.user.id
+      };
+      updateData[`has_seen_${tutorialKey}`] = true;
+      
       await supabase
         .from("notification_preferences")
-        .upsert({
-          user_id: session.user.id,
-          [`has_seen_${tutorialKey}`]: true
-        });
+        .upsert(updateData);
     }
 
     if (onComplete) {

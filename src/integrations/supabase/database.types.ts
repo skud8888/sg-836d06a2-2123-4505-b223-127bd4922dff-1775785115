@@ -2327,6 +2327,7 @@ export type Database = {
           email_new_enquiry: boolean | null
           email_payment_failed: boolean | null
           email_payment_received: boolean | null
+          has_seen_admin_dashboard_tutorial: boolean | null
           has_seen_admin_tour: boolean | null
           id: string
           notification_sound: boolean | null
@@ -2354,6 +2355,7 @@ export type Database = {
           email_new_enquiry?: boolean | null
           email_payment_failed?: boolean | null
           email_payment_received?: boolean | null
+          has_seen_admin_dashboard_tutorial?: boolean | null
           has_seen_admin_tour?: boolean | null
           id?: string
           notification_sound?: boolean | null
@@ -2381,6 +2383,7 @@ export type Database = {
           email_new_enquiry?: boolean | null
           email_payment_failed?: boolean | null
           email_payment_received?: boolean | null
+          has_seen_admin_dashboard_tutorial?: boolean | null
           has_seen_admin_tour?: boolean | null
           id?: string
           notification_sound?: boolean | null
