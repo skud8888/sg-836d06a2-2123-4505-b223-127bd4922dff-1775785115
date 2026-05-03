@@ -9,6 +9,7 @@ import { AdminWelcomeTour } from "@/components/AdminWelcomeTour";
 import { DashboardWelcome } from "@/components/DashboardWelcome";
 import { ActivityFeed } from "@/components/ActivityFeed";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
+import { TutorialOverlay, adminDashboardTutorial } from "@/components/TutorialOverlay";
 import { supabase } from "@/integrations/supabase/client";
 import { rbacService } from "@/services/rbacService";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -51,10 +52,20 @@ export default function AdminDashboard() {
   const { toast } = useToast();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<any>({
+    activeBookings: 0,
+    totalStudents: 0,
+    monthlyRevenue: 0,
+    pendingEnquiries: 0,
+    monthlyRevenue: [],
+    courseDistribution: [],
+    paymentMethods: [],
+    studentActivity: []
+  });
   const [showTour, setShowTour] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>("");
+  const [showTutorial, setShowTutorial] = useState(false);
   const [quickStats, setQuickStats] = useState({
     upcomingClasses: 0,
     activeStudents: 0,
@@ -100,7 +111,7 @@ export default function AdminDashboard() {
       // Check if this is user's first time on the ADMIN DASHBOARD (not other pages)
       const { data: preferences } = await supabase
         .from("notification_preferences")
-        .select("has_seen_admin_tour")
+        .select("has_seen_admin_tour, has_seen_admin_dashboard_tutorial")
         .eq("user_id", session.user.id)
         .single();
 
@@ -108,9 +119,13 @@ export default function AdminDashboard() {
       if (!preferences?.has_seen_admin_tour) {
         // Small delay to let the dashboard render first
         setTimeout(() => setShowTour(true), 1000);
+      } else if (!preferences?.has_seen_admin_dashboard_tutorial) {
+        // Show tutorial overlay after tour is complete
+        setTimeout(() => setShowTutorial(true), 500);
       }
 
-      loadQuickStats();
+      await loadQuickStats();
+      await loadDashboardStats();
     } catch (error: any) {
       console.error("Auth error:", error);
       toast({
@@ -122,6 +137,137 @@ export default function AdminDashboard() {
       setLoading(false);
     }
   }
+
+  const loadDashboardStats = async () => {
+    try {
+      // Active bookings
+      const { data: bookings } = await supabase
+        .from("bookings")
+        .select("id")
+        .in("status", ["confirmed", "pending"]);
+
+      // Total students
+      const { data: students } = await supabase
+        .from("profiles")
+        .select("id");
+
+      // Monthly revenue
+      const firstDayOfMonth = new Date();
+      firstDayOfMonth.setDate(1);
+      firstDayOfMonth.setHours(0, 0, 0, 0);
+
+      const { data: payments } = await supabase
+        .from("payments")
+        .select("amount, created_at, payment_method")
+        .eq("status", "completed")
+        .gte("created_at", firstDayOfMonth.toISOString());
+
+      const revenue = payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+
+      // Pending enquiries
+      const { data: enquiries } = await supabase
+        .from("enquiries")
+        .select("id")
+        .eq("status", "new");
+
+      // Chart data - last 6 months
+      const monthlyData = [];
+      for (let i = 5; i >= 0; i--) {
+        const date = new Date();
+        date.setMonth(date.getMonth() - i);
+        const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
+        const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+
+        const { data: monthPayments } = await supabase
+          .from("payments")
+          .select("amount")
+          .eq("status", "completed")
+          .gte("created_at", monthStart.toISOString())
+          .lte("created_at", monthEnd.toISOString());
+
+        const { data: monthBookings } = await supabase
+          .from("bookings")
+          .select("id")
+          .gte("created_at", monthStart.toISOString())
+          .lte("created_at", monthEnd.toISOString());
+
+        monthlyData.push({
+          name: date.toLocaleDateString('en-US', { month: 'short' }),
+          revenue: monthPayments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0,
+          bookings: monthBookings?.length || 0
+        });
+      }
+
+      // Course distribution
+      const { data: courseStats } = await supabase
+        .from("bookings")
+        .select("scheduled_class_id, scheduled_classes!inner(course_template_id, course_templates!inner(name))");
+
+      const courseMap = new Map();
+      courseStats?.forEach((booking: any) => {
+        const courseName = booking.scheduled_classes?.course_templates?.name || "Unknown";
+        courseMap.set(courseName, (courseMap.get(courseName) || 0) + 1);
+      });
+
+      const courseDistribution = Array.from(courseMap.entries()).map(([name, value]) => ({
+        name,
+        value
+      }));
+
+      // Payment methods
+      const paymentMethodMap = new Map();
+      payments?.forEach((payment: any) => {
+        const method = payment.payment_method || "Unknown";
+        paymentMethodMap.set(method, (paymentMethodMap.get(method) || 0) + 1);
+      });
+
+      const paymentMethods = Array.from(paymentMethodMap.entries()).map(([name, value]) => ({
+        name,
+        value
+      }));
+
+      // Student activity - last 6 months
+      const studentActivity = [];
+      for (let i = 5; i >= 0; i--) {
+        const date = new Date();
+        date.setMonth(date.getMonth() - i);
+        const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
+        const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+
+        const { data: newStudents } = await supabase
+          .from("profiles")
+          .select("id")
+          .gte("created_at", monthStart.toISOString())
+          .lte("created_at", monthEnd.toISOString());
+
+        const { data: activeEnrollments } = await supabase
+          .from("enrollments")
+          .select("student_id")
+          .eq("status", "active")
+          .gte("created_at", monthStart.toISOString())
+          .lte("created_at", monthEnd.toISOString());
+
+        studentActivity.push({
+          name: date.toLocaleDateString('en-US', { month: 'short' }),
+          new: newStudents?.length || 0,
+          active: new Set(activeEnrollments?.map(e => e.student_id)).size || 0
+        });
+      }
+
+      setStats({
+        activeBookings: bookings?.length || 0,
+        totalStudents: students?.length || 0,
+        monthlyRevenue: revenue,
+        pendingEnquiries: enquiries?.length || 0,
+        monthlyRevenue: monthlyData,
+        courseDistribution,
+        paymentMethods,
+        studentActivity
+      });
+    } catch (err) {
+      console.error("Error loading dashboard stats:", err);
+    }
+  };
 
   const loadQuickStats = async () => {
     try {
@@ -674,6 +820,15 @@ export default function AdminDashboard() {
             open={showTour} 
             onOpenChange={setShowTour}
           />
+
+          {/* Tutorial Overlay - Shows keyboard shortcuts and features */}
+          {showTutorial && (
+            <TutorialOverlay
+              steps={adminDashboardTutorial}
+              tutorialKey="admin_dashboard_tutorial"
+              onComplete={() => setShowTutorial(false)}
+            />
+          )}
         </div>
       </div>
     </>
