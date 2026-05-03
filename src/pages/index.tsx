@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Navigation } from "@/components/Navigation";
 import { Hero } from "@/components/Hero";
 import { Features } from "@/components/Features";
-import { FeaturedCourses } from "@/components/FeaturedCourses";
+import { FeaturedCoursesSection as FeaturedCourses } from "@/components/FeaturedCourses";
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
