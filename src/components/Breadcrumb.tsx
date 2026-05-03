@@ -1,37 +1,68 @@
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { ChevronRight, Home } from "lucide-react";
+import { useMemo } from "react";
 
-interface BreadcrumbItem {
-  label: string;
-  href?: string;
-}
+export function Breadcrumb() {
+  const router = useRouter();
 
-interface BreadcrumbProps {
-  items: BreadcrumbItem[];
-}
+  const breadcrumbs = useMemo(() => {
+    const pathSegments = router.pathname.split('/').filter(Boolean);
+    const crumbs = [{ label: 'Home', href: '/' }];
 
-export function Breadcrumb({ items }: BreadcrumbProps) {
-  return (
-    <nav className="flex items-center space-x-1 text-sm text-muted-foreground mb-6">
-      <Link 
-        href="/" 
-        className="flex items-center hover:text-primary transition-colors"
-      >
-        <Home className="h-4 w-4" />
-      </Link>
+    let currentPath = '';
+    pathSegments.forEach((segment, index) => {
+      currentPath += `/${segment}`;
       
-      {items.map((item, index) => (
-        <div key={index} className="flex items-center space-x-1">
-          <ChevronRight className="h-4 w-4" />
-          {item.href ? (
+      // Replace dynamic segments with actual values from query
+      let label = segment;
+      if (segment.startsWith('[') && segment.endsWith(']')) {
+        const paramName = segment.slice(1, -1);
+        label = router.query[paramName] as string || segment;
+      }
+      
+      // Format label: remove hyphens, capitalize
+      label = label
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+
+      crumbs.push({
+        label,
+        href: currentPath,
+        isLast: index === pathSegments.length - 1
+      });
+    });
+
+    return crumbs;
+  }, [router.pathname, router.query]);
+
+  // Don't show breadcrumbs on homepage
+  if (router.pathname === '/') {
+    return null;
+  }
+
+  return (
+    <nav aria-label="Breadcrumb" className="flex items-center space-x-1 text-sm text-muted-foreground mb-6">
+      {breadcrumbs.map((crumb, index) => (
+        <div key={crumb.href} className="flex items-center">
+          {index > 0 && <ChevronRight className="h-4 w-4 mx-1" />}
+          {index === 0 ? (
             <Link 
-              href={item.href}
-              className="hover:text-primary transition-colors"
+              href={crumb.href}
+              className="flex items-center hover:text-foreground transition-colors"
             >
-              {item.label}
+              <Home className="h-4 w-4" />
             </Link>
+          ) : crumb.isLast ? (
+            <span className="font-medium text-foreground">{crumb.label}</span>
           ) : (
-            <span className="text-foreground font-medium">{item.label}</span>
+            <Link 
+              href={crumb.href}
+              className="hover:text-foreground transition-colors"
+            >
+              {crumb.label}
+            </Link>
           )}
         </div>
       ))}

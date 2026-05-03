@@ -2,13 +2,16 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { Navigation } from "@/components/Navigation";
+import { Breadcrumb } from "@/components/Breadcrumb";
+import { QuickNav } from "@/components/QuickNav";
+import { DashboardCharts } from "@/components/DashboardCharts";
 import { AdminWelcomeTour } from "@/components/AdminWelcomeTour";
 import { DashboardWelcome } from "@/components/DashboardWelcome";
 import { ActivityFeed } from "@/components/ActivityFeed";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { supabase } from "@/integrations/supabase/client";
 import { rbacService } from "@/services/rbacService";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -38,7 +41,8 @@ import {
   GraduationCap,
   ChevronDown,
   RefreshCw,
-  Award
+  Award,
+  Mail
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -413,52 +417,11 @@ export default function AdminDashboard() {
       <OfflineIndicator />
       <div className="min-h-screen bg-background pt-20">
         <div className="container mx-auto px-4 py-8">
+          {/* Breadcrumb */}
+          <Breadcrumb />
+          
           {/* Header */}
-          <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
-            <div>
-              <h1 className="text-3xl font-bold">Welcome back, {userName}!</h1>
-              <p className="text-muted-foreground">
-                {userRole && `Logged in as ${userRole.replace("_", " ")}`}
-              </p>
-            </div>
-            <div className="flex items-center gap-3" data-tour="user-menu">
-              {/* Profile Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="gap-2">
-                    <User className="h-4 w-4" />
-                    {userName}
-                    <ChevronDown className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem asChild>
-                    <Link href="/admin/profile" className="cursor-pointer">
-                      <User className="h-4 w-4 mr-2" />
-                      My Profile
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/admin/settings" className="cursor-pointer">
-                      <Settings className="h-4 w-4 mr-2" />
-                      Settings
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/admin/onboarding" className="cursor-pointer">
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                      Restart Tutorial
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut} className="text-red-600 cursor-pointer">
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Sign Out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
+          <DashboardWelcome />
 
           {/* Universal Search Tip */}
           <div className="mb-6" data-tour="search">
@@ -467,71 +430,37 @@ export default function AdminDashboard() {
             </p>
           </div>
 
-          {/* Dashboard Welcome Message */}
-          <DashboardWelcome userName={userName} userRole={userRole} />
-
           {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Upcoming Classes</p>
-                    <p className="text-2xl font-bold">{quickStats.upcomingClasses}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Next 7 days</p>
-                  </div>
-                  <div className="h-12 w-12 rounded-full bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center">
-                    <Calendar className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Active Students</p>
-                    <p className="text-2xl font-bold">{quickStats.activeStudents}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Currently enrolled</p>
-                  </div>
-                  <div className="h-12 w-12 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
-                    <Users className="h-6 w-6 text-green-600 dark:text-green-400" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Pending Bookings</p>
-                    <p className="text-2xl font-bold">{quickStats.pendingBookings}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Require attention</p>
-                  </div>
-                  <div className="h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
-                    <Calendar className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Monthly Revenue</p>
-                    <p className="text-2xl font-bold">${quickStats.monthlyRevenue.toFixed(0)}</p>
-                    <p className="text-xs text-muted-foreground mt-1">This month</p>
-                  </div>
-                  <div className="h-12 w-12 rounded-full bg-emerald-100 dark:bg-emerald-900/20 flex items-center justify-center">
-                    <DollarSign className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {[
+              { label: "Active Bookings", value: stats.activeBookings, icon: Calendar, color: "text-blue-600" },
+              { label: "Total Students", value: stats.totalStudents, icon: Users, color: "text-green-600" },
+              { label: "This Month Revenue", value: `$${stats.monthlyRevenue}`, icon: DollarSign, color: "text-purple-600" },
+              { label: "Pending Enquiries", value: stats.pendingEnquiries, icon: Mail, color: "text-orange-600" }
+            ].map((stat, i) => {
+              const Icon = stat.icon;
+              return (
+                <Card key={i}>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">{stat.label}</CardTitle>
+                    <Icon className={`h-4 w-4 ${stat.color}`} />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{stat.value}</div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
+
+          {/* Quick Navigation */}
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold mb-4">Quick Access</h2>
+            <QuickNav role="admin" />
+          </div>
+
+          {/* Dashboard Charts */}
+          <DashboardCharts />
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Main Content - Left Side (2/3) */}

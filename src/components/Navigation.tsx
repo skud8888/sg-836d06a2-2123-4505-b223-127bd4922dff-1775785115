@@ -33,9 +33,14 @@ import {
   LogIn,
   Sun,
   Moon,
-  Laptop
+  Laptop,
+  ChevronDown,
+  Award
 } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { ThemeSwitch } from "@/components/ThemeSwitch";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
+import { useToast } from "@/hooks/use-toast";
 
 export function Navigation() {
   const router = useRouter();
@@ -45,7 +50,9 @@ export function Navigation() {
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userName, setUserName] = useState<string>("");
+  const [user, setUser] = useState<any>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -65,6 +72,33 @@ export function Navigation() {
       authListener.subscription.unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    checkUser();
+    
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  async function checkUser() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      setUser(session.user);
+      
+      // Get user role
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", session.user.id)
+        .single();
+      
+      setUserRole(roleData?.role || null);
+    }
+  }
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -110,153 +144,147 @@ export function Navigation() {
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-6">
-              <Link 
-                href="/courses" 
-                className="text-sm font-medium hover:text-primary transition-colors"
-              >
+            <div className="hidden md:flex items-center space-x-1">
+              <Link href="/" className="px-4 py-2 rounded-lg text-sm font-medium hover:bg-accent transition-colors">
+                Home
+              </Link>
+              <Link href="/courses" className="px-4 py-2 rounded-lg text-sm font-medium hover:bg-accent transition-colors">
                 Courses
               </Link>
-              <Link 
-                href="/about" 
-                className="text-sm font-medium hover:text-primary transition-colors"
-              >
+              <Link href="/classes" className="px-4 py-2 rounded-lg text-sm font-medium hover:bg-accent transition-colors">
+                Classes
+              </Link>
+              <Link href="/about" className="px-4 py-2 rounded-lg text-sm font-medium hover:bg-accent transition-colors">
                 About
               </Link>
-              <Link 
-                href="/student/portal" 
-                className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-1"
-              >
-                <GraduationCap className="h-4 w-4" />
-                Student Portal
-              </Link>
-              <Link 
-                href="/contact" 
-                className="text-sm font-medium hover:text-primary transition-colors"
-              >
+              <Link href="/contact" className="px-4 py-2 rounded-lg text-sm font-medium hover:bg-accent transition-colors">
                 Contact
               </Link>
-
-              {/* Help Button */}
-              <Link href="/help">
-                <Button variant="ghost" size="icon" className="h-9 w-9">
-                  <HelpCircle className="h-5 w-5" />
-                </Button>
+              <Link href="/help" className="px-4 py-2 rounded-lg text-sm font-medium hover:bg-accent transition-colors">
+                Help
               </Link>
+            </div>
 
-              {/* Language Switcher */}
-              <LanguageSwitcher />
-
-              {/* Theme Toggle */}
-              {mounted && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-9 w-9">
-                      {theme === "dark" ? (
-                        <Moon className="h-5 w-5" />
-                      ) : theme === "light" ? (
-                        <Sun className="h-5 w-5" />
-                      ) : (
-                        <Laptop className="h-5 w-5" />
-                      )}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Theme</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => setTheme("light")}>
-                      <Sun className="h-4 w-4 mr-2" />
-                      Light
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setTheme("dark")}>
-                      <Moon className="h-4 w-4 mr-2" />
-                      Dark
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setTheme("system")}>
-                      <Laptop className="h-4 w-4 mr-2" />
-                      System
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-
-              {/* Auth Buttons - Desktop */}
-              {isAuthenticated ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="gap-2">
-                      <User className="h-4 w-4" />
-                      <span className="max-w-[100px] truncate">{userName}</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    
-                    {isAdmin && (
-                      <DropdownMenuItem asChild>
-                        <Link href="/admin" className="cursor-pointer">
-                          <LayoutDashboard className="h-4 w-4 mr-2" />
-                          Admin Dashboard
-                        </Link>
-                      </DropdownMenuItem>
-                    )}
-                    
-                    <DropdownMenuItem asChild>
-                      <Link href="/student/portal" className="cursor-pointer">
-                        <GraduationCap className="h-4 w-4 mr-2" />
-                        Student Portal
-                      </Link>
-                    </DropdownMenuItem>
-
-                    {isAdmin && (
-                      <DropdownMenuItem asChild>
-                        <Link href="/admin/profile" className="cursor-pointer">
-                          <User className="h-4 w-4 mr-2" />
-                          Profile
-                        </Link>
-                      </DropdownMenuItem>
-                    )}
-
-                    <DropdownMenuSeparator />
-                    
-                    <DropdownMenuItem 
-                      onClick={handleSignOut}
-                      className="text-red-600 focus:text-red-600 cursor-pointer"
+            {/* Right Side - Dashboard & Auth Buttons */}
+            <div className="flex items-center gap-3">
+              <ThemeSwitch />
+              
+              {user ? (
+                <>
+                  {/* Dashboard Button - Visible when logged in */}
+                  {userRole && (
+                    <Link 
+                      href={
+                        userRole === 'admin' || userRole === 'super_admin' 
+                          ? '/admin' 
+                          : userRole === 'trainer' 
+                          ? '/trainer/dashboard'
+                          : '/student/portal'
+                      }
                     >
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Sign Out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      <Button variant="default" size="sm" className="gap-2">
+                        <LayoutDashboard className="h-4 w-4" />
+                        <span className="hidden lg:inline">Dashboard</span>
+                      </Button>
+                    </Link>
+                  )}
+                  
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" className="gap-2">
+                        <User className="h-4 w-4" />
+                        <span className="hidden lg:inline">{user.email?.split('@')[0]}</span>
+                        <ChevronDown className="h-3 w-3" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      
+                      {userRole === 'admin' || userRole === 'super_admin' ? (
+                        <>
+                          <DropdownMenuItem asChild>
+                            <Link href="/admin" className="flex items-center gap-2">
+                              <LayoutDashboard className="h-4 w-4" />
+                              Admin Dashboard
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/admin/profile" className="flex items-center gap-2">
+                              <User className="h-4 w-4" />
+                              Profile
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/admin/settings" className="flex items-center gap-2">
+                              <Settings className="h-4 w-4" />
+                              Settings
+                            </Link>
+                          </DropdownMenuItem>
+                        </>
+                      ) : userRole === 'trainer' ? (
+                        <>
+                          <DropdownMenuItem asChild>
+                            <Link href="/trainer/dashboard" className="flex items-center gap-2">
+                              <LayoutDashboard className="h-4 w-4" />
+                              Trainer Dashboard
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/trainer" className="flex items-center gap-2">
+                              <Calendar className="h-4 w-4" />
+                              My Classes
+                            </Link>
+                          </DropdownMenuItem>
+                        </>
+                      ) : (
+                        <>
+                          <DropdownMenuItem asChild>
+                            <Link href="/student/portal" className="flex items-center gap-2">
+                              <LayoutDashboard className="h-4 w-4" />
+                              Student Portal
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/student/profile" className="flex items-center gap-2">
+                              <User className="h-4 w-4" />
+                              My Profile
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/student/certificates" className="flex items-center gap-2">
+                              <Award className="h-4 w-4" />
+                              My Certificates
+                            </Link>
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                      
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Sign Out
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
               ) : (
                 <div className="flex items-center gap-2">
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => setLoginModalOpen(true)}
-                  >
-                    <LogIn className="h-4 w-4 mr-2" />
-                    Sign In
-                  </Button>
-                  <Button 
-                    size="sm"
-                    onClick={() => router.push("/courses")}
-                  >
-                    Browse Courses
-                  </Button>
+                  <LoginModal 
+                    trigger={
+                      <Button variant="outline" size="sm">
+                        Sign In
+                      </Button>
+                    }
+                  />
+                  <Link href="/admin/signup">
+                    <Button variant="default" size="sm">
+                      Get Started
+                    </Button>
+                  </Link>
                 </div>
               )}
-            </nav>
-
-            {/* Mobile Menu Button */}
-            <button
-              className="md:hidden p-2"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-label="Toggle menu"
-            >
-              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
+            </div>
           </div>
 
           {/* Mobile Navigation */}

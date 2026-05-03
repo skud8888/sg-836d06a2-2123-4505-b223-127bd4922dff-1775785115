@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { SEO } from "@/components/SEO";
 import { Navigation } from "@/components/Navigation";
+import { Breadcrumb } from "@/components/Breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -431,15 +432,17 @@ export default function StudentPortalPage() {
 
   return (
     <>
-      <SEO
+      <SEO 
         title="Student Portal"
-        description="View your course enrollments, progress, and certificates"
+        description="Access your courses, view progress, and manage your learning journey"
       />
       <Navigation />
-      <div className="min-h-screen bg-background pt-16">
+      <div className="min-h-screen bg-background pt-20">
         <div className="container mx-auto px-4 py-8">
-          {/* Header */}
-          <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
+          <Breadcrumb />
+          
+          {/* Welcome Header */}
+          <div className="mb-8">
             <div>
               <h1 className="text-4xl font-bold">Welcome back!</h1>
               <p className="text-muted-foreground">Continue your learning journey</p>
