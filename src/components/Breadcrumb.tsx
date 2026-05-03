@@ -3,25 +3,41 @@ import { useRouter } from "next/router";
 import { ChevronRight, Home } from "lucide-react";
 import { useMemo } from "react";
 
-export function Breadcrumb() {
+interface BreadcrumbProps {
+  items?: { label: string; href?: string }[];
+}
+
+interface Crumb {
+  label: string;
+  href: string;
+  isLast: boolean;
+}
+
+export function Breadcrumb({ items }: BreadcrumbProps = {}) {
   const router = useRouter();
 
   const breadcrumbs = useMemo(() => {
+    if (items && items.length > 0) {
+      return items.map((item, index) => ({
+        label: item.label,
+        href: item.href || "#",
+        isLast: index === items.length - 1 || !item.href
+      }));
+    }
+
     const pathSegments = router.pathname.split('/').filter(Boolean);
-    const crumbs = [{ label: 'Home', href: '/' }];
+    const crumbs: Crumb[] = [{ label: 'Home', href: '/', isLast: pathSegments.length === 0 }];
 
     let currentPath = '';
     pathSegments.forEach((segment, index) => {
       currentPath += `/${segment}`;
       
-      // Replace dynamic segments with actual values from query
       let label = segment;
       if (segment.startsWith('[') && segment.endsWith(']')) {
         const paramName = segment.slice(1, -1);
         label = router.query[paramName] as string || segment;
       }
       
-      // Format label: remove hyphens, capitalize
       label = label
         .split('-')
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
@@ -35,19 +51,18 @@ export function Breadcrumb() {
     });
 
     return crumbs;
-  }, [router.pathname, router.query]);
+  }, [router.pathname, router.query, items]);
 
-  // Don't show breadcrumbs on homepage
-  if (router.pathname === '/') {
+  if (router.pathname === '/' && (!items || items.length === 0)) {
     return null;
   }
 
   return (
     <nav aria-label="Breadcrumb" className="flex items-center space-x-1 text-sm text-muted-foreground mb-6">
       {breadcrumbs.map((crumb, index) => (
-        <div key={crumb.href} className="flex items-center">
+        <div key={index} className="flex items-center">
           {index > 0 && <ChevronRight className="h-4 w-4 mx-1" />}
-          {index === 0 ? (
+          {index === 0 && (!items || items.length === 0) ? (
             <Link 
               href={crumb.href}
               className="flex items-center hover:text-foreground transition-colors"

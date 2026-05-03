@@ -270,13 +270,9 @@ export function Navigation() {
                 </>
               ) : (
                 <div className="flex items-center gap-2">
-                  <LoginModal 
-                    trigger={
-                      <Button variant="outline" size="sm">
-                        Sign In
-                      </Button>
-                    }
-                  />
+                  <Button variant="outline" size="sm" onClick={() => setLoginModalOpen(true)}>
+                    Sign In
+                  </Button>
                   <Link href="/admin/signup">
                     <Button variant="default" size="sm">
                       Get Started
@@ -397,33 +393,32 @@ export function Navigation() {
                         Profile
                       </Link>
                     )}
-                    <button
-                      onClick={handleSignOut}
-                      className="text-red-600 hover:text-red-700 transition-colors flex items-center gap-2 px-2 text-left"
+                    <div className="px-4 py-2 text-sm text-muted-foreground">
+                      Signed in as {user.email}
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start gap-2"
+                      onClick={() => {
+                        handleSignOut();
+                        setMobileMenuOpen(false);
+                      }}
                     >
                       <LogOut className="h-4 w-4" />
                       Sign Out
-                    </button>
+                    </Button>
                   </>
                 ) : (
-                  <>
-                    <button
-                      onClick={() => {
-                        setMobileMenuOpen(false);
-                        setLoginModalOpen(true);
-                      }}
-                      className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2 px-2 text-left"
-                    >
-                      <LogIn className="h-4 w-4" />
+                  <div className="space-y-2">
+                    <Button variant="outline" className="w-full" onClick={() => setLoginModalOpen(true)}>
                       Sign In
-                    </button>
-                    <Link
-                      href="/courses"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <Button className="w-full">Browse Courses</Button>
+                    </Button>
+                    <Link href="/admin/signup" onClick={() => setMobileMenuOpen(false)}>
+                      <Button variant="default" className="w-full">
+                        Get Started
+                      </Button>
                     </Link>
-                  </>
+                  </div>
                 )}
               </div>
             </div>
