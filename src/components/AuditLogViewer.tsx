@@ -39,6 +39,7 @@ export function AuditLogViewer() {
   const [dateTo, setDateTo] = useState<Date | undefined>();
   const [actionFilter, setActionFilter] = useState<string>("all");
   const [userFilter, setUserFilter] = useState<string>("all");
+  const [severityFilter, setSeverityFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
 
@@ -70,6 +71,11 @@ export function AuditLogViewer() {
       // Apply user filter
       if (userFilter !== "all") {
         query = query.eq("user_id", userFilter);
+      }
+
+      // Apply severity filter
+      if (severityFilter !== "all") {
+        query = query.eq("severity", severityFilter);
       }
 
       const { data, error } = await query;
@@ -109,7 +115,7 @@ export function AuditLogViewer() {
     } finally {
       setLoading(false);
     }
-  }, [dateRange, actionFilter, userFilter, toast]);
+  }, [dateRange, actionFilter, userFilter, severityFilter, toast]);
 
   useEffect(() => {
     fetchLogs();
@@ -262,6 +268,20 @@ export function AuditLogViewer() {
                   {type === "all" ? "All Actions" : type.charAt(0).toUpperCase() + type.slice(1)}
                 </SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={severityFilter} onValueChange={setSeverityFilter}>
+            <SelectTrigger className="w-full md:w-40">
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Severity" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Severities</SelectItem>
+              <SelectItem value="info">Info</SelectItem>
+              <SelectItem value="warning">Warning</SelectItem>
+              <SelectItem value="error">Error</SelectItem>
+              <SelectItem value="critical">Critical</SelectItem>
             </SelectContent>
           </Select>
 

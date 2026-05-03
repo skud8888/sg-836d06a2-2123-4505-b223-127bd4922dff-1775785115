@@ -296,14 +296,14 @@ export default function Home() {
         </section>
 
         {/* Featured Courses Section */}
-        <div className="py-24 bg-white relative">
+        <div className="py-24 bg-background relative">
           <div className="container mx-auto px-4 relative z-10">
             <div className="text-center max-w-3xl mx-auto mb-16">
               <Badge variant="outline" className="mb-4">Popular Programs</Badge>
-              <h2 className="text-3xl md:text-5xl font-bold mb-6 text-slate-900">
+              <h2 className="text-3xl md:text-5xl font-bold mb-6 text-foreground">
                 Featured Training Courses
               </h2>
-              <p className="text-lg text-slate-600">
+              <p className="text-lg text-muted-foreground">
                 Discover our most sought-after compliance and certification programs.
               </p>
             </div>
