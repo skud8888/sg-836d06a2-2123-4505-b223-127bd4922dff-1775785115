@@ -103,33 +103,41 @@ export default function BrandingSettings() {
         .select("*")
         .single();
 
-      if (error) throw error;
-      if (data) setSettings(data);
+      if (error && error.code !== "PGRST116") throw error;
+      
+      if (data) {
+        setSettings(data as any);
+      }
     } catch (error: any) {
-      console.error("Error loading settings:", error);
+      toast({
+        title: "Error loading settings",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   }
 
   async function handleSave() {
     setSaving(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
       const { error } = await supabase
         .from("branding_settings")
-        .update({
-          ...settings,
-          updated_at: new Date().toISOString(),
-          updated_by: session?.user.id
-        })
-        .eq("id", settings.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Settings saved",
-        description: "Branding settings have been updated successfully",
-      });
+        .upsert({
+          id: settings.id,
+          company_name: settings.company_name,
+          company_tagline: settings.company_tagline,
+          primary_color: settings.primary_color,
+          secondary_color: settings.secondary_color,
+          logo_url: settings.logo_url,
+          favicon_url: settings.favicon_url,
+          contact_email: settings.contact_email,
+          contact_phone: settings.contact_phone,
+          address: settings.address,
+          social_facebook: settings.social_facebook,
+          social_twitter: settings.social_twitter,
+          social_linkedin: settings.social_linkedin,
+          social_instagram: settings.social_instagram
+        } as any);
     } catch (error: any) {
       toast({
         title: "Error saving settings",

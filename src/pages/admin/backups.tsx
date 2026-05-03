@@ -113,7 +113,7 @@ export default function DatabaseBackups() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setBackups(data || []);
+      setBackups((data || []) as any);
     } catch (error: any) {
       toast({
         title: "Error loading backups",
@@ -150,14 +150,14 @@ export default function DatabaseBackups() {
         .from("database_backups")
         .insert({
           filename,
-          size_mb: 0, // Will be updated after backup completes
+          size_mb: 0,
           backup_type: "manual",
           status: "completed",
           created_by: session?.user.id,
           storage_path: `/backups/${filename}`,
           tables_included: coreTables,
           notes: backupNotes
-        })
+        } as any)
         .select()
         .single();
 

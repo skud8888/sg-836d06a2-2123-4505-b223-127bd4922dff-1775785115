@@ -101,10 +101,10 @@ export default function FeatureFlags() {
       const { data, error } = await supabase
         .from("feature_flags")
         .select("*")
-        .order("name");
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setFlags(data || []);
+      setFlags((data || []) as any);
     } catch (error: any) {
       toast({
         title: "Error loading feature flags",
@@ -114,14 +114,14 @@ export default function FeatureFlags() {
     }
   }
 
-  async function toggleFlag(flag: FeatureFlag) {
+  async function handleToggle(flag: FeatureFlag) {
     try {
       const { error } = await supabase
         .from("feature_flags")
         .update({ 
           enabled: !flag.enabled,
-          updated_at: new Date().toISOString()
-        })
+          key: flag.key
+        } as any)
         .eq("id", flag.id);
 
       if (error) throw error;
@@ -169,7 +169,7 @@ export default function FeatureFlags() {
             name: formData.name,
             description: formData.description,
             enabled: formData.enabled
-          });
+          } as any);
 
         if (error) throw error;
 
@@ -186,6 +186,33 @@ export default function FeatureFlags() {
     } catch (error: any) {
       toast({
         title: "Error saving feature flag",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  }
+
+  async function handleDelete() {
+    if (!selectedFlag) return;
+
+    try {
+      const { error } = await supabase
+        .from("feature_flags")
+        .delete()
+        .eq("id", selectedFlag.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Feature flag deleted",
+        description: "Feature flag has been removed",
+      });
+
+      setDeleteDialogOpen(false);
+      await loadFlags();
+    } catch (error: any) {
+      toast({
+        title: "Error deleting flag",
         description: error.message,
         variant: "destructive",
       });
@@ -395,7 +422,7 @@ export default function FeatureFlags() {
                         <div className="flex items-center justify-end gap-2">
                           <Switch
                             checked={flag.enabled}
-                            onCheckedChange={() => toggleFlag(flag)}
+                            onCheckedChange={() => handleToggle(flag)}
                           />
                           <Button
                             variant="outline"
