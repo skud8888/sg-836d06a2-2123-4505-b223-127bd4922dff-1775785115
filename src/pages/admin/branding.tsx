@@ -14,18 +14,26 @@ import { Palette, Save, RefreshCw, Building2, Mail, Phone, MapPin, Globe } from 
 interface BrandingSettings {
   id: string;
   company_name: string;
+  company_tagline?: string;
   logo_url: string | null;
   favicon_url: string | null;
   primary_color: string;
   secondary_color: string;
   accent_color: string;
-  company_email: string | null;
-  company_phone: string | null;
-  company_address: string | null;
-  facebook_url: string | null;
-  linkedin_url: string | null;
-  twitter_url: string | null;
-  instagram_url: string | null;
+  company_email?: string | null;
+  company_phone?: string | null;
+  company_address?: string | null;
+  contact_email?: string | null;
+  contact_phone?: string | null;
+  address?: string | null;
+  social_facebook?: string | null;
+  social_linkedin?: string | null;
+  social_twitter?: string | null;
+  social_instagram?: string | null;
+  facebook_url?: string | null;
+  linkedin_url?: string | null;
+  twitter_url?: string | null;
+  instagram_url?: string | null;
   meta_title: string;
   meta_description: string;
 }
@@ -98,7 +106,7 @@ export default function BrandingSettings() {
 
   async function loadSettings() {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("branding_settings")
         .select("*")
         .single();
@@ -120,7 +128,7 @@ export default function BrandingSettings() {
   async function handleSave() {
     setSaving(true);
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("branding_settings")
         .upsert({
           id: settings.id,
@@ -130,14 +138,14 @@ export default function BrandingSettings() {
           secondary_color: settings.secondary_color,
           logo_url: settings.logo_url,
           favicon_url: settings.favicon_url,
-          contact_email: settings.contact_email,
-          contact_phone: settings.contact_phone,
-          address: settings.address,
-          social_facebook: settings.social_facebook,
-          social_twitter: settings.social_twitter,
-          social_linkedin: settings.social_linkedin,
-          social_instagram: settings.social_instagram
-        } as any);
+          contact_email: settings.contact_email || settings.company_email,
+          contact_phone: settings.contact_phone || settings.company_phone,
+          address: settings.address || settings.company_address,
+          social_facebook: settings.social_facebook || settings.facebook_url,
+          social_twitter: settings.social_twitter || settings.twitter_url,
+          social_linkedin: settings.social_linkedin || settings.linkedin_url,
+          social_instagram: settings.social_instagram || settings.instagram_url
+        });
     } catch (error: any) {
       toast({
         title: "Error saving settings",

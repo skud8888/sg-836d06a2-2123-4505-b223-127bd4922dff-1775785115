@@ -107,7 +107,7 @@ export default function DatabaseBackups() {
 
   async function loadBackups() {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("database_backups")
         .select("*")
         .order("created_at", { ascending: false });
@@ -146,7 +146,7 @@ export default function DatabaseBackups() {
       const filename = `backup_${new Date().toISOString().replace(/[:.]/g, '-')}.sql`;
       
       // Create backup record
-      const { data: backup, error } = await supabase
+      const { data: backup, error } = await (supabase as any)
         .from("database_backups")
         .insert({
           filename,
@@ -157,7 +157,7 @@ export default function DatabaseBackups() {
           storage_path: `/backups/${filename}`,
           tables_included: coreTables,
           notes: backupNotes
-        } as any)
+        })
         .select()
         .single();
 
@@ -187,7 +187,7 @@ export default function DatabaseBackups() {
     if (!selectedBackup) return;
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("database_backups")
         .delete()
         .eq("id", selectedBackup.id);

@@ -27,8 +27,18 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Flag, Plus, Edit, RefreshCw, CheckCircle, XCircle } from "lucide-react";
+import { Flag, Plus, Edit, Trash2, RefreshCw, CheckCircle, XCircle } from "lucide-react";
 
 interface FeatureFlag {
   id: string;
@@ -46,7 +56,9 @@ export default function FeatureFlags() {
   const [loading, setLoading] = useState(true);
   const [flags, setFlags] = useState<FeatureFlag[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingFlag, setEditingFlag] = useState<FeatureFlag | null>(null);
+  const [selectedFlag, setSelectedFlag] = useState<FeatureFlag | null>(null);
   const [formData, setFormData] = useState({
     key: "",
     name: "",
@@ -98,7 +110,7 @@ export default function FeatureFlags() {
 
   async function loadFlags() {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("feature_flags")
         .select("*")
         .order("created_at", { ascending: false });
@@ -116,12 +128,12 @@ export default function FeatureFlags() {
 
   async function handleToggle(flag: FeatureFlag) {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("feature_flags")
         .update({ 
           enabled: !flag.enabled,
           key: flag.key
-        } as any)
+        })
         .eq("id", flag.id);
 
       if (error) throw error;
@@ -144,9 +156,18 @@ export default function FeatureFlags() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
+    if (!formData.key || !formData.name) {
+      toast({
+        title: "Validation Error",
+        description: "Key and name are required",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       if (editingFlag) {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from("feature_flags")
           .update({
             name: formData.name,
@@ -162,14 +183,14 @@ export default function FeatureFlags() {
           description: "Feature flag has been updated successfully",
         });
       } else {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from("feature_flags")
           .insert({
             key: formData.key,
             name: formData.name,
             description: formData.description,
             enabled: formData.enabled
-          } as any);
+          });
 
         if (error) throw error;
 
@@ -196,7 +217,7 @@ export default function FeatureFlags() {
     if (!selectedFlag) return;
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("feature_flags")
         .delete()
         .eq("id", selectedFlag.id);
@@ -432,13 +453,23 @@ export default function FeatureFlags() {
                               setFormData({
                                 key: flag.key,
                                 name: flag.name,
-                                description: flag.description,
+                                description: flag.description || "",
                                 enabled: flag.enabled
                               });
                               setDialogOpen(true);
                             }}
                           >
                             <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedFlag(flag);
+                              setDeleteDialogOpen(true);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       </TableCell>
@@ -448,6 +479,25 @@ export default function FeatureFlags() {
               </Table>
             </CardContent>
           </Card>
+
+          {/* Delete Confirmation */}
+          <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Feature Flag?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently delete the feature flag "{selectedFlag?.name}". 
+                  Any code relying on this flag will default to false. This cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
+                  Delete Flag
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
     </>
