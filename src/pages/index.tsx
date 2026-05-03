@@ -93,7 +93,7 @@ export default function Home() {
       icon: Calendar,
       title: "Smart Scheduling",
       description: "Automated course scheduling with conflict detection, calendar sync, and capacity management.",
-      color: "text-blue-600 dark:text-blue-400"
+      color: "text-slate-600 dark:text-slate-400"
     },
     {
       icon: Users,
@@ -223,7 +223,7 @@ export default function Home() {
 
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight">
               Your Gateway to
-              <span className="block bg-gradient-to-r from-primary via-primary/80 to-accent bg-clip-text text-transparent">
+              <span className="block mt-2">
                 Professional Excellence
               </span>
             </h1>
@@ -393,7 +393,7 @@ export default function Home() {
                   <div className="grid grid-cols-2 gap-6 w-full">
                     {[
                       { icon: TrendingUp, value: "98%", label: "Satisfaction", color: "text-green-600 dark:text-green-400" },
-                      { icon: Clock, value: "24/7", label: "Support", color: "text-blue-600 dark:text-blue-400" },
+                      { icon: Clock, value: "24/7", label: "Support", color: "text-slate-600 dark:text-slate-400" },
                       { icon: Shield, value: "100%", label: "Secure", color: "text-red-600 dark:text-red-400" },
                       { icon: Award, value: "15+", label: "Years", color: "text-purple-600 dark:text-purple-400" }
                     ].map((stat, i) => (

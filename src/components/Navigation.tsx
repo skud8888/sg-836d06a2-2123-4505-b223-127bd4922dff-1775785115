@@ -104,7 +104,7 @@ export function Navigation() {
               <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
                 <GraduationCap className="h-5 w-5 text-primary-foreground" />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              <span className="text-xl font-bold">
                 The Training Hub
               </span>
             </Link>
