@@ -1,23 +1,20 @@
+import "@/styles/globals.css";
 import type { AppProps } from "next/app";
 import { ThemeProvider } from "@/contexts/ThemeProvider";
 import { Toaster } from "@/components/ui/toaster";
-import { StudentChatSupport } from "@/components/StudentChatSupport";
 import { CommandPalette } from "@/components/CommandPalette";
-import { OfflineIndicator } from "@/components/OfflineIndicator";
-import { ChatWidget } from "@/components/ChatWidget";
-import { FeatureDiscoveryTour } from "@/components/FeatureDiscoveryTour";
-import "@/styles/globals.css";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
-    <ThemeProvider>
-      <Component {...pageProps} />
-      <Toaster />
-      <StudentChatSupport />
-      <CommandPalette />
-      <OfflineIndicator />
-      <ChatWidget />
-      <FeatureDiscoveryTour />
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <div className="min-h-screen bg-background text-foreground">
+          <Component {...pageProps} />
+          <Toaster />
+          <CommandPalette />
+        </div>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
