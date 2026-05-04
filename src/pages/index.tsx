@@ -141,63 +141,26 @@ export default function Home() {
       <Navigation />
       
       <main className="min-h-screen bg-gradient-to-b from-background to-muted/20">
-        {/* Hero Section - Enhanced */}
-        <section className="relative overflow-hidden pt-32 pb-20 lg:pt-40 lg:pb-28">
-          {/* Animated Background */}
-          <div className="absolute inset-0 -z-10">
-            <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse"></div>
-            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
-          </div>
-
-          <div className="container mx-auto px-4">
+        {/* Hero Section */}
+        <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+          {/* Animated background gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900" />
+          
+          <div className="container mx-auto px-4 relative z-10">
             <div className="max-w-4xl mx-auto text-center">
-              <Badge variant="outline" className="mb-6 px-4 py-2">
-                <Zap className="h-3 w-3 mr-2" />
-                Trusted by 500+ Training Centers
-              </Badge>
-              
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6 animate-fade-in">
-                Transform Your
-                <span className="block mt-2 bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                  Training Business
-                </span>
+              {/* Floating badge */}
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-lg mb-8 animate-float">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <span className="text-sm font-medium">Industry-Leading Training Programs</span>
+              </div>
+
+              <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Professional Training <br />Made Simple
               </h1>
               
-              <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto animate-slide-up">
-                Complete training management platform with CRM, online booking, 
-                automated workflows, and AI-powered insights. Everything you need in one place.
+              <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+                Master compliance, safety, and technical skills with our comprehensive training programs designed for career advancement.
               </p>
-
-              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 animate-slide-up">
-                <Link href="/admin/signup">
-                  <Button size="lg" className="gap-2 group">
-                    Start Free Trial
-                    <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </Link>
-                <Link href="/courses">
-                  <Button size="lg" variant="outline" className="gap-2">
-                    <Globe className="h-4 w-4" />
-                    Browse Courses
-                  </Button>
-                </Link>
-              </div>
-
-              {/* Social Proof Stats */}
-              <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto pt-8 border-t">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-foreground">{stats.students}+</div>
-                  <div className="text-sm text-muted-foreground">Active Students</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-foreground">{stats.courses}+</div>
-                  <div className="text-sm text-muted-foreground">Courses Available</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-foreground">{stats.satisfaction}%</div>
-                  <div className="text-sm text-muted-foreground">Satisfaction</div>
-                </div>
-              </div>
             </div>
           </div>
         </section>

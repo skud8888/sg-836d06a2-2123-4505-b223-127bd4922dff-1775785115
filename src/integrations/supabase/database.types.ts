@@ -1281,24 +1281,21 @@ export type Database = {
       }
       course_wishlist: {
         Row: {
-          added_at: string | null
           course_template_id: string
+          created_at: string | null
           id: string
-          notes: string | null
           student_id: string
         }
         Insert: {
-          added_at?: string | null
           course_template_id: string
+          created_at?: string | null
           id?: string
-          notes?: string | null
           student_id: string
         }
         Update: {
-          added_at?: string | null
           course_template_id?: string
+          created_at?: string | null
           id?: string
-          notes?: string | null
           student_id?: string
         }
         Relationships: [
@@ -1307,13 +1304,6 @@ export type Database = {
             columns: ["course_template_id"]
             isOneToOne: false
             referencedRelation: "course_templates"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "course_wishlist_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]

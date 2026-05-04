@@ -15,6 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { rbacService } from "@/services/rbacService";
 import {
@@ -35,7 +36,14 @@ import {
   Moon,
   Laptop,
   ChevronDown,
-  Award
+  Award,
+  Shield,
+  Flag,
+  Palette,
+  Database,
+  Activity,
+  ClipboardList,
+  Zap
 } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { ThemeSwitch } from "@/components/ThemeSwitch";
@@ -212,26 +220,114 @@ export function Navigation() {
                       <DropdownMenuLabel>My Account</DropdownMenuLabel>
                       <DropdownMenuSeparator />
                       
-                      {userRole === 'admin' || userRole === 'super_admin' ? (
+                      {(userRole === "super_admin" || userRole === "admin") && (
                         <>
                           <DropdownMenuItem asChild>
-                            <Link href="/admin" className="flex items-center gap-2">
-                              <LayoutDashboard className="h-4 w-4" />
-                              Admin Dashboard
+                            <Link href="/admin/quick-access" className="flex items-center gap-2">
+                              <Zap className="h-4 w-4 text-yellow-600" />
+                              <div className="flex flex-col">
+                                <span className="font-medium">Quick Access</span>
+                                <span className="text-xs text-muted-foreground">All admin tools in one place</span>
+                              </div>
                             </Link>
                           </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link href="/admin/profile" className="flex items-center gap-2">
-                              <User className="h-4 w-4" />
-                              Profile
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link href="/admin/settings" className="flex items-center gap-2">
-                              <Settings className="h-4 w-4" />
-                              Settings
-                            </Link>
-                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                        </>
+                      )}
+                      
+                      {(userRole === "super_admin" || userRole === "admin") && (
+                        <DropdownMenuItem asChild>
+                          <Link href="/admin" className="flex items-center gap-2">
+                            <LayoutDashboard className="h-4 w-4" />
+                            <div className="flex flex-col">
+                              <span className="font-medium">Admin Dashboard</span>
+                              <span className="text-xs text-muted-foreground">Overview & Analytics</span>
+                            </div>
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                      
+                      {userRole === 'admin' || userRole === 'super_admin' ? (
+                        <>
+                          {(userRole === "super_admin" || userRole === "admin") && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuLabel className="text-xs text-muted-foreground">User Management</DropdownMenuLabel>
+                              
+                              <DropdownMenuItem asChild>
+                                <Link href="/admin/users" className="flex items-center gap-2">
+                                  <Users className="h-4 w-4" />
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">Users</span>
+                                    <span className="text-xs text-muted-foreground">Manage user accounts</span>
+                                  </div>
+                                </Link>
+                              </DropdownMenuItem>
+                              
+                              <DropdownMenuItem asChild>
+                                <Link href="/admin/roles" className="flex items-center gap-2">
+                                  <Shield className="h-4 w-4" />
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">Roles & Permissions</span>
+                                    <span className="text-xs text-muted-foreground">Assign roles & manage access</span>
+                                  </div>
+                                </Link>
+                              </DropdownMenuItem>
+                              
+                              <DropdownMenuItem asChild>
+                                <Link href="/admin/team" className="flex items-center gap-2">
+                                  <Users className="h-4 w-4" />
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">Team Management</span>
+                                    <span className="text-xs text-muted-foreground">Manage staff & trainers</span>
+                                  </div>
+                                </Link>
+                              </DropdownMenuItem>
+                              
+                              <DropdownMenuSeparator />
+                              <DropdownMenuLabel className="text-xs text-muted-foreground">System Settings</DropdownMenuLabel>
+                              
+                              <DropdownMenuItem asChild>
+                                <Link href="/admin/feature-flags" className="flex items-center gap-2">
+                                  <Flag className="h-4 w-4" />
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">Feature Flags</span>
+                                    <span className="text-xs text-muted-foreground">Toggle features on/off</span>
+                                  </div>
+                                </Link>
+                              </DropdownMenuItem>
+                              
+                              <DropdownMenuItem asChild>
+                                <Link href="/admin/branding" className="flex items-center gap-2">
+                                  <Palette className="h-4 w-4" />
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">Branding</span>
+                                    <span className="text-xs text-muted-foreground">Customize platform appearance</span>
+                                  </div>
+                                </Link>
+                              </DropdownMenuItem>
+                              
+                              <DropdownMenuItem asChild>
+                                <Link href="/admin/backups" className="flex items-center gap-2">
+                                  <Database className="h-4 w-4" />
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">Backups</span>
+                                    <span className="text-xs text-muted-foreground">Database backup management</span>
+                                  </div>
+                                </Link>
+                              </DropdownMenuItem>
+                              
+                              <DropdownMenuItem asChild>
+                                <Link href="/admin/system-health" className="flex items-center gap-2">
+                                  <Activity className="h-4 w-4" />
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">System Health</span>
+                                    <span className="text-xs text-muted-foreground">Monitor system status</span>
+                                  </div>
+                                </Link>
+                              </DropdownMenuItem>
+                            </>
+                          )}
                         </>
                       ) : userRole === 'trainer' ? (
                         <>
