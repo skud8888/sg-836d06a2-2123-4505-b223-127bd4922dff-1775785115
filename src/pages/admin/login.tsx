@@ -49,24 +49,28 @@ export default function AdminLoginPage() {
 
       console.log("User signed in:", data.user.id);
 
-      // Check if user has admin access using RBAC
-      const userRoles = await rbacService.getUserRoles(data.user.id);
-      console.log("User roles:", userRoles);
+      // Get user role with direct query
+      const { data: userRolesData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', data.user.id);
 
-      const allowedRoles = ["super_admin", "admin", "trainer", "receptionist"];
-      const hasAdminAccess = userRoles.some(roleAssignment => 
-        allowedRoles.includes(roleAssignment.role)
-      );
+      const userRoles = userRolesData || [];
+      const role = userRoles.length > 0 ? userRoles[0].role : 'student';
 
-      if (!hasAdminAccess) {
-        console.log("User does not have admin access");
+      // Check if admin/super_admin
+      if (!['admin', 'super_admin'].includes(role)) {
+        setError("You don't have admin access");
+        setLoading(false);
         await supabase.auth.signOut();
-        throw new Error("Access denied. You need admin, trainer, or receptionist role to access this area.");
+        return;
       }
 
-      console.log("Access granted, redirecting to dashboard");
+      toast({
+        title: "Login successful",
+        description: "Welcome back!",
+      });
 
-      // Success - redirect to admin dashboard
       router.push("/admin");
     } catch (err: any) {
       console.error("Login error:", err);

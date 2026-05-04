@@ -179,4 +179,45 @@ export const authService = {
   onAuthStateChange(callback: (event: string, session: Session | null) => void) {
     return supabase.auth.onAuthStateChange(callback);
   }
+
+  /**
+   * Get user roles
+   */
+  async getUserRoles(userId: string): Promise<string[]> {
+    const { data: userRolesData } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId);
+
+    const userRoles = userRolesData || [];
+    return userRoles.map((r: any) => r.role);
+  },
+
+  /**
+   * Check if user has specific role
+   */
+  async hasRole(userId: string, role: string): Promise<boolean> {
+    const { data: userRolesData } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .eq('role', role)
+      .single();
+
+    return !!userRolesData;
+  },
+
+  /**
+   * Get primary role (first role or default to 'student')
+   */
+  async getPrimaryRole(userId: string): Promise<string> {
+    const { data: userRolesData } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .limit(1)
+      .single();
+
+    return userRolesData?.role || 'student';
+  },
 };

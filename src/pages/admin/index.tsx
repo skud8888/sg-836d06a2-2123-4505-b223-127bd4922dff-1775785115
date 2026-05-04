@@ -74,8 +74,40 @@ export default function AdminDashboard() {
   });
 
   useEffect(() => {
-    checkAuth();
-  }, []);
+    async function checkAdminAccess() {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        router.push("/admin/login");
+        return;
+      }
+
+      // Direct query for user role
+      const { data: userRolesData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", session.user.id);
+
+      const userRoles = userRolesData || [];
+      const role = userRoles.length > 0 ? userRoles[0].role : 'student';
+
+      setUserRole(role);
+
+      if (!["admin", "super_admin"].includes(role)) {
+        toast({
+          title: "Access Denied",
+          description: "You don't have admin access",
+          variant: "destructive",
+        });
+        router.push("/admin/login");
+        return;
+      }
+
+      fetchDashboardData();
+    }
+
+    checkAdminAccess();
+  }, [router]);
 
   async function checkAuth() {
     try {

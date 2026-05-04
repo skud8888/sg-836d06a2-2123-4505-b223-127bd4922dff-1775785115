@@ -101,13 +101,16 @@ export default function UserManagement() {
         return;
       }
 
-      const { data: roleData } = await supabase
+      // Direct query for user role
+      const { data: userRolesData } = await supabase
         .from("user_roles")
         .select("role")
-        .eq("user_id", session.user.id)
-        .single();
+        .eq("user_id", session.user.id);
 
-      if (!roleData || !["super_admin", "admin"].includes(roleData.role)) {
+      const userRoles = userRolesData || [];
+      const role = userRoles.length > 0 ? userRoles[0].role : 'student';
+
+      if (!["super_admin", "admin"].includes(role)) {
         toast({
           title: "Access Denied",
           description: "You don't have permission to manage users",
