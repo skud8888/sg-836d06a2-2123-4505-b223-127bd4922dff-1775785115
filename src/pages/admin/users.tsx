@@ -141,13 +141,13 @@ export default function UserManagement() {
 
   async function fetchUsers() {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("user_management")
         .select("*")
         .order("joined_at", { ascending: false });
 
       if (error) throw error;
-      setUsers(data || []);
+      setUsers((data || []) as User[]);
     } catch (error: any) {
       console.error("Error fetching users:", error);
       toast({
@@ -184,12 +184,11 @@ export default function UserManagement() {
       if (!user) throw new Error("User creation failed");
 
       // Assign role
-      const { error: roleError } = await supabase
+      const { error: roleError } = await (supabase as any)
         .from("user_roles")
         .insert({
           user_id: user.id,
           role: newUserRole,
-          is_primary: true,
         });
 
       if (roleError) throw roleError;
@@ -229,17 +228,18 @@ export default function UserManagement() {
     }
 
     try {
-      // Update primary role
-      const { error } = await supabase
+      // Update primary role by clearing old ones and inserting new
+      await (supabase as any)
         .from("user_roles")
-        .upsert(
-          {
-            user_id: selectedUser.id,
-            role: newRole,
-            is_primary: true,
-          },
-          { onConflict: "user_id" }
-        );
+        .delete()
+        .eq("user_id", selectedUser.id);
+        
+      const { error } = await (supabase as any)
+        .from("user_roles")
+        .insert({
+          user_id: selectedUser.id,
+          role: newRole,
+        });
 
       if (error) throw error;
 
