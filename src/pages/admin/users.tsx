@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/router";
 import { Navigation } from "@/components/Navigation";
 import { Breadcrumb } from "@/components/Breadcrumb";
@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -37,16 +38,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import {
   Users,
@@ -81,14 +72,14 @@ const VALID_ROLES = ["super_admin", "admin", "trainer", "receptionist", "student
 export default function UserManagement() {
   const router = useRouter();
   const { toast } = useToast();
+  
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  
+  // Dialog states
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [newRole, setNewRole] = useState<string>("");
   
   // Create user form
   const [newUserEmail, setNewUserEmail] = useState("");
@@ -140,6 +131,7 @@ export default function UserManagement() {
   }
 
   async function fetchUsers() {
+    setLoading(true);
     try {
       const { data, error } = await (supabase as any)
         .from("user_management")
@@ -155,8 +147,158 @@ export default function UserManagement() {
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
+      setSelectedUsers([]);
     }
   }
+
+  // Filtered users
+  const filteredUsers = useMemo(() => {
+    return users.filter(user => 
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (user.full_name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      user.primary_role.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [users, searchTerm]);
+
+  // Bulk / Selection Actions
+  const toggleSelect = (id: string) => {
+    setSelectedUsers(prev => 
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    setSelectedUsers(prev => 
+      prev.length === filteredUsers.length ? [] : filteredUsers.map(u => u.id)
+    );
+  };
+
+  const bulkChangeRole = async (newRole: string) => {
+    if (selectedUsers.length === 0) return;
+
+    try {
+      // First delete existing roles for selected users
+      await (supabase as any)
+        .from("user_roles")
+        .delete()
+        .in("user_id", selectedUsers);
+
+      // Then insert new roles
+      const { error } = await (supabase as any)
+        .from("user_roles")
+        .insert(
+          selectedUsers.map(id => ({ user_id: id, role: newRole, is_primary: true }))
+        );
+
+      if (error) throw error;
+
+      toast({
+        title: "Roles Updated",
+        description: `✅ ${selectedUsers.length} users updated to ${newRole.replace('_', ' ')}`,
+      });
+      fetchUsers();
+    } catch (error: any) {
+      toast({
+        title: "Error updating roles",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const bulkDelete = async () => {
+    if (selectedUsers.length === 0) return;
+    if (!confirm(`Delete ${selectedUsers.length} users permanently?`)) return;
+    if (!confirm("Type 'DELETE' to confirm")) return;
+
+    try {
+      for (const id of selectedUsers) {
+        await supabase.auth.admin.deleteUser(id);
+      }
+      toast({
+        title: "Users Deleted",
+        description: "✅ Selected users deleted successfully",
+      });
+      fetchUsers();
+    } catch (error: any) {
+      toast({
+        title: "Error deleting users",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Single Actions
+  const handleEditRole = async (user: User) => {
+    const newRole = prompt(
+      `Change role for ${user.email}\n\nCurrent: ${user.primary_role}\n\nEnter new role (e.g., student, admin, trainer):`,
+      user.primary_role
+    );
+
+    if (!newRole) return;
+
+    if (!VALID_ROLES.includes(newRole as any)) {
+      toast({
+        title: "Invalid Role",
+        description: `Valid roles: ${VALID_ROLES.join(', ')}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await (supabase as any)
+        .from("user_roles")
+        .delete()
+        .eq("user_id", user.id);
+        
+      const { error } = await (supabase as any)
+        .from("user_roles")
+        .insert({
+          user_id: user.id,
+          role: newRole,
+          is_primary: true,
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Role updated",
+        description: `✅ Role updated to ${newRole}`,
+      });
+      fetchUsers();
+    } catch (error: any) {
+      toast({
+        title: "Error updating role",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteUser = async (user: User) => {
+    if (!confirm(`Delete user ${user.email} permanently?`)) return;
+
+    try {
+      const { error } = await supabase.auth.admin.deleteUser(user.id);
+      if (error) throw error;
+
+      toast({
+        title: "User deleted",
+        description: `✅ User deleted successfully`,
+      });
+      fetchUsers();
+    } catch (error: any) {
+      toast({
+        title: "Error deleting user",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
 
   async function handleCreateUser() {
     if (!newUserEmail || !newUserPassword) {
@@ -174,21 +316,19 @@ export default function UserManagement() {
         email: newUserEmail,
         password: newUserPassword,
         options: {
-          data: {
-            full_name: newUserFullName,
-          },
+          data: { full_name: newUserFullName },
         },
       });
 
       if (signUpError) throw signUpError;
       if (!user) throw new Error("User creation failed");
 
-      // Assign role
       const { error: roleError } = await (supabase as any)
         .from("user_roles")
         .insert({
           user_id: user.id,
           role: newUserRole,
+          is_primary: true,
         });
 
       if (roleError) throw roleError;
@@ -215,77 +355,6 @@ export default function UserManagement() {
     }
   }
 
-  async function handleEditRole() {
-    if (!selectedUser || !newRole) return;
-
-    if (!VALID_ROLES.includes(newRole as any)) {
-      toast({
-        title: "Invalid Role",
-        description: `Valid roles: ${VALID_ROLES.join(", ")}`,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      // Update primary role by clearing old ones and inserting new
-      await (supabase as any)
-        .from("user_roles")
-        .delete()
-        .eq("user_id", selectedUser.id);
-        
-      const { error } = await (supabase as any)
-        .from("user_roles")
-        .insert({
-          user_id: selectedUser.id,
-          role: newRole,
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: "Role updated",
-        description: `${selectedUser.email} is now ${newRole}`,
-      });
-
-      setEditDialogOpen(false);
-      setSelectedUser(null);
-      setNewRole("");
-      await fetchUsers();
-    } catch (error: any) {
-      toast({
-        title: "Error updating role",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  }
-
-  async function handleDeleteUser() {
-    if (!selectedUser) return;
-
-    try {
-      const { error } = await supabase.auth.admin.deleteUser(selectedUser.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "User deleted",
-        description: `${selectedUser.email} has been removed`,
-      });
-
-      setDeleteDialogOpen(false);
-      setSelectedUser(null);
-      await fetchUsers();
-    } catch (error: any) {
-      toast({
-        title: "Error deleting user",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  }
-
   const getRoleBadgeVariant = (role: string) => {
     if (role === "super_admin") return "destructive";
     if (role === "admin") return "default";
@@ -298,16 +367,7 @@ export default function UserManagement() {
     return null;
   };
 
-  const filteredUsers = users.filter((user) => {
-    const query = searchQuery.toLowerCase();
-    return (
-      user.email.toLowerCase().includes(query) ||
-      user.full_name?.toLowerCase().includes(query) ||
-      user.primary_role.toLowerCase().includes(query)
-    );
-  });
-
-  if (loading) {
+  if (loading && users.length === 0) {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
@@ -338,12 +398,12 @@ export default function UserManagement() {
                 User Management
               </h1>
               <p className="text-muted-foreground mt-2">
-                Manage user accounts, roles, and permissions
+                Manage user accounts, roles, permissions, and bulk actions
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={fetchUsers}>
-                <RefreshCw className="h-4 w-4 mr-2" />
+              <Button variant="outline" onClick={fetchUsers} disabled={loading}>
+                <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                 Refresh
               </Button>
               <Button onClick={() => setCreateDialogOpen(true)}>
@@ -395,21 +455,48 @@ export default function UserManagement() {
             </Card>
           </div>
 
-          {/* Users Table */}
+          {/* Users Table Card */}
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                   <CardTitle>All Users ({filteredUsers.length})</CardTitle>
                   <CardDescription>View and manage all platform users</CardDescription>
                 </div>
-                <div className="w-64">
-                  <div className="relative">
+                
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  {/* Bulk Actions */}
+                  {selectedUsers.length > 0 && (
+                    <div className="flex items-center gap-2 bg-muted/50 p-1.5 rounded-md border border-border/50">
+                      <span className="text-xs font-medium px-2 text-muted-foreground">
+                        {selectedUsers.length} selected
+                      </span>
+                      <Select onValueChange={bulkChangeRole}>
+                        <SelectTrigger className="w-[140px] h-8 text-xs">
+                          <SelectValue placeholder="Change Role..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {VALID_ROLES.map(role => (
+                            <SelectItem key={role} value={role}>
+                              {role.replace('_', ' ')}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button variant="destructive" size="sm" className="h-8 text-xs" onClick={bulkDelete}>
+                        <Trash2 className="h-3 w-3 mr-1" />
+                        Delete
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Search */}
+                  <div className="relative w-full sm:w-64">
                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
                       placeholder="Search users..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
                       className="pl-8"
                     />
                   </div>
@@ -420,6 +507,13 @@ export default function UserManagement() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-[40px]">
+                      <Checkbox 
+                        checked={selectedUsers.length === filteredUsers.length && filteredUsers.length > 0}
+                        onCheckedChange={toggleSelectAll}
+                        aria-label="Select all"
+                      />
+                    </TableHead>
                     <TableHead>User</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Role</TableHead>
@@ -430,7 +524,14 @@ export default function UserManagement() {
                 </TableHeader>
                 <TableBody>
                   {filteredUsers.map((user) => (
-                    <TableRow key={user.id}>
+                    <TableRow key={user.id} className={selectedUsers.includes(user.id) ? "bg-muted/30" : ""}>
+                      <TableCell>
+                        <Checkbox 
+                          checked={selectedUsers.includes(user.id)}
+                          onCheckedChange={() => toggleSelect(user.id)}
+                          aria-label={`Select ${user.email}`}
+                        />
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Avatar className="h-8 w-8">
@@ -483,11 +584,7 @@ export default function UserManagement() {
                       </TableCell>
                       <TableCell className="text-right space-x-2">
                         <Button
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setNewRole(user.primary_role);
-                            setEditDialogOpen(true);
-                          }}
+                          onClick={() => handleEditRole(user)}
                           size="sm"
                           variant="outline"
                         >
@@ -495,10 +592,7 @@ export default function UserManagement() {
                           Edit Role
                         </Button>
                         <Button
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setDeleteDialogOpen(true);
-                          }}
+                          onClick={() => handleDeleteUser(user)}
                           size="sm"
                           variant="destructive"
                         >
@@ -516,7 +610,7 @@ export default function UserManagement() {
                   <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-semibold mb-2">No users found</h3>
                   <p className="text-muted-foreground">
-                    {searchQuery ? "Try a different search term" : "Create your first user"}
+                    {searchTerm ? "Try a different search term" : "Create your first user"}
                   </p>
                 </div>
               )}
@@ -588,63 +682,6 @@ export default function UserManagement() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-
-          {/* Edit Role Dialog */}
-          <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Edit User Role</DialogTitle>
-                <DialogDescription>
-                  Change the primary role for {selectedUser?.email}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="new_role">New Role</Label>
-                  <Select value={newRole} onValueChange={setNewRole}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="student">Student</SelectItem>
-                      <SelectItem value="receptionist">Receptionist</SelectItem>
-                      <SelectItem value="trainer">Trainer</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="super_admin">Super Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleEditRole}>Update Role</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-
-          {/* Delete Confirmation */}
-          <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete User?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will permanently delete {selectedUser?.email} and all associated data.
-                  This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleDeleteUser}
-                  className="bg-destructive text-destructive-foreground"
-                >
-                  Delete User
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
         </div>
       </div>
     </>
